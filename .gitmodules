@@ -1,0 +1,3 @@
+[submodule "aplacc"]
+	path = aplacc
+	url = git@github.com:blade0b/aplacc.git
