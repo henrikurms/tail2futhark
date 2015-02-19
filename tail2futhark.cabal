@@ -1,0 +1,22 @@
+
+name:                tail2futhark
+version:             0.1.0.0
+synopsis:            APL to Futhark
+-- description:         
+-- license:             
+--license-file:        LICENSE
+author:              Henrik Urms, Anna Sofie Kiehn
+maintainer:          urmshenrik@gmail.com, a.kiehn89@gmail.com
+-- copyright:           
+category:            Language
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+executable tail2futhark
+  main-is:             Main.hs
+  -- other-modules:       
+  -- other-extensions:    
+  build-depends:       base >=4.7 && <4.8
+  -- hs-source-dirs:      
+  default-language:    Haskell2010
