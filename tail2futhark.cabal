@@ -17,6 +17,7 @@ executable tail2futhark
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
+  hs-source-dirs:      src
   build-depends:       base >=4.7 && <4.8
   -- hs-source-dirs:      
   default-language:    Haskell2010
