@@ -1,0 +1,16 @@
+let v0:Sh(2) = [10,30] in
+let v1:[int]2 = reshape{[int],[1,2]}(v0,iotaSh(49)) in
+let v2:[int]2 = snoc{[int],[1]}(transp{[int],[2]}(v1),iotaSh(31)) in
+let v3:Sh(3) = catSh(dropSh(1,shape{[int],[2]}(v2)),shape{[int],[2]}(v1)) in
+let v4:[int]0 = subi(firstSh(shapeSh(shape{[int],[2]}(v1))),1) in
+let v5:Sh(3) = iotaSh(firstSh(shapeSh(v3))) in
+let v6:Sh(3) = catSh(rotateSh(v4,dropSh(~1,v5)),takeSh(~1,v5)) in
+let v7:[int]3 = transp2{[int],[3]}(v6,reshape{[int],[2,3]}(v3,v1)) in
+let v8:Sh(3) = catSh(dropSh(~1,shape{[int],[2]}(v1)),shape{[int],[2]}(v2)) in
+let v9:Si(2) = firstSh(shapeSh(shape{[int],[2]}(v1))) in
+let v10:Sh(3) = iotaSh(firstSh(shapeSh(v8))) in
+let v11:Sh(1) = dropSh(negi(v9),rotateSh(v9,iotaSh(firstSh(shapeSh(v10))))) in
+let v12:Sh(3) = catSh(dropSh(~1,iotaSh(v9)),snocSh(v11,v9)) in
+let v13:[int]3 = transp2{[int],[3]}(v12,reshape{[int],[2,3]}(v8,v2)) in
+let v18:[int]2 = reduce{[int],[2]}(addi,0,zipWith{[int,int,int],[3]}(muli,v7,v13)) in
+i2d(reduce{[int],[0]}(addi,0,reduce{[int],[1]}(addi,0,v18)))

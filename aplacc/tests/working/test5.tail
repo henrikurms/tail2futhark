@@ -1,0 +1,4 @@
+let v6:[int]0 = addi(reduce{[int],[0]}(addi,0,zilde),addi(reduce{[int],[0]}(muli,1,zilde),reduce{[int],[0]}(muli,1,iotaSh(12)))) in
+let v12:[int]0 = reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(addi,[1,2,3,4],each{[int,int],[1]}(fn v7:[int]0 => addi(v7,5),iotaSh(4)))) in
+let v13:[int]0 = addi(v6,addi(v12,2)) in
+i2d(v13)

@@ -1,0 +1,7 @@
+let v0:Sh(10) = iotaSh(10) in
+let v1:Sh(10) = iotaSh(10) in
+let v2:Sh(2) = rotateSh(first{[int],[0]}(shape{[int],[1]}(shapeSh(v1))),iotaSh(firstSh(shapeSh(catSh(shapeSh(v1),shapeSh(v0)))))) in
+let v3:[int]2 = transp2{[int],[2]}(v2,reshape{[int],[1,2]}(catSh(shapeSh(v1),shapeSh(v0)),v0)) in
+let v4:[int]2 = reshape{[int],[1,2]}(catSh(shapeSh(v0),shapeSh(v1)),v1) in
+let v7:[int]2 = zipWith{[int,int,int],[2]}(muli,v3,v4) in
+i2d(reduce{[int],[0]}(addi,0,reduce{[int],[1]}(addi,0,v7)))

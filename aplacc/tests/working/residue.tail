@@ -1,0 +1,2 @@
+let v4:[int]0 = reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(resi,[3,~5,6,~3],[29,43,~14,~14])) in
+i2d(v4)

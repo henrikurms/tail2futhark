@@ -1,0 +1,9 @@
+let v0:Si(5) = 5 in
+let v1:[int]2 = reshape{[int],[1,2]}([2,2],iotaSh(4)) in
+let v5:[int]2 = each{[int,int],[2]}(fn v4:[int]0 => addi(8,v4),each{[int,int],[2]}(fn v3:[int]0 => addi(v0,v3),each{[int,int],[2]}(fn v2:[int]0 => addi(v2,9),v1))) in
+let v6:Si(5) = 5 in
+let v7:[int]2 = reshape{[int],[1,2]}([2,2],iotaSh(4)) in
+let v15:[int]0 = reduce{[int],[0]}(muli,1,reduce{[int],[1]}(addi,0,reshape{[int],[2,2]}([2,2],each{[int,int],[2]}(fn v10:[int]0 => addi(v6,v10),zipWith{[int,int,int],[2]}(addi,v7,v5))))) in
+let v16:Si(5) = 5 in
+let v17:[int]0 = addi(v16,addi(v16,v15)) in
+i2d(v17)

@@ -1,0 +1,1 @@
+i2d(reduce{[int],[0]}(muli,1,reduce{[int],[1]}(addi,0,transp{[int],[2]}(reverse{[int],[2]}(reshape{[int],[1,2]}([3,3],iotaSh(9)))))))

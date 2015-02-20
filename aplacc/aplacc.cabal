@@ -1,0 +1,31 @@
+name:                aplacc
+version:             0.1
+synopsis:            APL to Accelerate
+author:              Michael Budde
+maintainer:          mbudde@gmail.com
+-- copyright:
+build-type:          Simple
+cabal-version:       >= 1.8
+
+flag static
+  description:       Build static binary
+  default:           False
+
+executable aplacc
+  main-is:           Main.hs
+  other-modules:     APLAcc.Conversion
+                     APLAcc.Primitives
+                     APLAcc.TAIL.AST
+                     APLAcc.TAIL.Parser
+                     APLAcc.SimpleAcc.AST
+                     APLAcc.SimpleAcc.ToHaskell
+  hs-source-dirs:    src
+  build-depends:     base >= 4.5.0,
+                     containers,
+                     mtl,
+                     parsec == 3.1.*,
+                     accelerate >= 0.14.0.0,
+                     pretty == 1.*,
+                     haskell-src-exts == 1.16.*
+  if flag(static)
+    ghc-options:     -static -optc-static -optl-static -optl-pthread
