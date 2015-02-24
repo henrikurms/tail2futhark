@@ -1,0 +1,1 @@
+reduce{[double],[0]}(addd,0.00,eachV{[double,double],[7]}(fn v3:[double]0 => addd(2.10,v3),eachV{[int,double],[7]}(i2d,eachV{[bool,int],[7]}(b2i,eachV{[int,bool],[7]}(fn v0:[int]0 => lti(2,v0),[3,2,3,5,3,23,3])))))

@@ -1,0 +1,2 @@
+let v0:[int]2 = reshape{[int],[1,2]}([3,2],iotaV(6)) in
+i2d(reduce{[int],[0]}(muli,1,reduce{[int],[1]}(addi,0,v0)))

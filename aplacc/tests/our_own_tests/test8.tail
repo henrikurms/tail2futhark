@@ -1,0 +1,3 @@
+let v1:<int>10 = eachV{[int,int],[10]}(fn v0:[int]0 => subi(v0,2),iotaV(10)) in
+let v8:[double]1 = zipWith{[double,double,double],[1]}(addd,eachV{[int,double],[10]}(i2d,eachV{[int,int],[10]}(signi,v1)),eachV{[int,double],[10]}(fn v3:[int]0 => divd(1.00,i2d(v3)),v1)) in
+reduce{[double],[0]}(addd,0.00,v8)

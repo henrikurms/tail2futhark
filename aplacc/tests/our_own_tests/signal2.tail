@@ -1,0 +1,4 @@
+let v0:<int>15 = [9,8,6,8,7,4,4,3,2,2,b2iV(tt),2,4,5,6] in
+let v1:<int>15 = v0 in
+let v4:<int>16 = consV{[int],[15]}(b2iV(ff),v1) in
+reduce{[double],[0]}(addd,0.00,each{[double,double],[1]}(fn v12:[double]0 => maxd(i2d(~50),v12),each{[double,double],[1]}(fn v11:[double]0 => mind(i2d(50),v11),each{[double,double],[1]}(fn v10:[double]0 => muld(i2d(50),v10),zipWith{[double,double,double],[1]}(divd,each{[int,double],[1]}(i2d,drop{[int],[1]}(b2iV(tt),zipWith{[int,int,int],[1]}(subi,v4,transp{[int],[1]}(vrotateV(~1,transp{[int],[1]}(v4)))))),eachV{[double,double],[15]}(fn v3:[double]0 => addd(0.01,v3),eachV{[int,double],[15]}(i2d,v1)))))))

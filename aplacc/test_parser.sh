@@ -48,15 +48,17 @@ for f in "${files[@]}"; do
     if [ $? != 0 ]; then
         echo -e "\033[31;1m<<< [$f] aplacc failed\033[0m"
         continue
+    else
+        echo -e "\033[32m<<< [$f] Success\033[0m"
     fi
     if [ -n "$output" ]; then
         echo "$hsoutput" > $output
     fi
-    echo -e "\033[33m>>> [$f] Running ghc \033[0m"
-    echo "$hsoutput" | runghc "-i$toplevel/src"
-    if [ $? = 0 ]; then
-        echo -e "\033[32m<<< [$f] Success\033[0m"
-    else
-        echo -e "\033[31;1m<<< [$f] ghc failed\033[0m"
-    fi
+#    echo -e "\033[33m>>> [$f] Running ghc \033[0m"
+#    echo "$hsoutput" | runghc "-i$toplevel/src"
+#    if [ $? = 0 ]; then
+#        echo -e "\033[32m<<< [$f] Success\033[0m"
+#    else
+#        echo -e "\033[31;1m<<< [$f] ghc failed\033[0m"
+#    fi
 done

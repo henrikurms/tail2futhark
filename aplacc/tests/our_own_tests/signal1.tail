@@ -1,0 +1,3 @@
+let v0:<int>1000 = iotaV(1000) in
+let v3:<int>1001 = consV{[int],[1000]}(b2iV(ff),v0) in
+reduce{[double],[0]}(addd,0.00,each{[double,double],[1]}(fn v11:[double]0 => maxd(i2d(~50),v11),each{[double,double],[1]}(fn v10:[double]0 => mind(i2d(50),v10),each{[double,double],[1]}(fn v9:[double]0 => muld(i2d(50),v9),zipWith{[double,double,double],[1]}(divd,each{[int,double],[1]}(i2d,drop{[int],[1]}(b2iV(tt),zipWith{[int,int,int],[1]}(subi,v3,transp{[int],[1]}(vrotateV(~1,transp{[int],[1]}(v3)))))),eachV{[double,double],[1000]}(fn v2:[double]0 => addd(0.01,v2),eachV{[int,double],[1000]}(i2d,v0)))))))
