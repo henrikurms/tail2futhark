@@ -1,0 +1,5 @@
+let v0:[int]0 = addi(b2i(andb(ff,tt)),b2i(orb(tt,ff))) in
+let v1:[bool]0 = nandb(tt,ff) in
+let v2:[bool]0 = notb(v1) in
+let v3:[bool]0 = norb(tt,ff) in
+i2d(addi(v0,addi(b2i(v1),addi(b2i(v2),b2i(v3)))))

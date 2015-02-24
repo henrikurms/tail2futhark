@@ -1,0 +1,6 @@
+let v0:S(int,13) = prSclI(13) in
+let v1:<int>3 = prArrI(vreverseV{[int],[3]}([b2iV(tt),2,3])) in
+let v2:[int]2 = vreverse{[int],[2]}(reshape{[int],[1,2]}([3,4],iotaV(10))) in
+let v4:[int]2 = prArrI(each{[int,int],[2]}(fn v3:[int]0 => subi(v3,b2iV(tt)),v2)) in
+let v5:<int>0 = prArrI(vreverseV{[int],[0]}(zilde)) in
+i2d(b2iV(ff))

@@ -1,0 +1,12 @@
+let v0:[bool]2 = reshape{[bool],[1,2]}([3,3],[tt,tt,tt,tt,ff,ff,ff,tt,ff]) in
+let v1:[bool]2 = transp{[bool],[2]}(take{[bool],[2]}(~10,transp{[bool],[2]}(take{[bool],[2]}(~10,v0)))) in
+let v81:[bool]2 = power(fn v41:[bool]2 => let v42:[bool]2 = v41 in
+          let v43:[bool]2 = v42 in
+          let v44:[bool]2 = v43 in
+          let v45:[bool]2 = vrotate{[bool],[2]}(b2iV(tt),v44) in
+          let v53:[bool]2 = v44 in
+          let v63:[bool]2 = vrotate{[bool],[2]}(~1,v44) in
+          let v73:[int]2 = zipWith{[int,int,int],[2]}(addi,zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(~1,transp{[bool],[2]}(v63)))),zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,v63),each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(b2iV(tt),transp{[bool],[2]}(v63)))))),zipWith{[int,int,int],[2]}(addi,zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(~1,transp{[bool],[2]}(v53)))),zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,v53),each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(b2iV(tt),transp{[bool],[2]}(v53)))))),zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(~1,transp{[bool],[2]}(v45)))),zipWith{[int,int,int],[2]}(addi,each{[bool,int],[2]}(b2i,v45),each{[bool,int],[2]}(b2i,transp{[bool],[2]}(vrotate{[bool],[2]}(b2iV(tt),transp{[bool],[2]}(v45)))))))) in
+          let v80:[bool]2 = prArrB(zipWith{[bool,bool,bool],[2]}(orb,each{[int,bool],[2]}(fn v77:[int]0 => eqi(v77,3),v73),zipWith{[bool,bool,bool],[2]}(andb,each{[int,bool],[2]}(fn v74:[int]0 => eqi(v74,4),v73),v43))) in
+          v80,20,v1) in
+i2d(b2iV(ff))

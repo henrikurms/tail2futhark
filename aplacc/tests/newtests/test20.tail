@@ -1,0 +1,2 @@
+let v0:S(int,6) = 6 in
+i2d(v0)

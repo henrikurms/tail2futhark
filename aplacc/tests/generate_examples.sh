@@ -1,6 +1,7 @@
 #!/bin/sh
 
-input_dir=~/.smackage/lib/apltail/v1/tests
+#input_dir=~/.smackage/lib/apltail/v1/tests
+input_dir=~/apltail/tests
 output_dir=$1
 
 for f in $input_dir/*.apl; do

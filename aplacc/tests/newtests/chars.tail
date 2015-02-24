@@ -1,0 +1,8 @@
+let v0:[char]1 = ['H','e','l','l','o',' ','w','o','r','l','d'] in
+let v1:[char]1 = prArrC(transp{[char],[1]}(vreverse{[char],[1]}(transp{[char],[1]}(v0)))) in
+let v2:[char]0 = 'X' in
+let v3:[char]0 = prSclC(v2) in
+let v4:[char]1 = prArrC(cons{[char],[0]}(v2,transp{[char],[1]}(vreverse{[char],[1]}(transp{[char],[1]}(v0))))) in
+let v5:[char]2 = prArrC(transp{[char],[2]}(reshape{[char],[1,2]}([5,6],v0))) in
+let v6:[char]1 = prArrC(replicate(' ',[b2iV(ff),b2iV(tt),3,b2iV(ff)],['b','o','a','t'])) in
+i2d(first{[int],[1]}(shape{[char],[1]}(cons{[char],[0]}(v2,v0))))

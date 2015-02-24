@@ -1,0 +1,8 @@
+let v0:<int>4 = [b2iV(tt),2,4,3] in
+let v1:[char]1 = ['h','e','l','l','o'] in
+let v2:[char]1 = prArrC(v1) in
+let v3:<int>4 = prArrI(v0) in
+let v6:[int]0 = reduce{[int],[0]}(addi,0,v0) in
+let v7:[int]0 = first{[int],[1]}(shape{[char],[1]}(v1)) in
+let v8:[int]0 = prSclI(addi(v6,addi(v7,4))) in
+i2d(b2iV(ff))

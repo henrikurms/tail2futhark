@@ -1,0 +1,1 @@
+i2d(reduce{[int],[0]}(addi,0,eachV{[int,int],[2]}(fn v0:[int]0 => addi(v0,2),shape{[int],[2]}(reshape{[int],[1,2]}([2,3],[b2iV(tt),2,3,4,5,6])))))

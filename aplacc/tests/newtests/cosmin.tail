@@ -1,0 +1,10 @@
+let v0:S(int,200) = 200 in
+let v1:S(int,300) = 300 in
+let v2:<int>2 = [200,300] in
+let v3:<int>2 = [300,200] in
+let v4:[int]2 = reshape{[int],[1,2]}(v2,iota(muli(v0,v1))) in
+let v5:[int]2 = transp{[int],[2]}(v4) in
+let v9:[int]2 = zipWith{[int,int,int],[2]}(addi,v5,each{[int,int],[2]}(fn v6:[int]0 => muli(10,v6),reshape{[int],[1,2]}(v3,iotaV(v0)))) in
+let v12:[int]1 = reduce{[int],[1]}(addi,0,reshape{[int],[2,2]}(v3,v9)) in
+let v15:[int]0 = reduce{[int],[0]}(addi,0,v12) in
+i2d(v15)

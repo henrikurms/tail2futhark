@@ -12,13 +12,14 @@ data BType = IntT
            | DoubleT
            | BoolT
            | Btyv Ident
+           | CharT
   deriving (Show, Eq)
 
 data Type
   = ArrT BType Rank
   | VecT BType Rank
-  | S Rank
-  | SV Rank
+  | S BType Rank
+  | SV BType Rank
   | FunT Type Type
 --  | ShT Rank
 --  | SiT Rank
@@ -41,6 +42,7 @@ data Exp
   = Var Ident
   | I Integer
   | D Double
+  | C Char
   | Inf
   | Neg Exp
   | Let Ident Type Exp Exp

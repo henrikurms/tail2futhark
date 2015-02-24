@@ -1,0 +1,18 @@
+let v0:S(int,13) = prSclI(13) in
+let v1:S(int,13) = prSclI(13) in
+let v2:S(int,13) = prSclI(13) in
+let v3:<int>3 = prArrI(vrotateV(b2iV(tt),[b2iV(tt),2,3])) in
+let v4:<int>3 = prArrI(vrotateV(4,[b2iV(tt),2,3])) in
+let v5:<int>3 = prArrI(vrotateV(~1,[b2iV(tt),2,3])) in
+let v6:<int>3 = prArrI(vrotateV(b2iV(ff),[b2iV(tt),2,3])) in
+let v7:[int]2 = reshape{[int],[1,2]}([3,4],iotaV(9)) in
+let v8:[int]2 = prArrI(vrotate{[int],[2]}(b2iV(tt),v7)) in
+let v9:[int]2 = prArrI(vrotate{[int],[2]}(4,v7)) in
+let v10:[int]2 = prArrI(vrotate{[int],[2]}(~1,v7)) in
+let v11:[int]2 = prArrI(vrotate{[int],[2]}(~4,v7)) in
+let v12:[int]2 = prArrI(vrotate{[int],[2]}(b2iV(ff),v7)) in
+let v13:<int>0 = prArrI(vrotateV(~2,zilde)) in
+let v14:<int>0 = prArrI(vrotateV(11,zilde)) in
+let v15:<int>0 = prArrI(vrotateV(b2iV(ff),zilde)) in
+let v16:[int]2 = prArrI(vrotate{[int],[2]}(12,take{[int],[2]}(b2iV(ff),v7))) in
+i2d(b2iV(ff))

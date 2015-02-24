@@ -1,0 +1,13 @@
+let v1:[int]1 = each{[double,int],[1]}(ceil,[3.20,2.80,~2.30,0.00,2.00,~1.70]) in
+let v3:[int]1 = each{[double,int],[1]}(floor,[3.20,2.80,~2.30,0.00,2.00,~1.70]) in
+let v6:[int]0 = prSclI(reduce{[int],[0]}(addi,0,v1)) in
+let v9:[int]0 = prSclI(reduce{[int],[0]}(addi,0,v3)) in
+let v11:[double]1 = each{[double,double],[1]}(fn v10:[double]0 => maxd(2.00,v10),[3.20,2.80,~2.30,0.00,2.00,~1.70]) in
+let v14:[double]0 = prSclD(reduce{[double],[0]}(addd,0.00,v11)) in
+let v16:[double]1 = each{[double,double],[1]}(fn v15:[double]0 => mind(2.00,v15),[3.20,2.80,~2.30,0.00,2.00,~1.70]) in
+let v19:[double]0 = prSclD(reduce{[double],[0]}(addd,0.00,v16)) in
+let v20:[int]0 = prSclI(mini(b2iV(ff),b2iV(tt))) in
+let v21:[int]0 = prSclI(maxi(b2iV(ff),b2iV(tt))) in
+let v22:S(int,1) = prSclI(b2iV(tt)) in
+let v23:S(int,0) = prSclI(b2iV(ff)) in
+i2d(b2iV(ff))

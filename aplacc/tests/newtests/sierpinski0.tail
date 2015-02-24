@@ -1,0 +1,13 @@
+let v1:[bool]2 = reshape{[bool],[1,2]}(eachV{[bool,int],[2]}(b2i,[tt,tt]),[tt]) in
+let v2:[bool]2 = v1 in
+let v3:[bool]2 = transp{[bool],[2]}(cat{[bool],[2]}(transp{[bool],[2]}(cat{[bool],[2]}(v2,reshape{[bool],[1,2]}(shape{[bool],[2]}(v2),[ff]))),transp{[bool],[2]}(cat{[bool],[2]}(v2,v2)))) in
+let v4:[bool]2 = v3 in
+let v5:[bool]2 = transp{[bool],[2]}(cat{[bool],[2]}(transp{[bool],[2]}(cat{[bool],[2]}(v4,reshape{[bool],[1,2]}(shape{[bool],[2]}(v4),[ff]))),transp{[bool],[2]}(cat{[bool],[2]}(v4,v4)))) in
+let v6:[bool]2 = v5 in
+let v7:[bool]2 = transp{[bool],[2]}(cat{[bool],[2]}(transp{[bool],[2]}(cat{[bool],[2]}(v6,reshape{[bool],[1,2]}(shape{[bool],[2]}(v6),[ff]))),transp{[bool],[2]}(cat{[bool],[2]}(v6,v6)))) in
+let v8:[bool]2 = v7 in
+let v9:[bool]2 = transp{[bool],[2]}(cat{[bool],[2]}(transp{[bool],[2]}(cat{[bool],[2]}(v8,reshape{[bool],[1,2]}(shape{[bool],[2]}(v8),[ff]))),transp{[bool],[2]}(cat{[bool],[2]}(v8,v8)))) in
+let v10:[bool]2 = v9 in
+let v11:[bool]2 = transp{[bool],[2]}(cat{[bool],[2]}(transp{[bool],[2]}(cat{[bool],[2]}(v10,reshape{[bool],[1,2]}(shape{[bool],[2]}(v10),[ff]))),transp{[bool],[2]}(cat{[bool],[2]}(v10,v10)))) in
+let v12:[bool]2 = prArrB(v11) in
+i2d(reduce{[int],[0]}(addi,0,reduce{[int],[1]}(addi,0,each{[bool,int],[2]}(b2i,v11))))

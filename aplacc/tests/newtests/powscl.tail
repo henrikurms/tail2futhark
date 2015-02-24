@@ -1,0 +1,2 @@
+let v1:[int]0 = prSclI(powerScl(fn v0:[int]0 => addi(v0,b2iV(tt)),3,100)) in
+i2d(b2iV(ff))

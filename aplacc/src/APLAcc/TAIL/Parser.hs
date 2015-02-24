@@ -41,6 +41,7 @@ identifier = Token.identifier lexer
 reserved   = Token.reserved   lexer
 reservedOp = Token.reservedOp lexer
 stringlit  = Token.stringLiteral lexer
+charlit    = Token.charLiteral lexer
 parens     = Token.parens     lexer
 brackets   = Token.brackets   lexer
 angles     = Token.angles     lexer
@@ -86,11 +87,12 @@ valueExpr = try (liftM D $ lexeme float)
          <|> liftM I (lexeme decimal)
          <|> try (reserved "inf" >> return Inf)
          <|> (char '~' >> liftM Neg valueExpr)
+         <|> liftM C charlit 
          <|> liftM Var identifier
          <?> "number or identifier"
 
 arrayExpr :: Parser Exp
-arrayExpr = liftM Vc $ brackets (sepBy valueExpr comma)
+arrayExpr = liftM Vc $ brackets (sepBy (opExpr <|> valueExpr) comma)
 
 letExpr :: Parser Exp
 letExpr =
@@ -144,8 +146,8 @@ arrayType = liftM2 ArrT (brackets basicType) rank
 -- vectortype as replacement for shapeType 
 vectorType :: Parser Type
 vectorType = liftM2 VecT (angles basicType) rank
-         <|> (try (symbol "S") >> liftM S (parens rank))
-         <|> (try (symbol "SV") >> liftM SV (parens rank))
+         <|> (try (symbol "SV") >> parens (do {t <- basicType ; comma ; r <- rank ; return $ SV t r}))
+         <|> (try (symbol "S") >> parens (do {t <- basicType ; comma ; r <- rank ; return $ S t r }))
          <?> "vector type"
 
 --shapeType :: Parser Type
@@ -164,6 +166,7 @@ basicType :: Parser BType
 basicType = (reserved "int" >> return IntT)
         <|> (reserved "double" >> return DoubleT)
         <|> (reserved "bool" >> return BoolT)
+        <|> (reserved "char" >> return CharT)
         <?> "basic type"
 
 -------------------

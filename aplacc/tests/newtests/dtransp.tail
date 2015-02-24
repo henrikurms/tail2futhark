@@ -1,0 +1,12 @@
+let v0:[int]3 = reshape{[int],[1,3]}([2,3,4],iotaV(24)) in
+let v1:[char]1 = prArrC(['A',':']) in
+let v2:[int]3 = prArrI(v0) in
+let v3:[int]3 = transp2{[int],[3]}([2,b2iV(tt),3],v0) in
+let v4:[char]1 = prArrC(['B',':']) in
+let v5:[int]3 = prArrI(v3) in
+let v8:[int]2 = prArrI(reduce{[int],[2]}(addi,0,v3)) in
+let v9:[int]3 = transp2{[int],[3]}([3,b2iV(tt),2],v0) in
+let v10:[char]1 = prArrC(['C',':']) in
+let v11:[int]3 = prArrI(v9) in
+let v14:[int]2 = prArrI(reduce{[int],[2]}(addi,0,v9)) in
+i2d(b2iV(ff))

@@ -1,0 +1,11 @@
+let v0:[int]2 = reshape{[int],[1,2]}([3,4],iotaV(12)) in
+let v1:[int]2 = cat{[int],[2]}(transp{[int],[2]}(drop{[int],[2]}(b2iV(tt),transp{[int],[2]}(v0))),transp{[int],[2]}(take{[int],[2]}(b2iV(tt),transp{[int],[2]}(v0)))) in
+let v4:[int]1 = prArrI(reduce{[int],[1]}(addi,0,v1)) in
+let v7:[int]1 = prArrI(reduce{[int],[1]}(addi,0,transp{[int],[2]}(vrotate{[int],[2]}(b2iV(tt),transp{[int],[2]}(v0))))) in
+let v8:[int]2 = reshape{[int],[1,2]}([3,4],iotaV(9)) in
+let v9:[int]2 = prArrI(transp{[int],[2]}(vrotate{[int],[2]}(b2iV(tt),transp{[int],[2]}(v8)))) in
+let v10:[int]2 = prArrI(transp{[int],[2]}(vrotate{[int],[2]}(4,transp{[int],[2]}(v8)))) in
+let v11:[int]2 = prArrI(transp{[int],[2]}(vrotate{[int],[2]}(~1,transp{[int],[2]}(v8)))) in
+let v12:[int]2 = prArrI(transp{[int],[2]}(vrotate{[int],[2]}(~4,transp{[int],[2]}(v8)))) in
+let v13:[int]2 = prArrI(transp{[int],[2]}(vrotate{[int],[2]}(b2iV(ff),transp{[int],[2]}(v8)))) in
+i2d(b2iV(ff))

@@ -1,0 +1,2 @@
+let v0:<int>30 = iotaV(30) in
+i2d(reduce{[int],[0]}(addi,0,eachV{[int,int],[30]}(fn v1:[int]0 => addi(5,v1),v0)))

@@ -1,0 +1,10 @@
+let v2:[int]0 = prSclI(powerScl(fn v1:[int]0 => addi(v1,30),b2i(gti(3,2)),powerScl(fn v0:[int]0 => subi(v0,30),b2i(notb(gti(3,2))),28))) in
+let v5:[int]0 = prSclI(powerScl(fn v4:[int]0 => addi(v4,30),b2i(gti(3,3)),powerScl(fn v3:[int]0 => subi(v3,30),b2i(notb(gti(3,3))),28))) in
+let v6:[int]2 = reshape{[int],[1,2]}([2,2],iotaV(4)) in
+let v13:[int]2 = prArrI(power(fn v10:[int]2 => let v11:[int]2 = v10 in
+                 each{[int,int],[2]}(fn v12:[int]0 => addi(v12,30),v11),b2i(gti(3,2)),power(fn v7:[int]2 => let v8:[int]2 = v7 in
+                       each{[int,int],[2]}(fn v9:[int]0 => subi(v9,30),v8),b2i(notb(gti(3,2))),v6))) in
+let v20:[int]2 = prArrI(power(fn v17:[int]2 => let v18:[int]2 = v17 in
+                 each{[int,int],[2]}(fn v19:[int]0 => addi(v19,30),v18),b2i(gti(3,3)),power(fn v14:[int]2 => let v15:[int]2 = v14 in
+                       each{[int,int],[2]}(fn v16:[int]0 => subi(v16,30),v15),b2i(notb(gti(3,3))),v6))) in
+i2d(b2iV(ff))

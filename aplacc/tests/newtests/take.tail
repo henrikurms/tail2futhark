@@ -1,0 +1,20 @@
+let v0:<int>3 = prArrI(takeV{[int],[3]}(3,[b2iV(tt),2,3,4])) in
+let v1:<int>6 = prArrI(takeV{[int],[6]}(6,[b2iV(tt),2,3,4])) in
+let v2:[int]2 = take{[int],[2]}(2,reshape{[int],[1,2]}([4,5],iotaV(20))) in
+let v4:[int]2 = prArrI(each{[int,int],[2]}(fn v3:[int]0 => subi(10,v3),v2)) in
+let v5:[int]2 = prArrI(take{[int],[2]}(4,reshape{[int],[1,2]}([2,5],iotaV(8)))) in
+let v6:<int>2 = prArrI(takeV{[int],[2]}(~2,[b2iV(tt),2,3,4,5])) in
+let v7:[int]2 = prArrI(take{[int],[2]}(~2,reshape{[int],[1,2]}([4,2],iotaV(8)))) in
+let v8:<int>6 = prArrI(takeV{[int],[6]}(~6,[b2iV(tt),2,3,4])) in
+let v9:[int]2 = prArrI(take{[int],[2]}(~6,reshape{[int],[1,2]}([4,2],iotaV(8)))) in
+let v10:<int>3 = prArrI(takeV{[int],[3]}(3,zilde)) in
+let v11:<int>3 = prArrI(takeV{[int],[3]}(~3,zilde)) in
+let v12:<int>0 = prArrI(takeV{[int],[0]}(b2iV(ff),[b2iV(tt),2,3,4])) in
+let v13:[int]2 = prArrI(take{[int],[2]}(b2iV(ff),reshape{[int],[1,2]}([4,2],iotaV(8)))) in
+let v14:<int>0 = prArrI(takeV{[int],[0]}(b2iV(ff),zilde)) in
+let v15:<int>3 = prArrI(takeV{[int],[3]}(3,[23])) in
+let v16:<int>3 = prArrI(takeV{[int],[3]}(~3,[23])) in
+let v17:<int>1 = prArrI(takeV{[int],[1]}(b2iV(tt),[23])) in
+let v18:<int>1 = prArrI(takeV{[int],[1]}(~1,[23])) in
+let v19:<int>0 = prArrI(takeV{[int],[0]}(b2iV(ff),[23])) in
+i2d(b2iV(ff))
