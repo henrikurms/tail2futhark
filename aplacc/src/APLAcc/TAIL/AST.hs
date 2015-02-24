@@ -8,7 +8,9 @@ data Rank
   -- | Radd Rank Rank     Unsupported
   deriving (Show)
 
-data BType = IntT | DoubleT
+data BType = IntT 
+           | DoubleT
+           | BoolT
            | Btyv Ident
   deriving (Show, Eq)
 

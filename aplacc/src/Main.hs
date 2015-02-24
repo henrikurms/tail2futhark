@@ -19,5 +19,5 @@ main =
                                            in (x:as, opts')
         parseArgs [] opts = ([], opts)
 
-        compileFile file opts h = parseFile h file >>= putStrLn . toHs opts . convertProgram
+        compileFile file opts h = parseFile h file >>= putStrLn . show --toHs opts . convertProgram
 

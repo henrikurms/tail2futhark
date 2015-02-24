@@ -163,6 +163,7 @@ rank = liftM R (lexeme decimal)
 basicType :: Parser BType
 basicType = (reserved "int" >> return IntT)
         <|> (reserved "double" >> return DoubleT)
+        <|> (reserved "bool" >> return BoolT)
         <?> "basic type"
 
 -------------------
