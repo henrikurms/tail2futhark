@@ -43,6 +43,7 @@ reservedOp = Token.reservedOp lexer
 stringlit  = Token.stringLiteral lexer
 parens     = Token.parens     lexer
 brackets   = Token.brackets   lexer
+angles     = Token.angles     lexer
 braces     = Token.braces     lexer
 integer    = Token.integer    lexer
 semi       = Token.semi       lexer
@@ -135,17 +136,24 @@ typedIdent =
 
 typeExpr :: Parser Type
 typeExpr = liftM (foldr1 FunT) $
-  sepBy1 (arrayType <|> shapeType <?> "type") (symbol "->")
+  sepBy1 (arrayType <|> vectorType <?> "type") (symbol "->")
 
 arrayType :: Parser Type
 arrayType = liftM2 ArrT (brackets basicType) rank
 
-shapeType :: Parser Type
-shapeType = shape "Sh" ShT
-        <|> shape "Si" SiT
-        <|> shape "Vi" ViT
-        <?> "shape type"
-  where shape name con = try (symbol name) >> liftM con (parens rank)
+-- vectortype as replacement for shapeType 
+vectorType :: Parser Type
+vectorType = liftM2 VecT (angles basicType) rank
+         <|> (try (symbol "S") >> liftM S (parens rank))
+         <|> (try (symbol "SV") >> liftM SV (parens rank))
+         <?> "vector type"
+
+--shapeType :: Parser Type
+--shapeType = shape "Sh" ShT
+--        <|> shape "Si" SiT
+--        <|> shape "Vi" ViT
+--        <?> "shape type"
+--  where shape name con = try (symbol name) >> liftM con (parens rank)
 
 rank :: Parser Rank
 rank = liftM R (lexeme decimal)

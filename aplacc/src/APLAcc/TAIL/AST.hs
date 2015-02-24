@@ -14,10 +14,13 @@ data BType = IntT | DoubleT
 
 data Type
   = ArrT BType Rank
-  | ShT Rank
-  | SiT Rank
-  | ViT Rank
+  | VecT BType Rank
+  | S Rank
+  | SV Rank
   | FunT Type Type
+--  | ShT Rank
+--  | SiT Rank
+--  | ViT Rank
   deriving (Show)
 
 scalar :: BType -> Type

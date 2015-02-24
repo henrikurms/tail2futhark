@@ -89,9 +89,9 @@ convertExp e t = error $ "failed to convert exp " ++ show e ++ " to type " ++ sh
 convertType :: T.Type -> A.Type
 convertType (T.ArrT t (T.R 0)) = Exp t
 convertType (T.ArrT t (T.R r)) = Acc r t
-convertType (T.ShT _) = Acc 1 IntT
-convertType (T.SiT _) = Exp IntT
-convertType (T.ViT _) = Acc 1 IntT
+--convertType (T.ShT _) = Acc 1 IntT
+--convertType (T.SiT _) = Exp IntT
+--convertType (T.ViT _) = Acc 1 IntT
 convertType _ = error "convertType - not implemented"
 
 functions :: Map.Map String (Maybe T.InstDecl -> A.Type -> ([A.Exp] -> A.Exp, [T.Exp -> Convert A.Exp], A.Type))
