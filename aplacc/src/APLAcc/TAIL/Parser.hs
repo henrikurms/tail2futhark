@@ -167,6 +167,7 @@ basicType = (reserved "int" >> return IntT)
         <|> (reserved "double" >> return DoubleT)
         <|> (reserved "bool" >> return BoolT)
         <|> (reserved "char" >> return CharT)
+        <|> (char '\'' >> many1 alphaNum  >>= return . Btyv)
         <?> "basic type"
 
 -------------------
