@@ -18,6 +18,10 @@ ppType tp = text . show $ tp
 ppExp (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
 ppExp rest = text . show $ rest
 
+-- Arguments --
 ppArg arg = text . show $ arg
 
-ppPat p = text . show $ p
+-- Pattern --
+ppPat :: Pattern -> Doc
+ppPat (Ident ident) = text ident
+ppPat (TouplePat pat) = braces . hcat . punctuate comma . map ppPat $ pat 
