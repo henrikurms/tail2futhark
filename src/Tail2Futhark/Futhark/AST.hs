@@ -1,4 +1,4 @@
-module Futhark.AST where
+module Tail2Futhark.Futhark.AST where
 
 type Program = [FunDecl]
 
