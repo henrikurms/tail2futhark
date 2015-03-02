@@ -16,7 +16,13 @@ ppFun (tp, ident, args, exp) = text "fun"
 ppType tp = text . show $ tp
 
 ppExp (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
+ppExp (Array exps) = brackets . hcat . punctuate comma . map ppExp $ exps
+ppExp (Constant c) = ppConstant c
+ppExp (Var ident) = text ident
 ppExp rest = text . show $ rest
+
+ppConstant (Int int) = integer int
+ppConstant rest = text . show $ rest
 
 -- Arguments --
 ppArg arg = text . show $ arg
