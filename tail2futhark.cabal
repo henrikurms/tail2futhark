@@ -23,3 +23,20 @@ executable tail2futhark
                        pretty
   -- hs-source-dirs:      
   default-language:    Haskell2010
+
+test-suite test
+  default-language:
+    Haskell2010
+  type:
+    exitcode-stdio-1.0
+  hs-source-dirs:
+    tests,src
+  main-is:
+    Test.hs
+  build-depends:
+    base >=4.7 && <4.8,
+    tasty,
+    tasty-program,
+    tasty-golden,
+    process
+
