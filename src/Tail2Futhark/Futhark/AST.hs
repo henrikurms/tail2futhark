@@ -25,11 +25,11 @@ data Constant = Int Integer
               | Float Float
               | Char Char
               | Bool Bool
-              | Array [Constant]
+              | ArrayConstant [Constant]
   deriving (Show, Eq)
 
 data Kernel = Fn Type [Arg] Exp
-              | Fun [Exp]
+              | Fun Ident [Exp]
               | Op Operator
   deriving (Show, Eq)
 
@@ -40,6 +40,7 @@ data Exp = Var Ident
          | Let Pattern Exp Exp
          | Constant Constant
          | Neg Exp
+         | Array [Exp]
          -- | FunCall Ident [Exp]
          | Map Kernel Exp
          | Filter Kernel Exp
