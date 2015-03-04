@@ -11,7 +11,7 @@ compile e = [(RealT, "main", [], (compileExp e))]
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Let id t e1 e2) = F.Let (Ident id) (compileExp e1) (compileExp e2) -- Let
 compileExp (I int) = Constant (Int int)
-compileExp (D double) = Constant (Float (double2Float double))
+compileExp (D double) = Constant (Float (double2Float double)) -- isn't this supporsed to be real??????????
 compileExp (C char)   = Constant (Char char)
 compileExp Inf = Constant (Float (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
@@ -19,4 +19,4 @@ compileExp (T.Neg exp) = F.Neg (compileExp exp)
 compileExp (T.Op ident instDecl args) = Array (F.Var ident : map compileExp args)
 compileExp (Vc exps) = Array(map compileExp exps)
 compileExp (T.Var ident) = F.Var ident
-compileExp rest = F.Var $ show rest -- catch all
+compileExp rest = F.Var $ show rest -- catch all DUMMY!!!
