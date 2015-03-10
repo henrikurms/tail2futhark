@@ -39,6 +39,5 @@ runArgs cmdargs = (opts,args,errors)
   (nonargs,args,errors) = getOpt Permute options cmdargs
   opts = foldl (.) id nonargs defaultOptions -- MAGIC!!!! - our ooption record
 
-run :: [String] -> IO Program
 run [] = putStrLn (usageInfo "Usage: tail2futhark [options] FILE" options) >> exitFailure
 run (f : _) = withFile f ReadMode $ flip parseFile f

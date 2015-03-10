@@ -11,8 +11,8 @@ data Rank
 data BType = IntT 
            | DoubleT
            | BoolT
-           | Btyv Ident
            | CharT
+           | Btyv Ident
   deriving (Show, Eq)
 
 data Type
@@ -20,7 +20,7 @@ data Type
   | VecT BType Rank
   | S BType Rank
   | SV BType Rank
-  | FunT Type Type
+--  | FunT Type Type
 --  | ShT Rank
 --  | SiT Rank
 --  | ViT Rank
