@@ -25,17 +25,20 @@ main = do
 checkErrors [] = return ()
 checkErrors errors = putStrLn (concat errors ++ usageInfo "Usage: tail2futhark [options] FILE" options) >> exitFailure
 
+-- Option record --
 data Options = Options {outputFile :: Maybe String} deriving Show
 
 defaultOptions = Options {outputFile = Nothing}
 
+-- option description --
 options = [Option ['o'] [] (ReqArg (\arg opt -> opt { outputFile = Just arg }) "FILE") "output FILE"]
-
+-- nonargs list of functions typed : Options -> Options
 runArgs :: [String] -> (Options,[String],[String])
 runArgs cmdargs = (opts,args,errors)
   where
   (nonargs,args,errors) = getOpt Permute options cmdargs
-  opts = foldl (.) id nonargs defaultOptions
+  opts = foldl (.) id nonargs defaultOptions -- MAGIC!!!! - our ooption record
 
+run :: [String] -> IO Program
 run [] = putStrLn (usageInfo "Usage: tail2futhark [options] FILE" options) >> exitFailure
 run (f : _) = withFile f ReadMode $ flip parseFile f
