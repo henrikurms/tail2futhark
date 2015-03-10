@@ -14,4 +14,3 @@ outputTests = testGroup "Output Tests" [goldenVsFile "integer test" "tests/integ
 
 integerTest :: IO ()
 integerTest = rawSystem "tail2futhark" ["tests/integer.tail", "-o", "tests/integer_out.fut"] >> return ()
---integerTest = system "tail2futhark tests/integer.tail > tests/integer_out.fut" >> return ()
