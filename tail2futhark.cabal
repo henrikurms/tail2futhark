@@ -38,5 +38,6 @@ test-suite test
     tasty,
     tasty-program,
     tasty-golden,
-    process
+    process,
+    filepath
 
