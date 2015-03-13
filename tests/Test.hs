@@ -1,17 +1,24 @@
 import Test.Tasty
 import Test.Tasty.Program
 import Test.Tasty.Golden
+import Test.Tasty.Golden.Manage as G
 import System.Process
+import System.FilePath.Posix
 
-main = defaultMain tests
+main = do
+    files <- findByExtension [".tail"] "tests/our_tests"
+    let tests = testGroup "Tests"$ map (\f -> goldenVsFile f (replaceExtension f "fut") (replaceExtension f "out") (makeTest f)) files
+    G.defaultMain tests
 
-tests = testGroup "Tests" [crashTests,outputTests]
-
-crashTests = testGroup "Crash Tests" [testProgram "test2.tail" "tail2futhark" ["tests/test2.tail"] Nothing]
-
-outputTests = testGroup "Output Tests" [goldenVsFile "integer test" "tests/integer.fut" "tests/integer_out.fut" integerTest]
+makeTest :: FilePath -> IO ()
+makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "out"] >> return ()
 
 
-integerTest :: IO ()
-integerTest = rawSystem "tail2futhark" ["tests/integer.tail", "-o", "tests/integer_out.fut"] >> return ()
---integerTest = system "tail2futhark tests/integer.tail > tests/integer_out.fut" >> return ()
+--tests = testGroup "Tests" [crashTests,outputTests]
+--
+--crashTests = testGroup "Crash Tests" [testProgram "test2.tail" "tail2futhark" ["tests/test2.tail"] Nothing]
+--
+--outputTests = testGroup "Output Tests" [goldenVsFile "integer test" "tests/integer.fut" "tests/integer_out.fut" integerTest]
+--
+--integerTest :: IO ()
+--integerTest = rawSystem "tail2futhark" ["tests/integer.tail", "-o", "tests/integer_out.fut"] >> return ()

@@ -8,9 +8,9 @@ data Type = IntT
           | RealT
           | BoolT
           | CharT
-          | ToupleT [Type]
+         -- | ToupleT [Type]
           | ArrayT Type
-          | UArrayT Type
+         -- | UArrayT Type
   deriving (Show, Eq)
 
 type Ident = String
@@ -41,6 +41,7 @@ data Exp = Var Ident
          | Constant Constant
          | Neg Exp
          | Array [Exp]
+         | BinApp Operator Exp Exp
          -- | FunCall Ident [Exp]
          | Map Kernel Exp
          | Filter Kernel Exp

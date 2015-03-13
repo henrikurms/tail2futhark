@@ -137,8 +137,9 @@ typedIdent =
 -- Types
 
 typeExpr :: Parser Type
-typeExpr = liftM (foldr1 FunT) $
-  sepBy1 (arrayType <|> vectorType <?> "type") (symbol "->")
+typeExpr = arrayType <|> vectorType <?> "type"
+--typeExpr = liftM (foldr1 FunT) $
+--  sepBy1 (arrayType <|> vectorType <?> "type") (symbol "->")
 
 arrayType :: Parser Type
 arrayType = liftM2 ArrT (brackets basicType) rank
