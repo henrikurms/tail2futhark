@@ -31,17 +31,26 @@ compileExp rest = F.Var $ show rest -- catch all DUMMY!!!
 
 
 compileOpExp "reduce" instDecl [kernel,id,array] = compileReduce instDecl kernel (compileExp id) (compileExp array)
+compileOpExp "eachV" instDecl [kernel,array] = compileEachV instDecl kernel (compileExp array)
 --compileOpExp "reduce" instDecl [T.Fn ident tp exp,identity,array] = Reduce (F.Fn ) identity array
 --compileOpExp ident instDecl args = F.Var $ show ident ++ show args
 compileOpExp "addi" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
 compileOpExp "addd" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
 compileOpExp ident instDecl args = error $ ident ++ " not supported"
 
+-- AUX functions--
+compileEachV :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp
+compileEachV Nothing _ _ = error "Need instance declaration for eachV"
+compileEachV (Just ([intp,outtp],[len])) kernel array = undefined --Map kernelExp array
+   where kernelExp = compileKernel kernel (makeBTp outtp) 
+
 compileReduce :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp -> F.Exp
 compileReduce Nothing _ _ _ = error "Need instance declaration for reduce"
 compileReduce (Just ([tp],[rank])) kernel id array = if rank == 0 then Reduce kernelExp id array else F.Var "puha" 
     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
+-- compileReduce for arrays
 
+compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = compileBinOp ident
 compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(ident,compileTp tp),(ident2,compileTp tp2)] (compileExp exp)
 compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(ident,compileTp tp)] (compileExp exp)

@@ -25,6 +25,7 @@ ppExp (Array exps) = brackets . hcat . punctuate comma . map ppExp $ exps
 ppExp (Constant c) = ppConstant c
 ppExp (Var ident) = text ident
 ppExp (Reduce k e1 e2) = text "reduce" <> parens ((ppKernel k) <> comma <> ppExp e1 <> comma <> ppExp e2)
+ppExp (Map k e) = text "map" <> parens ((ppKernel k) <> comma <> ppExp e)
 ppExp rest = text . show $ rest
 
 ppKernel (Fn tp args exp) = text "fn" <+> ppType tp <+> (parens . hcat . punctuate comma . map ppArg $ args) <+> text "=>" <+> ppExp exp
