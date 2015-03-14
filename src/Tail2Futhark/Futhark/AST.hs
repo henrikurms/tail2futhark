@@ -15,7 +15,7 @@ data Type = IntT
 
 type Ident = String
 
-type Arg = (Ident, Type)
+type Arg = (Type, Ident)
 
 data Pattern = Ident Ident
              | TouplePat [Pattern]
@@ -42,7 +42,7 @@ data Exp = Var Ident
          | Neg Exp
          | Array [Exp]
          | BinApp Operator Exp Exp
-         -- | FunCall Ident [Exp]
+         | FunCall Ident [Exp]
          | Map Kernel Exp
          | Filter Kernel Exp
          | Scan Kernel Exp Exp

@@ -5,7 +5,7 @@ import Tail2Futhark.Futhark.AST as F -- the futhark AST
 import GHC.Float (double2Float)
 
 compile :: T.Program -> F.Program
-compile e = [(RealT, "main", [], (compileExp $ removeFinali2d e))] -- This is only temporary
+compile e = [(RealT, "main", [], (compileExp e))] 
 
 removeFinali2d (T.Let id t e1 (T.Op "i2d" _ [e])) = T.Let id t e1 e
 removeFinali2d (T.Let id t (T.Op "i2d" _ [e]) e2) = T.Let id t e e2
@@ -36,6 +36,7 @@ compileOpExp "eachV" instDecl [kernel,array] = compileEachV instDecl kernel (com
 --compileOpExp ident instDecl args = F.Var $ show ident ++ show args
 compileOpExp "addi" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
 compileOpExp "addd" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
+compileOpExp "i2d" _ [e]      = F.FunCall "toReal" [compileExp e]
 compileOpExp ident instDecl args = error $ ident ++ " not supported"
 
 -- AUX functions--
@@ -52,8 +53,8 @@ compileReduce (Just ([tp],[rank])) kernel id array = if rank == 0 then Reduce ke
 
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = compileBinOp ident
-compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(ident,compileTp tp),(ident2,compileTp tp2)] (compileExp exp)
-compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(ident,compileTp tp)] (compileExp exp)
+compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(compileTp tp,ident),(compileTp tp2,ident2)] (compileExp exp)
+compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(compileTp tp,ident)] (compileExp exp)
 
 compileBinOp ident = case ident of
                        "addi" -> F.Op Plus
