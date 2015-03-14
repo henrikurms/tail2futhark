@@ -41,7 +41,7 @@ compileOpExp ident instDecl args = error $ ident ++ " not supported"
 -- AUX functions--
 compileEachV :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp
 compileEachV Nothing _ _ = error "Need instance declaration for eachV"
-compileEachV (Just ([intp,outtp],[len])) kernel array = undefined --Map kernelExp array
+compileEachV (Just ([intp,outtp],[len])) kernel array = Map kernelExp array
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
 compileReduce :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp -> F.Exp
