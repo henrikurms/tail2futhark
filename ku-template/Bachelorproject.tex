@@ -1,0 +1,80 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+
+\author{
+  \Large{Anna Sofie Kiehn}
+  \\ \texttt{a.kiehn@gmail.com} \\ \\
+  \Large{Henriks Urms}
+  \\ \texttt{urmshenrik@gmail.com}
+}
+
+\title{
+  \vspace{3cm}
+  \Huge{Bachelorproject} \\
+  \Large{Compiling TAIL to Futhark}
+}
+
+\begin{document}
+
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{include/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{include/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+\section{Abstract}
+
+\section{Introduction}
+In recent years, there has been a lot of focus on leveraging the power of parallel hardware. 
+
+One approach has been to design programming languages with explicit data-parallel constructs that can be compiled into highly parallel code. One such language is Futhark. The aim of Futhark is to target parallel hardware such as GPUs while itself being the target of more programmer-productivity oriented languages. The Futhark compiler performs several optimizations, such as fusion, which enhance the degree of parallelism [4].
+
+Any language that targets Futhark must have a compiler that is capable of extracting parallelism or must be able to express parallelism directly in the source code to be able to leverage the parallel constructs of Futhark.
+
+A language that expresses data-parallelism very well is APL. APL is a mature language developed in the 1960s but still used today e.g. in financial applications. In APL, the programmer is able to express complex programs in a concise manner using a very compact notation.
+
+Efforts in compiling APL to parallel backends already exist in the form of the  language TAIL(Typed array intermediate language) and it’s compiler. The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form. In our work we provide a compiler from TAIL to Futhark thus bridging the gap between APL and Futhark. While doing  this, we will focus on generating efficient code. In particular, we will try to preserve the parallelism in the source code.
+
+\section{Overview of TAIL}
+TAIL support:
+\begin{itemize}
+  \item Shape-polymophic functions 
+  \item Types that classify shapes
+  \item Primitive operators
+  \item Vector types
+\end{itemize}
+
+Vector types are a special type of shape type. A vector is an array of dimention 1 where the length of the array have to be kown. 
+
+\section{Overview of Futhark}
+\section{The difference betweet TAIL and Futhark}
+There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). 
+
+One of the main differences between TAIL and Futhark is the implementation of the array operators 
+
+\section{The compilation scheme}
+
+\section{Methods}
+\section{Evaluation}
+\subsection{Test results}
+\section{Conclusion}
+
+
+%\section{Adapting the parser}
+%Instead of writing a parser from scratch we instead adabbted an existing one writen to support an accelerate backend for Haskell. 
+
+%\section{Compiler}
+%Because TAIL is a much less extencive language then Futhark we decided to base our implementation in the compiler thereby trying to minimise making code we will later discover we will not need because a structure that exists in Futhark doen not exist in TAIL and we therefore will not need to compile it. 
+
+%\subsection{Constants}
+%TAIL does not support \verb|fint| so that is not implemented. 
+\end{document}

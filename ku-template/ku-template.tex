@@ -1,0 +1,43 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\def \ColourPDF {include/ku-farve}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\def \TitlePDF   {include/ku-en}  % University of Copenhagen
+
+\title{
+  \vspace{3cm}
+  \Huge{Some Title} \\
+  \Large{More elaborate subtitle}
+}
+
+\author{
+  \Large{Philip Munksgaard}
+  \\ \texttt{pmunksgaard@gmail.com} \\
+}
+
+\date{
+    \today
+}
+
+\begin{document}
+
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{\ColourPDF}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{\ColourPDF}}}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{\TitlePDF}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%% Write your dissertation here.
+
+\end{document}
