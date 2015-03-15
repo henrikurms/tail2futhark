@@ -1,4 +1,4 @@
 fun real main() =
-  let v0 = [1,2,3,4,5,6] in
-  let v1 = reduce(op +,0,v0) in
-  toReal(v1)
+  let t_v0 = [1,2,3,4,5,6] in
+  let t_v1 = reduce(op +,0,t_v0) in
+  toReal(t_v1)
