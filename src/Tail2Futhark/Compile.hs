@@ -47,7 +47,7 @@ compileEachV (Just ([intp,outtp],[len])) kernel array = Map kernelExp array
 
 compileReduce :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp -> F.Exp
 compileReduce Nothing _ _ _ = error "Need instance declaration for reduce"
-compileReduce (Just ([tp],[rank])) kernel id array = if rank == 0 then Reduce kernelExp id array else F.Var "puha" 
+compileReduce (Just ([tp],[rank])) kernel id array = if rank == 0 then Reduce kernelExp id array else error "Reduce operation - Not supported" 
     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
 -- compileReduce for arrays
 
