@@ -63,6 +63,9 @@ One of the main differences between TAIL and Futhark is the implementation of th
 
 \section{The compilation scheme}
 
+\subsection{buildinds}
+Futhark transforms all functions to fist level functions and in order to simplefy the implementation of some functions for instance \verb|takeV| it was made a build in function added to the beginning of every program. The sucsequent problem of removing the dead code in the programs where these functions is not used we hand of to the compiler.
+
 \section{Methods}
 \section{Evaluation}
 \subsection{Test results}
