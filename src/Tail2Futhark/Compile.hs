@@ -39,6 +39,7 @@ compileOpExp ident instDecl args = case ident of
 
 convertFun fun = case fun of
   "i2d"    -> Just "toReal"
+  "iotaV"  -> Just "iota"
   _     -> Nothing
 
 convertBinOp op = case op of
