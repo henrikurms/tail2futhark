@@ -15,6 +15,7 @@ ppFun (tp, ident, args, exp) =
   <+> equals $+$ nest 2 (ppExp exp)
 
 commaList = parens . hcat . punctuate comma
+brackList = brackets . hcat . punctuate comma
 
 ppType :: Type -> Doc
 ppType IntT = text "int"
@@ -27,6 +28,7 @@ ppExp (Var ident) = text ident
 ppExp (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
 ppExp (Constant c) = ppConstant c
 ppExp (Neg exp)    = text "-" <> ppExp exp
+ppExp (Index exp exps) = ppExp exp <> brackList (map ppExp exps)
 ppExp (Array exps) = brackets . hcat . punctuate comma . map ppExp $ exps
 ppExp (BinApp op e1 e2) = ppExp e1 <+> ppOp op <+> ppExp e2
 ppExp (FunCall ident exps) = text ident <> (commaList . map ppExp $ exps)

@@ -7,6 +7,8 @@ import GHC.Float (double2Float)
 compile :: T.Program -> F.Program
 compile e = builtins ++ [(RealT, "main", [], (compileExp e))] 
 
+builtins = []
+
 -- Expressionis--
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) = F.Var ("t_" ++ ident)
@@ -24,6 +26,7 @@ compileExp (Vc exps) = Array(map compileExp exps)
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
+  "firstV" -> compileFirstV instDecl args
   _
    -- | [e]      <- args
    -- , Just fun <- convertFun ident
@@ -49,6 +52,11 @@ convertBinOp op = case op of
   _      -> Nothing
 
 -- AUX functions--
+
+compileFirstV _ args
+  | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
+  | otherwise = error "firstV takes one argument"
+
 --compileEachV :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp
 compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)

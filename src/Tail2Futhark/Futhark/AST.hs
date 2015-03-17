@@ -39,6 +39,7 @@ data Operator = Plus | Mult
 data Exp = Var Ident
          | Let Pattern Exp Exp
          | Constant Constant
+         | Index Exp [Exp]
          | Neg Exp
          | Array [Exp]
          | BinApp Operator Exp Exp
