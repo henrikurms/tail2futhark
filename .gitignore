@@ -4,6 +4,11 @@ doc/*.aux
 doc/*.log
 doc/*.pdf
 
+*.pdf
+*.log
+*.aux
+*.synctex.gz
+
 *.swp
 .DS_Store
 
@@ -18,3 +23,4 @@ cabal-dev
 .cabal-sandbox/
 cabal.sandbox.config
 cabal.config
+
