@@ -1,5 +1,8 @@
 aplacc/tests/newtests/*.out
 aplacc/tests/newtests/*.fut
+doc/*.aux
+doc/*.log
+doc/*.pdf
 
 *.swp
 .DS_Store
