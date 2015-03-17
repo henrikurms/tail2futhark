@@ -27,7 +27,8 @@ compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
   "firstV" -> compileFirstV instDecl args
-  "shapeV" -> compileShapeV instDecl args 
+  "shapeV" -> makeShape 1 args 
+  "shape"  -> compileShape instDecl args 
   _
    -- | [e]      <- args
    -- , Just fun <- convertFun ident
@@ -54,9 +55,13 @@ convertBinOp op = case op of
   _      -> Nothing
 
 -- AUX functions --
-compileShapeV _ args
-  | [e] <- args = F.Array [F.FunCall "size" [compileExp e]]
-  | otherwise = error "shapeV takes one argument"
+makeShape rank args 
+  | [e] <- args =  F.Map (F.Fn F.IntT [(F.IntT, "d")] (FunCall "size" [F.Var "d", compileExp e])) dims
+  | otherwise = error "shape takes one argument"
+    where dims = F.Map (F.Fn F.IntT [(F.IntT,"x")] (BinApp Plus (F.Var "x") (F.Neg (Constant (Int 1))))) (FunCall "iota" [Constant (Int rank)]) 
+
+compileShape (Just(_,[len])) args = makeShape len args
+compileShape Nothing args = error "Need instance declaration for shape"
 
 compileFirstV _ args
   | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
