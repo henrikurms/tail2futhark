@@ -5,7 +5,7 @@ import Tail2Futhark.Futhark.AST as F -- the futhark AST
 import GHC.Float (double2Float)
 
 compile :: T.Program -> F.Program
-compile e = [(RealT, "main", [], (compileExp e))] 
+compile e = builtins ++ [(RealT, "main", [], (compileExp e))] 
 
 -- Expressionis--
 compileExp :: T.Exp -> F.Exp
@@ -25,12 +25,14 @@ compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
   _
-    | [e]      <- args
-    , Just fun <- convertFun ident
-    -> F.FunCall fun [compileExp e]
+   -- | [e]      <- args
+   -- , Just fun <- convertFun ident
+   -- -> F.FunCall fun [compileExp e]
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
     -> F.BinApp op (compileExp e1) (compileExp e2)
+    | Just fun <- convertFun ident
+    -> F.FunCall fun $ map compileExp args
     | otherwise       -> error $ ident ++ " not supported"
 --compileOpExp "addi" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
 --compileOpExp "addd" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
