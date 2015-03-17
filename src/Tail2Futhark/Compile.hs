@@ -55,10 +55,12 @@ convertBinOp op = case op of
   _      -> Nothing
 
 -- AUX functions --
-makeShape rank args 
-  | [e] <- args =  F.Map (F.Fn F.IntT [(F.IntT, "d")] (FunCall "size" [F.Var "d", compileExp e])) dims
+makeShape rank args
+  | [e] <- args = F.Array $ map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
-    where dims = F.Map (F.Fn F.IntT [(F.IntT,"x")] (BinApp Plus (F.Var "x") (F.Neg (Constant (Int 1))))) (FunCall "iota" [Constant (Int rank)]) 
+--  | [e] <- args =  F.Map (F.Fn F.IntT [(F.IntT, "d")] (FunCall "size" [F.Var "d", compileExp e])) dims
+--  | otherwise = error "shape takes one argument"
+--    where dims = F.Map (F.Fn F.IntT [(F.IntT,"x")] (BinApp Plus (F.Var "x") (F.Neg (Constant (Int 1))))) (FunCall "iota" [Constant (Int rank)]) 
 
 compileShape (Just(_,[len])) args = makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
