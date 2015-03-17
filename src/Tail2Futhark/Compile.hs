@@ -27,6 +27,7 @@ compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
   "firstV" -> compileFirstV instDecl args
+  "shapeV" -> compileShapeV instDecl args 
   _
    -- | [e]      <- args
    -- , Just fun <- convertFun ident
@@ -52,7 +53,10 @@ convertBinOp op = case op of
   "addd" -> Just F.Plus
   _      -> Nothing
 
--- AUX functions--
+-- AUX functions --
+compileShapeV _ args
+  | [e] <- args = F.Array [F.FunCall "size" [compileExp e]]
+  | otherwise = error "shapeV takes one argument"
 
 compileFirstV _ args
   | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
