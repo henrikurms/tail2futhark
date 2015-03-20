@@ -62,24 +62,21 @@ Any language that targets Futhark must have a compiler that is capable of extrac
 
 A language that expresses data-parallelism very well is APL. APL is a mature language developed in the 1960s but still used today e.g. in financial applications. In APL, the programmer is able to express complex programs in a concise manner using a very compact notation.
 
-Efforts in compiling APL to parallel backends already exist in the form of the  language TAIL(Typed array intermediate language) and it’s compiler. The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form. In our work we provide a compiler from TAIL to Futhark thus bridging the gap between APL and Futhark. While doing  this, we will focus on generating efficient code. In particular, we will try to preserve the parallelism in the source code.
+Efforts in compiling APL to parallel backends already exist in the form of the language TAIL(Typed array intermediate language) and it’s compiler. The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form. In our work we provide a compiler from TAIL to Futhark thus bridging the gap between APL and Futhark. While doing  this, we will focus on generating efficient code. In particular, we will try to preserve the parallelism in the source code.
 
 \section{Overview of TAIL}
-TAIL support:
-\begin{itemize}
-  \item Shape-polymophic functions 
-  \item Types that classify shapes
-  \item Primitive operators
-  \item Vector types
-\end{itemize}
+Tail is a typed intermidiate language to the multidimentional array language APL (reference). Tail is designed as a practical and well-defined intermidiate format for targeting parallel architectures.\\ 
 
-Vector types are a special type of shape type. A vector is an array of dimention 1 where the length of the array have to be kown. 
+The types in Tail consist of types that classify shapes i.e. multidimentional arrays, vector types that are a special case of the shape type where the rank of the array is 1 and the length is staticly known and singleton types that like vectors are a special case of array type with rank 0. 
+
+Besides shape (multidimentional array) and vector types Tail has primitive types such as \verb|int|, \verb|double| and \verb|bool|.
 
 \section{Overview of Futhark}
-\section{The difference betweet TAIL and Futhark}
-There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). 
 
-One of the main differences between TAIL and Futhark is the implementation of the array operators 
+\section{The difference betweet TAIL and Futhark}
+There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). \\
+
+One of the main differences between TAIL and Futhark is the implementation of the array operators...???????? \\
 
 \begin{lstlisting}
 fun [a] takeV(int l, [a] x) =
@@ -96,12 +93,31 @@ fun [a] takeV(int l, [a] x) =
 \end{lstlisting}
 
 \section{The compilation scheme}
-\subsection{buildinds}
-Futhark transforms all functions to fist level functions and in order to simplefy the implementation of some functions for instance \verb|takeV| it was made a build in function added to the beginning of every program. The sucsequent problem of removing the dead code in the programs where these functions is not used we hand of to the compiler.
+An overview of the combilation scheme can be found in figure ???????. 
+
+\subsubsection{shape}
+\verb|shape| is implemented by mapping \verb|size| on each of the dimentions and then wrapping the resulting array in the Futhark array type constructor. 
+\verb|shape| could potentialy be used on multidimentional array of a high number of dimentions resulting in a very long computation time but our implementation does not support an efficient implementation in this case. In order to have an efficient implementation when the number of dimentons are very high is to use \verb|reshape| .... \\
+
+\subsubsection{take and drop}
+\verb|take| and \verb|drop| are both implemented
+
+\subsection{Buildinds}
+Futhark transforms all functions to fist level functions and in order to simplefy the implementation of some functions for instance \verb|take| it was made a build in function added to the beginning of every program. The sucsequent problem of removing the dead code in the programs where these functions is not used we hand of to the compiler.
+
+
+%is implemented by wrapping a maped haskell array in the futhark array constructor. The reason for this is the to prevent a havy computation in the case where the array has a big number of dimentions. Alternativly \verb|| 
 
 \section{Methods}
 \section{Evaluation}
 \subsection{Test results}
+\subsection{Discusion}
+Futhark does not allow for the creation of functions that has polymorphic (return) types. Only the build in functions support polymorphism. That created a problem when we had to implement some of the array combinators for instance  \verb|take| because in order to make it work on an array of arbitrary rank we either had to create a `libaray' function for each of the ranks, or create a function that could give us the return type that luckaly is the same for \verb|take| as the type it is given or we could....... 
+We therefore limited our compiler to only support \verb|take| operations on array with rank \(< \) 4. \\ %not true!!
+
+This could be remidied by instead compiling the exact code from the Tail program to Futhark code, but that would create a somewhat complicated translation cheme and would be difficult to implement in the compiler????????? %not sure this is true just writing crap...
+However this is only needed because Futhark does not support polymorphism in fuctions. If it did it would be easy to simply translate the Tail code to the corresponding Futhark code.
+
 \section{Conclusion}
 
 %\section{Adapting the parser}
