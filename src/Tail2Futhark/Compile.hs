@@ -3,11 +3,53 @@ module Tail2Futhark.Compile (compile) where
 import APLAcc.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
 import GHC.Float (double2Float)
+import Data.List
+import Data.Maybe
+import Data.Char
 
 compile :: T.Program -> F.Program
-compile e = builtins ++ [(RealT, "main", [], (compileExp e))] 
+compile e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
+  where takes = nub $ getTakes (compileExp e)
+        takeFuns = map makeTake . catMaybes . map getType $ takes
 
-builtins = []
+
+getTakes (FunCall ident _) = maybeToList $ stripPrefix "take" ident--if isPrefixOf "take" ident then [ident] else []
+getTakes (F.Let _ e1 e2) = getTakes e1 ++ getTakes e2
+getTakes (Index e es) = getTakes e ++ concat (map getTakes es)
+getTakes (F.Neg e) = getTakes e
+getTakes (Array es) = concat $ map getTakes es
+getTakes (BinApp _ e1 e2) = getTakes e1 ++ getTakes e2
+getTakes (Map _ e) = getTakes e
+getTakes (Filter _ e) = getTakes e
+getTakes (Scan _ e1 e2) = getTakes e1 ++ getTakes e2
+getTakes (Reduce _ e1 e2) = getTakes e1 ++ getTakes e2
+
+
+builtins :: [F.FunDecl]
+builtins = [makeTake (ArrayT (ArrayT F.IntT))]
+
+makeTake :: F.Type -> F.FunDecl
+makeTake tp = (tp,("take" ++ show (rank tp) ++ ppTp (baseType tp)),[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
+  where ppTp :: F.Type -> String
+        ppTp tp = case tp of F.IntT -> "int"
+                             F.RealT -> "real"
+                             F.BoolT -> "bool"
+                             F.CharT -> "char"
+getType s 
+  | suffix `elem` ["int","real","bool","char"]
+  , Just rank <- rank
+  = Just $ makeArrTp (readBType suffix) rank
+  | otherwise = Nothing
+  where (prefix,suffix) = span isDigit s
+        rank | [] <- prefix = Nothing | otherwise = Just (read prefix :: Integer)
+        readBType tp = case tp of "int" -> F.IntT
+                                  "real" -> F.RealT
+                                  "bool" -> F.BoolT
+                                  "char" -> F.CharT
+
+
+takeBody :: F.Exp
+takeBody = undefined
 
 -- Expressionis--
 compileExp :: T.Exp -> F.Exp

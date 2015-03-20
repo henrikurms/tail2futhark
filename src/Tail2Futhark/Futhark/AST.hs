@@ -13,6 +13,13 @@ data Type = IntT
          -- | UArrayT Type
   deriving (Show, Eq)
 
+
+rank (ArrayT tp) = 1 + rank tp
+rank _ = 0
+
+baseType (ArrayT tp) = baseType tp
+baseType tp = tp
+
 type Ident = String
 
 type Arg = (Type, Ident)
