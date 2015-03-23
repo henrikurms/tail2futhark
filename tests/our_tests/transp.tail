@@ -1,0 +1,2 @@
+let v0:[int]1 = iota(8) in
+let v1:[int]? = transp()
