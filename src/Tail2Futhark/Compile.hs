@@ -24,10 +24,12 @@ getTakes (Map _ e) = getTakes e
 getTakes (Filter _ e) = getTakes e
 getTakes (Scan _ e1 e2) = getTakes e1 ++ getTakes e2
 getTakes (Reduce _ e1 e2) = getTakes e1 ++ getTakes e2
+getTakes (F.Var _) = []
+getTakes (Constant _) = []
 
 
 builtins :: [F.FunDecl]
-builtins = [makeTake (ArrayT (ArrayT F.IntT))]
+builtins = [] -- [makeTake (ArrayT (ArrayT F.IntT))]
 
 makeTake :: F.Type -> F.FunDecl
 makeTake tp = (tp,("take" ++ show (rank tp :: Integer) ++ tpS),[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
