@@ -26,6 +26,7 @@ ppType (ArrayT at) = brackets (ppType at)
 
 ppExp (Var ident) = text ident
 ppExp (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
+ppExp (IfThenElse e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
 ppExp (Constant c) = ppConstant c
 ppExp (Neg exp)    = text "-" <> ppExp exp
 ppExp (Index exp exps) = ppExp exp <> brackList (map ppExp exps)
@@ -47,6 +48,8 @@ ppKernel (Op op) = text "op" <+> ppOp op
 
 ppOp op = text $ case op of 
   Plus -> "+"
+  Minus -> "-"
+  LessEq -> "<="
 
 ppConstant (Int int) = integer int
 ppConstant (Float f) = float f

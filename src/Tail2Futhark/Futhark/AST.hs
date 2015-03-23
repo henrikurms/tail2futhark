@@ -13,10 +13,11 @@ data Type = IntT
          -- | UArrayT Type
   deriving (Show, Eq)
 
-
+rank :: Num a => Type -> a
 rank (ArrayT tp) = 1 + rank tp
 rank _ = 0
 
+baseType :: Type -> Type
 baseType (ArrayT tp) = baseType tp
 baseType tp = tp
 
@@ -40,11 +41,12 @@ data Kernel = Fn Type [Arg] Exp
               | Op Operator
   deriving (Show, Eq)
 
-data Operator = Plus | Mult 
+data Operator = Plus | Mult | LessEq | Minus
   deriving (Show, Eq)
 
 data Exp = Var Ident
          | Let Pattern Exp Exp
+         | IfThenElse Exp Exp Exp
          | Constant Constant
          | Index Exp [Exp]
          | Neg Exp

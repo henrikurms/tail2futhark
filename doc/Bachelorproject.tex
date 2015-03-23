@@ -77,21 +77,21 @@ Besides shape (multidimentional array) and vector types Tail has primitive types
 There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). \\
 
 One of the main differences between TAIL and Futhark is the implementation of the array operators...???????? \\
-
+\begin{figure}
 \begin{lstlisting}
-fun [a] takeV(int l, [a] x) =
-  if l >= 0 then
-      if l <= size(x) then
+fun [int] takeV(int l, [int] x) =
+  if 0 <= l then
+      if l <= size(0,x) then
           let {v1,v2} = split(l,x) in v1
       else
-          concat(x,replicate(l - size(x),0))
+          concat(x,replicate(l - size(0,x),0))
   else
-      if (-l <= size(x) then
-          let {v1,v2} = split(size(x)+l,x) in v1
+      if -l <= size(0,x) then
+          let {v1,v2} = split(size(0,x)+l,x) in v1
       else
-          concat(replicate(-(size(x)+l),0),x)
+          concat(replicate(-(size(0,x)+l),0),x)
 \end{lstlisting}
-
+\end{figure}
 \section{The compilation scheme}
 An overview of the combilation scheme can be found in figure ???????. 
 
