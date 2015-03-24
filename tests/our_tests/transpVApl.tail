@@ -1,1 +1,1 @@
-i2d(reduce{[int],[0]}(addi,0,transp2{[int],[1]}([b2iV(tt),2,3])))
+i2d(reduce{[int],[0]}(addi,0,transp{[int],[1]}([1,2,3])))
