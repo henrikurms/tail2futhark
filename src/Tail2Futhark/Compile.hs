@@ -84,7 +84,7 @@ compileOpExp ident instDecl args = case ident of
   "firstV" -> compileFirstV instDecl args
   "shapeV" -> makeShape 1 args 
   "shape"  -> compileShape instDecl args
-  "transp" -> compileTransp instDecl args
+--  "transp" -> compileTransp instDecl args
   _
    -- | [e]      <- args
    -- -> F.FunCall fun [compileExp e]
@@ -114,8 +114,7 @@ convertFun fun = case fun of
 convertBinOp op = case op of
   "addi" -> Just F.Plus
   "addd" -> Just F.Plus
-
-  _      -> error $ "binop " ++ op
+  _      -> Nothing
 
 -- AUX functions --
 makeShape rank args
