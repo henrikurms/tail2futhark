@@ -1,0 +1,2 @@
+let v0:[int]10 = reshape{[int],[1,10]}(iotaV(10),[2]) in
+i2d(first{[int],[1]}(shape{[int],[10]}(v0)))
