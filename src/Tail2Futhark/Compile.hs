@@ -27,7 +27,6 @@ getTakes (Reduce _ e1 e2) = getTakes e1 ++ getTakes e2
 getTakes (F.Var _) = []
 getTakes (Constant _) = []
 
-
 builtins :: [F.FunDecl]
 builtins = [] -- [makeTake (ArrayT (ArrayT F.IntT))]
 
@@ -104,6 +103,9 @@ convertFun fun = case fun of
   "i2d"    -> Just "toReal"
   "iotaV"  -> Just "iota"
   "transp" -> Just "transpose"
+  "cat"    -> Just "concat"
+  "catV"   -> Just "concat"
+--  "transp" -> error "bkabka" --Just "transpose"
   _     -> Nothing
 
 convertBinOp op = case op of

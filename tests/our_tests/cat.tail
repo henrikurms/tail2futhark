@@ -1,0 +1,5 @@
+let v0:[int]2 = [[1,2],[3,4],[5,6]] in
+let v1:[int]2 = [[7,8],[9,10],[11,12]] in
+let v2:[int]2 = cat(v0,v1) in
+let v3:[int]0 = reduce(addi,0,(reduce{addi,0,v2})) in
+i2d(v3)
