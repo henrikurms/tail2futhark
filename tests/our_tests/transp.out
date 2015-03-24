@@ -1,0 +1,2 @@
+fun real main() =
+  toReal(reduce(op +,0,transpose([1,2,3])))
