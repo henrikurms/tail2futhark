@@ -104,7 +104,7 @@ convertFun fun = case fun of
   "iotaV"  -> Just "iota"
   "cat"    -> Just "concat"
   "catV"   -> Just "concat"
-  "transp" -> Just "transpose"
+  "transp" -> error "bkabka" --Just "transpose"
   _     -> Nothing
 
 convertBinOp op = case op of

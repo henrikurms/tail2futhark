@@ -1,2 +1,3 @@
-let v0:[int]1 = iota(8) in
-let v1:[int]? = transp()
+let v0:[int]1 = iotaV(8) in
+let v1:[int]1 = transp(v0) in
+v1
