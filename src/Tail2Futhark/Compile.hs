@@ -83,7 +83,8 @@ compileOpExp ident instDecl args = case ident of
   "eachV"  -> compileEachV instDecl args
   "firstV" -> compileFirstV instDecl args
   "shapeV" -> makeShape 1 args 
-  "shape"  -> compileShape instDecl args 
+  "shape"  -> compileShape instDecl args
+--  "transp" -> compileTransp instDecl args
   _
    -- | [e]      <- args
    -- -> F.FunCall fun [compileExp e]
@@ -102,9 +103,11 @@ compileOpExp ident instDecl args = case ident of
 convertFun fun = case fun of
   "i2d"    -> Just "toReal"
   "iotaV"  -> Just "iota"
-  "transp" -> Just "transpose"
+  "iota"   -> Just "iota"
   "cat"    -> Just "concat"
   "catV"   -> Just "concat"
+ -- _     -> error $ "convertfun error" ++ fun
+  "transp" -> Just "transpose"
 --  "transp" -> error "bkabka" --Just "transpose"
   _     -> Nothing
 
@@ -120,6 +123,9 @@ makeShape rank args
 --  | [e] <- args =  F.Map (F.Fn F.IntT [(F.IntT, "d")] (FunCall "size" [F.Var "d", compileExp e])) dims
 --  | otherwise = error "shape takes one argument"
 --    where dims = F.Map (F.Fn F.IntT [(F.IntT,"x")] (BinApp Plus (F.Var "x") (F.Neg (Constant (Int 1))))) (FunCall "iota" [Constant (Int rank)]) 
+
+compileTransp (Just(_,_)) args = F.FunCall "transpose" $ map compileExp args
+compileTransp Nothing args = error "Need instance declaration for transp"
 
 compileShape (Just(_,[len])) args = makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
