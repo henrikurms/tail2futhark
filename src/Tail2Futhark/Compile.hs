@@ -104,10 +104,12 @@ convertFun fun = case fun of
   "i2d"    -> Just "toReal"
   "iotaV"  -> Just "iota"
   "iota"   -> Just "iota"
-  "transp2" -> error "bkabka" --Just "transpose"
   "cat"    -> Just "concat"
   "catV"   -> Just "concat"
-  _     -> error $ "convertfun error" ++ fun
+ -- _     -> error $ "convertfun error" ++ fun
+  "transp" -> Just "transpose"
+--  "transp" -> error "bkabka" --Just "transpose"
+  _     -> Nothing
 
 convertBinOp op = case op of
   "addi" -> Just F.Plus

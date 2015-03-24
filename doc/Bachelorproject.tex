@@ -87,7 +87,7 @@ fun [int] takeV(int l, [int] x) =
           concat(x,replicate(l - size(0,x),0))
   else
       if -l <= size(0,x) then
-          let {v1,v2} = split(size(0,x)+l,x) in v1
+          let {v1,v2} = split(size(0,x)+l,x) in v2
       else
           concat(replicate(-(size(0,x)+l),0),x)
 \end{lstlisting}
