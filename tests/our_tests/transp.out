@@ -1,2 +1,4 @@
 fun real main() =
-  toReal(reduce(op +,0,transpose([1,2,3])))
+  let t_v0 = iota(8) in
+  let t_v1 = transpose(t_v0) in
+  t_v1
