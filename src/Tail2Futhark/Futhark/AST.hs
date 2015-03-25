@@ -53,6 +53,7 @@ data Exp = Var Ident
          | Array [Exp]
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
+         | Reshape [Exp] Exp
          | Map Kernel Exp
          | Filter Kernel Exp
          | Scan Kernel Exp Exp
