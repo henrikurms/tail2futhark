@@ -9,34 +9,36 @@ import Data.Char
 
 compile :: T.Program -> F.Program
 compile e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
-  where takes = nub $ getTakes (compileExp e)
+  where takes = nub $ getFunCalls "take" (compileExp e)
         takeFuns = map makeTake . catMaybes . map getType $ takes
 
-getTakes :: F.Exp -> [[Char]]
-getTakes (FunCall ident _) = maybeToList $ stripPrefix "take" ident--if isPrefixOf "take" ident then [ident] else []
-getTakes (F.Let _ e1 e2) = getTakes e1 ++ getTakes e2
-getTakes (Index e es) = getTakes e ++ concat (map getTakes es)
-getTakes (IfThenElse e1 e2 e3) = getTakes e1 ++ getTakes e2 ++ getTakes e3
-getTakes (F.Neg e) = getTakes e
-getTakes (Array es) = concat $ map getTakes es
-getTakes (BinApp _ e1 e2) = getTakes e1 ++ getTakes e2
-getTakes (Map _ e) = getTakes e
-getTakes (Filter _ e) = getTakes e
-getTakes (Scan _ e1 e2) = getTakes e1 ++ getTakes e2
-getTakes (Reduce _ e1 e2) = getTakes e1 ++ getTakes e2
-getTakes (F.Var _) = []
-getTakes (Constant _) = []
+getFunCalls :: F.Ident -> F.Exp -> [[Char]]
+getFunCalls name exp = getFuns exp
+  where getFuns (FunCall ident _) = maybeToList $ stripPrefix name ident--if isPrefixOf "take" ident then [ident] else []
+        getFuns (F.Let _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (Index e es) = getFuns e ++ concat (map getFuns es)
+        getFuns (IfThenElse e1 e2 e3) = getFuns e1 ++ getFuns e2 ++ getFuns e3
+        getFuns (F.Neg e) = getFuns e
+        getFuns (Array es) = concat $ map getFuns es
+        getFuns (BinApp _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (Map _ e) = getFuns e
+        getFuns (Filter _ e) = getFuns e
+        getFuns (Scan _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (F.Var _) = []
+        getFuns (Constant _) = []
 
 builtins :: [F.FunDecl]
 builtins = [] -- [makeTake (ArrayT (ArrayT F.IntT))]
 
 makeTake :: F.Type -> F.FunDecl
 makeTake tp = (tp,("take" ++ show (rank tp :: Integer) ++ tpS),[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
-  where tpS = case baseType tp of 
-              F.IntT -> "int"
-              F.RealT -> "real"
-              F.BoolT -> "bool"
-              F.CharT -> "char"
+  where  
+  tpS = case baseType tp of 
+    F.IntT -> "int"
+    F.RealT -> "real"
+    F.BoolT -> "bool"
+    F.CharT -> "char"
 
 getType :: [Char] -> Maybe F.Type
 getType s 
@@ -82,8 +84,9 @@ compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
   "firstV" -> compileFirstV instDecl args
-  "shapeV" -> makeShape 1 args 
+  "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
+  "reshape" -> compileReshape instDecl args
 --  "transp" -> compileTransp instDecl args
   _
    -- | [e]      <- args
@@ -118,16 +121,22 @@ convertBinOp op = case op of
 
 -- AUX functions --
 makeShape rank args
-  | [e] <- args = F.Array $ map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
+  | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
---  | [e] <- args =  F.Map (F.Fn F.IntT [(F.IntT, "d")] (FunCall "size" [F.Var "d", compileExp e])) dims
---  | otherwise = error "shape takes one argument"
---    where dims = F.Map (F.Fn F.IntT [(F.IntT,"x")] (BinApp Plus (F.Var "x") (F.Neg (Constant (Int 1))))) (FunCall "iota" [Constant (Int rank)]) 
+
+compileReshape (Just(tp,[r1,r2])) [dims,array] = F.Reshape dimsList $ F.FunCall fname [dimProd, resh]
+    where F.Array dimsList = compileExp dims
+          fname = "reshape" ++ show r1 ++ "int" ++ show r2
+          dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
+          resh = F.Reshape [shapeProd] (compileExp array)
+          shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
+compileReshape Nothing args = error "Need instance declaration for reshape"
+compileReshape _ _ = error "Reshape nedds 2 arguments"
 
 compileTransp (Just(_,_)) args = F.FunCall "transpose" $ map compileExp args
 compileTransp Nothing args = error "Need instance declaration for transp"
 
-compileShape (Just(_,[len])) args = makeShape len args
+compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
 
 compileFirstV _ args
