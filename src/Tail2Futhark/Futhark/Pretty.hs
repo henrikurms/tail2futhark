@@ -15,7 +15,9 @@ ppFun (tp, ident, args, exp) =
   <+> equals $+$ nest 2 (ppExp exp)
 
 commaList = parens . hcat . punctuate comma
+commaExps = commaList . map ppExp
 brackList = brackets . hcat . punctuate comma
+brackExps = brackList . map ppExp
 
 ppType :: Type -> Doc
 ppType IntT = text "int"
@@ -29,10 +31,11 @@ ppExp (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <
 ppExp (IfThenElse e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
 ppExp (Constant c) = ppConstant c
 ppExp (Neg exp)    = text "-" <> ppExp exp
-ppExp (Index exp exps) = ppExp exp <> brackList (map ppExp exps)
-ppExp (Array exps) = brackets . hcat . punctuate comma . map ppExp $ exps
+ppExp (Index exp exps) = ppExp exp <> brackExps exps
+ppExp (Array exps) = brackExps exps
 ppExp (BinApp op e1 e2) = ppExp e1 <+> ppOp op <+> ppExp e2
-ppExp (FunCall ident exps) = text ident <> (commaList . map ppExp $ exps)
+ppExp (FunCall ident exps) = text ident <> commaExps exps
+ppExp (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppExp exp)
 ppExp e = case e of
   Map k e         -> pp1 "map" k e
   Filter k e      -> pp1 "filter" k e
@@ -44,12 +47,13 @@ ppExp e = case e of
 ppKernel (Fn tp args exp) = text "fn" <+> ppType tp <+> (commaList . map ppArg $ args) <+> text "=>" <+> ppExp exp
 ppKernel (Fun ident []) = text ident
 ppKernel (Fun ident exps) = text ident <+> (commaList . map ppExp $ exps)
-ppKernel (Op op) = text "op" <+> ppOp op
+ppKernel (Op op) = ppOp op
 
 ppOp op = text $ case op of 
   Plus -> "+"
   Minus -> "-"
   LessEq -> "<="
+  Mult -> "*"
 
 ppConstant (Int int) = integer int
 ppConstant (Float f) = float f

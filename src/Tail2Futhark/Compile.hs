@@ -27,18 +27,20 @@ getFunCalls name exp = getFuns exp
         getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (F.Var _) = []
         getFuns (Constant _) = []
+        getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
 
 builtins :: [F.FunDecl]
 builtins = [] -- [makeTake (ArrayT (ArrayT F.IntT))]
 
 makeTake :: F.Type -> F.FunDecl
-makeTake tp = (tp,("take" ++ show (rank tp :: Integer) ++ tpS),[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
-  where  
-  tpS = case baseType tp of 
-    F.IntT -> "int"
-    F.RealT -> "real"
-    F.BoolT -> "bool"
-    F.CharT -> "char"
+makeTake tp = (tp,name,[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
+  where name = "take" ++ show (rank tp :: Integer) ++ showTp (baseType tp)
+
+showTp tp  = case baseType tp of 
+  F.IntT -> "int"
+  F.RealT -> "real"
+  F.BoolT -> "bool"
+  F.CharT -> "char"
 
 getType :: [Char] -> Maybe F.Type
 getType s 
@@ -124,9 +126,12 @@ makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
 
-compileReshape (Just(tp,[r1,r2])) [dims,array] = F.Reshape dimsList $ F.FunCall fname [dimProd, resh]
-    where F.Array dimsList = compileExp dims
-          fname = "reshape" ++ show r1 ++ "int" ++ show r2
+compileReshape (Just([tp],[r1,r2])) [dims,array] = F.Reshape dimsList $ F.FunCall fname [dimProd, resh]
+    where dimsList | F.Array dimsList <- dimsExp = dimsList
+                   | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r1-1]
+                   | otherwise = error "reshape needs literal or variable as shape argument"
+          dimsExp = compileExp dims
+          fname = "reshape1" ++ showTp (makeBTp tp)
           dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
           resh = F.Reshape [shapeProd] (compileExp array)
           shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
