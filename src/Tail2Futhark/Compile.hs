@@ -30,7 +30,7 @@ getFunCalls name exp = getFuns exp
         getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
 
 builtins :: [F.FunDecl]
-builtins = [] -- [makeTake (ArrayT (ArrayT F.IntT))]
+builtins = reshapeFuns -- [makeTake (ArrayT (ArrayT F.IntT))]
 
 makeTake :: F.Type -> F.FunDecl
 makeTake tp = (tp,name,[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
@@ -59,8 +59,26 @@ readBType tp = case tp of
 mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall "split" [dims,exp]) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
-  where name = "takeLess" ++ showTp tp
-        extend = "extend" ++ showTp tp
+  where name = "takeLess_" ++ showTp tp
+        extend = "extend_" ++ showTp tp
+
+extendBody = F.Reshape [BinApp Mult size length] (F.FunCall "replicate" [length,F.Var "x"])
+  where length = (F.Var "l" `fdiv` size) `fplus` Constant (Int 1)
+        size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
+        fdiv = BinApp Div
+        fplus = BinApp Plus
+
+
+makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
+makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
+
+reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
+--takeLessFun tp = makeFun tp "takeLess" 
+
+reshapeFuns :: [FunDecl]
+reshapeFuns = let
+  reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
+  in concat $ map (reshapeFuns . readBType) $ ["int","real","bool","char"]
 
 takeBody :: F.Exp
 takeBody = IfThenElse (BinApp LessEq (Constant (Int 0)) (F.Var "dims")) posTake negTake
@@ -163,8 +181,8 @@ compileReduce _ _ = error "reduce needs 3 arguments"
 
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = makeKernel ident
-compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(compileTp tp,ident),(compileTp tp2,ident2)] (compileExp exp)
-compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(compileTp tp,ident)] (compileExp exp)
+compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident),(compileTp tp2,"t_" ++ ident2)] (compileExp exp)
+compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident)] (compileExp exp)
 
 makeKernel ident
   | Just fun <- convertFun ident = F.Fun fun []
