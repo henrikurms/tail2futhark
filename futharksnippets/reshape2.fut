@@ -1,4 +1,3 @@
-
 fun [int] extend(int l, [int] x) =
   reshape((size(0,x) * (l/size(0,x)+1)),replicate(l/size(0,x)+1,x))
 
@@ -13,3 +12,14 @@ fun [[int]] reshape2(int dim1, int dim2, [[int]] x) =
 
 fun [[int]] main() =
   reshape2(4,4,[[1,2,3],[4,5,6]])
+
+
+// replicate(a,x) er stort nok
+
+// |replicate(a,x)| >= l
+
+// a * |x| >= l
+
+// a >= l/|x|
+
+
