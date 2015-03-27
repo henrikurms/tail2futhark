@@ -49,11 +49,18 @@ getType s
   | otherwise = Nothing
   where (prefix,suffix) = span isDigit s
         rank | [] <- prefix = Nothing | otherwise = Just (read prefix :: Integer)
-        readBType tp = case tp of "int" -> F.IntT
-                                  "real" -> F.RealT
-                                  "bool" -> F.BoolT
-                                  "char" -> F.CharT
 
+readBType tp = case tp of
+  "int" -> F.IntT
+  "real" -> F.RealT
+  "bool" -> F.BoolT
+  "char" -> F.CharT
+
+mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall "split" [dims,exp]) retExp
+takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
+reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
+  where name = "takeLess" ++ showTp tp
+        extend = "extend" ++ showTp tp
 
 takeBody :: F.Exp
 takeBody = IfThenElse (BinApp LessEq (Constant (Int 0)) (F.Var "dims")) posTake negTake
@@ -89,21 +96,13 @@ compileOpExp ident instDecl args = case ident of
   "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
---  "transp" -> compileTransp instDecl args
   _
-   -- | [e]      <- args
-   -- -> F.FunCall fun [compileExp e]
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
     -> F.BinApp op (compileExp e1) (compileExp e2)
-    -- , Just fun <- convertFun ident
     | Just fun <- convertFun ident
     -> F.FunCall fun $ map compileExp args
     | otherwise       -> error $ ident ++ " not supported"
---compileOpExp "addi" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
---compileOpExp "addd" _ [e1,e2] = F.BinApp F.Plus (compileExp e1) (compileExp e2)
---compileOpExp "i2d" _ [e]      = F.FunCall "toReal" [compileExp e]
---compileOpExp ident instDecl args = error $ ident ++ " not supported"
 
 convertFun fun = case fun of
   "i2d"    -> Just "toReal"
@@ -111,9 +110,7 @@ convertFun fun = case fun of
   "iota"   -> Just "iota"
   "cat"    -> Just "concat"
   "catV"   -> Just "concat"
- -- _     -> error $ "convertfun error" ++ fun
   "transp" -> Just "transpose"
---  "transp" -> error "bkabka" --Just "transpose"
   _     -> Nothing
 
 convertBinOp op = case op of
@@ -148,12 +145,12 @@ compileFirstV _ args
   | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
   | otherwise = error "firstV takes one argument"
 
---compileEachV :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp
+compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
---compileReduce :: Maybe InstDecl -> T.Exp -> F.Exp -> F.Exp -> F.Exp
+compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
 compileReduce (Just ([tp],[rank])) [kernel,id,array]
   | rank == 0 = Reduce kernelExp idExp arrayExp
