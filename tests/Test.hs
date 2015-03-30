@@ -11,7 +11,7 @@ main = do
     G.defaultMain tests
 
 makeTest :: FilePath -> IO ()
-makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "out"] >> return ()
+makeTest file = rawSystem "tail2futhark" ["--no-include-lib-funs",file,"-o",replaceExtension file "out"] >> return ()
 
 
 --tests = testGroup "Tests" [crashTests,outputTests]

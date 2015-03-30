@@ -9,7 +9,7 @@ import Data.Char
 import Options (Options(..))
 
 compile :: Options -> T.Program -> F.Program
-compile opts e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
+compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
   where takes = nub $ getFunCalls "take" (compileExp e)
         takeFuns = map makeTake . catMaybes . map getType $ takes
         includes = (if includeLibs opts then builtins else []) ++ takeFuns
