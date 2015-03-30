@@ -12,9 +12,12 @@ compile e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
   where takes = nub $ getFunCalls "take" (compileExp e)
         takeFuns = map makeTake . catMaybes . map getType $ takes
 
+-- get a list of function names from the program tree (with duplicates)
+-- by recursively going throught the tree.
+-- removes function name from list fx. take2int => 2int
 getFunCalls :: F.Ident -> F.Exp -> [[Char]]
 getFunCalls name exp = getFuns exp
-  where getFuns (FunCall ident _) = maybeToList $ stripPrefix name ident--if isPrefixOf "take" ident then [ident] else []
+  where getFuns (FunCall ident _) = maybeToList $ stripPrefix name ident
         getFuns (F.Let _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Index e es) = getFuns e ++ concat (map getFuns es)
         getFuns (IfThenElse e1 e2 e3) = getFuns e1 ++ getFuns e2 ++ getFuns e3
@@ -27,59 +30,70 @@ getFunCalls name exp = getFuns exp
         getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (F.Var _) = []
         getFuns (Constant _) = []
-        getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
+        getFunc (F.FunCall2 _ _ exp) = getFuns exp
+        --getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
 
+-- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = reshapeFuns -- [makeTake (ArrayT (ArrayT F.IntT))]
+builtins = reshapeFuns -- reshapeFuns = the functions needed to make reshape
 
+-- AUX: makes FunDecl out of type by adding  signature + return and argument type (that are the same)
 makeTake :: F.Type -> F.FunDecl
 makeTake tp = (tp,name,[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
   where name = "take" ++ show (rank tp :: Integer) ++ showTp (baseType tp)
 
+-- AUX: takes type and gives string representation of type
 showTp tp  = case baseType tp of 
   F.IntT -> "int"
   F.RealT -> "real"
   F.BoolT -> "bool"
   F.CharT -> "char"
 
+-- AUX: takes fx 2int and gives [[int]]
 getType :: [Char] -> Maybe F.Type
 getType s 
-  | suffix `elem` ["int","real","bool","char"]
-  = fmap (makeArrTp (readBType suffix)) $ rank
+  | suffix `elem` ["int","real","bool","char"] = fmap (makeArrTp (readBType suffix)) $ rank
   | otherwise = Nothing
   where (prefix,suffix) = span isDigit s
-        rank | [] <- prefix = Nothing | otherwise = Just (read prefix :: Integer)
+        rank | [] <- prefix = Nothing 
+             | otherwise = Just (read prefix :: Integer)
 
+-- AUX: takes string representation of type and return Maybe F.Type
 readBType tp = case tp of
   "int" -> F.IntT
   "real" -> F.RealT
   "bool" -> F.BoolT
   "char" -> F.CharT
 
+-- AUX reshape: create split part of reshape function 
 mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall "split" [dims,exp]) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
   where name = "takeLess_" ++ showTp tp
         extend = "extend_" ++ showTp tp
 
-extendBody = F.Reshape [BinApp Mult size length] (F.FunCall "replicate" [length,F.Var "x"])
+-- AUX reshape: create extend part of reshape function
+extendBody = F.FunCall2 "reshape" [BinApp Mult size length] (F.FunCall "replicate" [length,F.Var "x"])
   where length = (F.Var "l" `fdiv` size) `fplus` Constant (Int 1)
         size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
         fdiv = BinApp Div
         fplus = BinApp Plus
 
-
+-- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
 makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
 
+-- AUX: brainfart (Henrik)
 reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 --takeLessFun tp = makeFun tp "takeLess" 
 
+-- AUX: create a list of reshape functions for all basic types
 reshapeFuns :: [FunDecl]
 reshapeFuns = let
   reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
   in concat $ map (reshapeFuns . readBType) $ ["int","real","bool","char"]
 
+-- AUX: HELP US!!!!
 takeBody :: F.Exp
 takeBody = IfThenElse (BinApp LessEq (Constant (Int 0)) (F.Var "dims")) posTake negTake
   where posTake = IfThenElse (BinApp LessEq (F.Var "dims") (FunCall "size" [Constant (Int 0),F.Var "x"])) letExp elseBranch
@@ -93,7 +107,7 @@ takeBody = IfThenElse (BinApp LessEq (Constant (Int 0)) (F.Var "dims")) posTake 
                elseBranch = FunCall "concat" [FunCall "replicate" [BinApp Plus sizeExp (F.Var "dims"),Constant (Int 0)],F.Var "x"]
                sizeExp = F.Neg $ FunCall "size" [Constant (Int 0), F.Var "x"]
 
--- Expressionis--
+-- Expressionis --
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) = F.Var ("t_" ++ ident)
 compileExp (I int) = Constant (Int int)
@@ -106,6 +120,7 @@ compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
 
+-- Operation expressions --
 compileOpExp :: [Char] -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
@@ -122,37 +137,40 @@ compileOpExp ident instDecl args = case ident of
     -> F.FunCall fun $ map compileExp args
     | otherwise       -> error $ ident ++ " not supported"
 
+-- Operations that are 1:1 --
 convertFun fun = case fun of
   "i2d"    -> Just "toReal"
   "iotaV"  -> Just "iota"
   "iota"   -> Just "iota"
   "cat"    -> Just "concat"
   "catV"   -> Just "concat"
-  "transp" -> Just "transpose"
   _     -> Nothing
 
+-- Convert string to Maybe futhark  binary operation --
 convertBinOp op = case op of
   "addi" -> Just F.Plus
   "addd" -> Just F.Plus
   _      -> Nothing
 
--- AUX functions --
+-- AUX shape --
 makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
 
-compileReshape (Just([tp],[r1,r2])) [dims,array] = F.Reshape dimsList $ F.FunCall fname [dimProd, resh]
+-- Compilation of reshape --
+compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
     where dimsList | F.Array dimsList <- dimsExp = dimsList
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r1-1]
                    | otherwise = error "reshape needs literal or variable as shape argument"
           dimsExp = compileExp dims
           fname = "reshape1" ++ showTp (makeBTp tp)
           dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
-          resh = F.Reshape [shapeProd] (compileExp array)
+          resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
           shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
 compileReshape Nothing args = error "Need instance declaration for reshape"
 compileReshape _ _ = error "Reshape nedds 2 arguments"
 
+-- Compilation of Transp --
 compileTransp (Just(_,_)) args = F.FunCall "transpose" $ map compileExp args
 compileTransp Nothing args = error "Need instance declaration for transp"
 

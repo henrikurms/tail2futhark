@@ -1,2 +1,0 @@
-fun real main() =
-  toReal(reduce(+,0,[size(0,transpose(reshape((2,2,2),reshape1int((2 * (2 * (2 * 1))),reshape(((size(0,iota(8)) * 1)),iota(8)))))),size(1,transpose(reshape((2,2,2),reshape1int((2 * (2 * (2 * 1))),reshape(((size(0,iota(8)) * 1)),iota(8)))))),size(2,transpose(reshape((2,2,2),reshape1int((2 * (2 * (2 * 1))),reshape(((size(0,iota(8)) * 1)),iota(8))))))]))

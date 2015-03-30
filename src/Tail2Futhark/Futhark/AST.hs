@@ -53,7 +53,8 @@ data Exp = Var Ident
          | Array [Exp]
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
-         | Reshape [Exp] Exp
+         | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args
+         -- | Reshape [Exp] Exp -- "old" version of impl
          | Map Kernel Exp
          | Filter Kernel Exp
          | Scan Kernel Exp Exp

@@ -35,7 +35,8 @@ ppExp (Index exp exps) = ppExp exp <> brackExps exps
 ppExp (Array exps) = brackExps exps
 ppExp (BinApp op e1 e2) = parens $ ppExp e1 <+> ppOp op <+> ppExp e2
 ppExp (FunCall ident exps) = text ident <> commaExps exps
-ppExp (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppExp exp)
+ppExp (FunCall2 ident exps exp) = text ident <> parens (commaExps exps <> comma <> ppExp exp)
+--ppExp (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppExp exp)
 ppExp e = case e of
   Map k e         -> pp1 "map" k e
   Filter k e      -> pp1 "filter" k e

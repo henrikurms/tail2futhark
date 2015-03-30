@@ -1,2 +1,30 @@
+fun [int] takeLess_int(int l,[int] x) =
+  let {v1,_} = split(l,x) in
+  v1
+fun [int] reshape1_int(int l,[int] x) =
+  takeLess_int(l,extend_int(l,x))
+fun [int] extend_int(int l,[int] x) =
+  reshape(((size(0,x) * ((l / size(0,x)) + 1))),replicate(((l / size(0,x)) + 1),x))
+fun [real] takeLess_real(int l,[real] x) =
+  let {v1,_} = split(l,x) in
+  v1
+fun [real] reshape1_real(int l,[real] x) =
+  takeLess_real(l,extend_real(l,x))
+fun [real] extend_real(int l,[real] x) =
+  reshape(((size(0,x) * ((l / size(0,x)) + 1))),replicate(((l / size(0,x)) + 1),x))
+fun [bool] takeLess_bool(int l,[bool] x) =
+  let {v1,_} = split(l,x) in
+  v1
+fun [bool] reshape1_bool(int l,[bool] x) =
+  takeLess_bool(l,extend_bool(l,x))
+fun [bool] extend_bool(int l,[bool] x) =
+  reshape(((size(0,x) * ((l / size(0,x)) + 1))),replicate(((l / size(0,x)) + 1),x))
+fun [char] takeLess_char(int l,[char] x) =
+  let {v1,_} = split(l,x) in
+  v1
+fun [char] reshape1_char(int l,[char] x) =
+  takeLess_char(l,extend_char(l,x))
+fun [char] extend_char(int l,[char] x) =
+  reshape(((size(0,x) * ((l / size(0,x)) + 1))),replicate(((l / size(0,x)) + 1),x))
 fun real main() =
   toReal(5)

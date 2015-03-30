@@ -1,4 +1,0 @@
-fun real main() =
-  let t_v0 = iota(8) in
-  let t_v1 = transpose(t_v0) in
-  t_v1
