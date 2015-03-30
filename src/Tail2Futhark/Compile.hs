@@ -32,7 +32,7 @@ getFunCalls name exp = getFuns exp
         getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (F.Var _) = []
         getFuns (Constant _) = []
-        getFunc (F.FunCall2 _ _ exp) = getFuns exp
+        getFuns (F.FunCall2 _ _ exp) = getFuns exp
         --getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
 
 -- list of builtin fuctions (EXPERIMENT) 
@@ -166,7 +166,7 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r1-1]
                    | otherwise = error "reshape needs literal or variable as shape argument"
           dimsExp = compileExp dims
-          fname = "reshape1" ++ showTp (makeBTp tp)
+          fname = "reshape1_" ++ showTp (makeBTp tp)
           dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
           resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
           shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
