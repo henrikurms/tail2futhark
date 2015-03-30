@@ -68,7 +68,7 @@ readBType tp = case tp of
   "char" -> F.CharT
 
 -- AUX reshape: create split part of reshape function 
-mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall "split" [dims,exp]) retExp
+mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
   where name = "takeLess_" ++ showTp tp
