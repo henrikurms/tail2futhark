@@ -69,9 +69,13 @@ Tail is a typed intermidiate language to the multidimentional array language APL
 
 The types in Tail consist of types that classify shapes i.e. multidimentional arrays, vector types that are a special case of the shape type where the rank of the array is 1 and the length is staticly known and singleton types that like vectors are a special case of array type with rank 0. 
 
+Tail implements a subset of the array operators found in APL.
 Besides shape (multidimentional array) and vector types Tail has primitive types such as \verb|int|, \verb|double| and \verb|bool|.
 
 \section{Overview of Futhark}
+Futhark is a functionel language, created to be an independent language designed for parallel exectution. In order to be better suted for compiler optimisation such as transposition and simplefied size analysis Futhark only support nested parallelism on regular arrays i.e. arrays where all rows have the same length.\\
+
+The reason Futhark support nested parallelism insted of just flat parallelism is that many programs includes several layers of parallellism and this cannot be exploided using flat parallelism %[in the stile if REPA see troelses speciale p 4]
 
 \section{The difference betweet TAIL and Futhark}
 There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). \\
@@ -86,6 +90,7 @@ fun [int] takeV(int l, [int] x) =
       else
           concat(x,replicate(l - size(0,x),0))
   else
+  
       if -l <= size(0,x) then
           let {v1,v2} = split(size(0,x)+l,x) in v2
       else
