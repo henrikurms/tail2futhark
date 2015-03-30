@@ -6,11 +6,13 @@ import GHC.Float (double2Float)
 import Data.List
 import Data.Maybe
 import Data.Char
+import Options (Options(..))
 
-compile :: T.Program -> F.Program
-compile e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
+compile :: Options -> T.Program -> F.Program
+compile opts e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
   where takes = nub $ getFunCalls "take" (compileExp e)
         takeFuns = map makeTake . catMaybes . map getType $ takes
+        includes = (if includeLibs opts then builtins else []) ++ takeFuns
 
 -- get a list of function names from the program tree (with duplicates)
 -- by recursively going throught the tree.
