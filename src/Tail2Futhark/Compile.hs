@@ -84,6 +84,7 @@ makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
 makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
 
 -- AUX: brainfart (Henrik)
+reshapeArgs :: F.Type -> [F.Arg]
 reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 --takeLessFun tp = makeFun tp "takeLess" 
 
