@@ -6,11 +6,13 @@ import GHC.Float (double2Float)
 import Data.List
 import Data.Maybe
 import Data.Char
+import Options (Options(..))
 
-compile :: T.Program -> F.Program
-compile e = builtins ++ takeFuns ++ [(RealT, "main", [], (compileExp e))]
+compile :: Options -> T.Program -> F.Program
+compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
   where takes = nub $ getFunCalls "take" (compileExp e)
         takeFuns = map makeTake . catMaybes . map getType $ takes
+        includes = (if includeLibs opts then builtins else []) ++ takeFuns
 
 -- get a list of function names from the program tree (with duplicates)
 -- by recursively going throught the tree.
@@ -30,7 +32,7 @@ getFunCalls name exp = getFuns exp
         getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (F.Var _) = []
         getFuns (Constant _) = []
-        getFunc (F.FunCall2 _ _ exp) = getFuns exp
+        getFuns (F.FunCall2 _ _ exp) = getFuns exp
         --getFuns (Reshape _ exp) = getFuns exp -- reshape does not supports functions in shape arguments
 
 -- list of builtin fuctions (EXPERIMENT) 
@@ -66,7 +68,7 @@ readBType tp = case tp of
   "char" -> F.CharT
 
 -- AUX reshape: create split part of reshape function 
-mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall "split" [dims,exp]) retExp
+mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
   where name = "takeLess_" ++ showTp tp
@@ -84,6 +86,7 @@ makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
 makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
 
 -- AUX: brainfart (Henrik)
+reshapeArgs :: F.Type -> [F.Arg]
 reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 --takeLessFun tp = makeFun tp "takeLess" 
 
@@ -163,7 +166,7 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r1-1]
                    | otherwise = error "reshape needs literal or variable as shape argument"
           dimsExp = compileExp dims
-          fname = "reshape1" ++ showTp (makeBTp tp)
+          fname = "reshape1_" ++ showTp (makeBTp tp)
           dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
           resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
           shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
