@@ -96,19 +96,20 @@ reshapeFuns = let
   reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
   in concat $ map (reshapeFuns . readBType) $ ["int","real","bool","char"]
 
--- AUX: HELP US!!!!
+-- AUX: create the body for take
 takeBody :: F.Exp
-takeBody = IfThenElse (BinApp LessEq (Constant (Int 0)) (F.Var "dims")) posTake negTake
-  where posTake = IfThenElse (BinApp LessEq (F.Var "dims") (FunCall "size" [Constant (Int 0),F.Var "x"])) letExp elseBranch
-         where letExp = F.Let (TouplePat [(Ident "v1"),(Ident "v2")]) split (F.Var "v1")
-               split = FunCall "split" [F.Var "dims", F.Var "x"]
-               elseBranch = FunCall "concat" [F.Var "x",FunCall "replicate" [BinApp Minus (F.Var "dims") sizeExp,Constant (Int 0)]]
-               sizeExp = FunCall "size" [Constant (Int 0), F.Var "x"]
-        negTake = IfThenElse (BinApp LessEq (F.Neg (F.Var "dims")) (FunCall "size" [Constant (Int 0),F.Var "x"])) letExp elseBranch
-         where letExp = F.Let (TouplePat [Ident "v1",Ident "v2"]) split (F.Var "v1")
-               split = FunCall "split" [BinApp Plus (FunCall "size" [Constant (Int 0),F.Var "x"]) (F.Var "dims"),F.Var "x"]
-               elseBranch = FunCall "concat" [FunCall "replicate" [BinApp Plus sizeExp (F.Var "dims"),Constant (Int 0)],F.Var "x"]
-               sizeExp = F.Neg $ FunCall "size" [Constant (Int 0), F.Var "x"]
+takeBody = IfThenElse (zero `less` len) posTake negTake
+    where less = BinApp LessEq
+          zero = Constant (Int 0)
+          sum  = BinApp Plus len size
+          len  = F.Var "l"
+          size = F.FunCall "size" [zero, F.Var "x"]
+          padRight = F.FunCall "concat" [F.Var "x", padding]
+          padLeft = F.FunCall "concat" [padding, F.Var "x"]
+          padding = F.FunCall "replicate" [(BinApp Minus len size), zero]
+          posTake = IfThenElse (len `less` size) takeLessBody padRight
+          negTake = IfThenElse (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
+
 
 -- Expressionis --
 compileExp :: T.Exp -> F.Exp
@@ -132,6 +133,7 @@ compileOpExp ident instDecl args = case ident of
   "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
+  "take" -> compileTake instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -159,6 +161,12 @@ convertBinOp op = case op of
 makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
+
+-- Compilation of take --
+compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd,resh]
+    where dimsList | F.Array dimsList <- dimsExp = dimsList
+                   | F.Var dimsVar <- 
 
 -- Compilation of reshape --
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
