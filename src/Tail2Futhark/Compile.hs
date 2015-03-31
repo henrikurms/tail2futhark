@@ -146,7 +146,7 @@ compileOpExp ident instDecl args = case ident of
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
   "take" -> compileTake instDecl args
-  "takeV" -> compileTake instDecl args
+  "takeV" -> compileTakeV instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -180,6 +180,12 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+
+compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileTakeV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
+    where fname = "take1_" ++ showTp (makeBTp tp)
+compileTakeV Nothing _ = error "Need instance declaration for takeV"
+compileTakeV _ _ = error "TakeV needs 2 arguments"
 
 -- Compilation of take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
