@@ -162,11 +162,22 @@ makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
 
+multExp :: [F.Exp] -> F.Exp
+multExp = foldr (BinApp Mult) (Constant (Int 1))
+
+absExp :: F.Exp -> F.Exp
+absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+
 -- Compilation of take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd,resh]
-    where dimsList | F.Array dimsList <- dimsExp = dimsList
-                   | F.Var dimsVar <- 
+compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
+    where dims = absExp (compileExp len) : tail shape
+          sizeProd = multExp $ compileExp len : tail shape
+          fname = "take1_" ++ showTp (makeBTp tp)
+          resh = F.FunCall2 "reshape" [multExp shape] (compileExp exp) 
+          shape = makeShape r [exp]
+compileTake Nothing args = error "Need instance declaration for take"
+compileTake _ _ = error "Take needs 2 arguments"
 
 -- Compilation of reshape --
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
@@ -175,11 +186,11 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList
                    | otherwise = error "reshape needs literal or variable as shape argument"
           dimsExp = compileExp dims
           fname = "reshape1_" ++ showTp (makeBTp tp)
-          dimProd = foldr (BinApp Mult) (Constant (Int 1)) dimsList
+          dimProd = multExp dimsList
           resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
-          shapeProd = foldr (BinApp Mult) (Constant (Int 1)) (makeShape r1 [array])
+          shapeProd = multExp (makeShape r1 [array])
 compileReshape Nothing args = error "Need instance declaration for reshape"
-compileReshape _ _ = error "Reshape nedds 2 arguments"
+compileReshape _ _ = error "Reshape needs 2 arguments"
 
 -- Compilation of Transp --
 compileTransp (Just(_,_)) args = F.FunCall "transpose" $ map compileExp args
