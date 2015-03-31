@@ -114,6 +114,8 @@ Futhark transforms all functions to fist level functions and in order to simplef
 %is implemented by wrapping a maped haskell array in the futhark array constructor. The reason for this is the to prevent a havy computation in the case where the array has a big number of dimentions. Alternativly \verb|| 
 
 \section{Methods}
+We could have used generalised algebraric datatypes (GADT) from haskell to make our Futhark AST in order to enable type checking in the AST and thereby the correctness of the resulting code. 
+
 \section{Evaluation}
 \subsection{Test results}
 \subsection{Discusion}

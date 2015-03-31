@@ -1,0 +1,4 @@
+fun real main() =
+  let t_v0 = reshape((2,3),reshape1_int((2 * (3 * 1)),reshape(((size(0,iota(10)) * 1)),iota(10)))) in
+  let t_v1 = reshape((if (0 <= 0) then -0 else 0,size(1,t_v0)),take1_int((0 * (size(1,t_v0) * 1)),reshape(((size(0,t_v0) * (size(1,t_v0) * 1))),t_v0))) in
+  toReal(reduce(+,0,reshape((3),reshape1_int((3 * 1),reshape(((size(0,t_v1) * (size(1,t_v1) * 1))),t_v1)))))
