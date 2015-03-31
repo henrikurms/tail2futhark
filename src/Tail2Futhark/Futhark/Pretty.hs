@@ -60,7 +60,7 @@ ppOp op = text $ case op of
 ppConstant (Int int) = integer int
 ppConstant (Float f) = float f
 ppConstant (Char c) = quotes $ char c
-ppConstant (Bool b) = text (if b then "true" else "false")
+ppConstant (Bool b) = text (if b then "True" else "False")
 ppConstant (ArrayConstant arr) = braces . hcat . punctuate comma . map ppConstant $ arr
 
 -- Arguments --

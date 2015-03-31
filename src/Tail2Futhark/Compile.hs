@@ -11,8 +11,8 @@ import Options (Options(..))
 compile :: Options -> T.Program -> F.Program
 compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
   where takes = nub $ getFunCalls "take" (compileExp e)
-        takeFuns = map makeTake . catMaybes . map getType $ takes
-        includes = (if includeLibs opts then builtins else []) ++ takeFuns
+        --takeFuns = map makeTake . catMaybes . map getType $ takes
+        includes = (if includeLibs opts then builtins else [])
 
 -- get a list of function names from the program tree (with duplicates)
 -- by recursively going throught the tree.
@@ -37,12 +37,14 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = reshapeFuns -- reshapeFuns = the functions needed to make reshape
+builtins = []
+        ++ reshapeFuns 
+        ++ takeFuns
 
 -- AUX: makes FunDecl out of type by adding  signature + return and argument type (that are the same)
-makeTake :: F.Type -> F.FunDecl
-makeTake tp = (tp,name,[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
-  where name = "take" ++ show (rank tp :: Integer) ++ showTp (baseType tp)
+--makeTake :: F.Type -> F.FunDecl
+--makeTake tp = (tp,name,[(ArrayT F.IntT, "dims"),(tp,"x")],takeBody)
+--  where name = "take" ++ show (rank tp :: Integer) ++ showTp (baseType tp)
 
 -- AUX: takes type and gives string representation of type
 showTp tp  = case baseType tp of 
@@ -66,6 +68,8 @@ readBType tp = case tp of
   "real" -> F.RealT
   "bool" -> F.BoolT
   "char" -> F.CharT
+
+btypes = map readBType ["int","real","bool","char"]
 
 -- AUX reshape: create split part of reshape function 
 mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
@@ -94,11 +98,11 @@ reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 reshapeFuns :: [FunDecl]
 reshapeFuns = let
   reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
-  in concat $ map (reshapeFuns . readBType) $ ["int","real","bool","char"]
+  in concat $ map reshapeFuns btypes
 
 -- AUX: create the body for take
-takeBody :: F.Exp
-takeBody = IfThenElse (zero `less` len) posTake negTake
+takeBody :: F.Exp -> F.Exp
+takeBody padElement = IfThenElse (zero `less` len) posTake negTake
     where less = BinApp LessEq
           zero = Constant (Int 0)
           sum  = BinApp Plus len size
@@ -106,10 +110,18 @@ takeBody = IfThenElse (zero `less` len) posTake negTake
           size = F.FunCall "size" [zero, F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
-          padding = F.FunCall "replicate" [(BinApp Minus len size), zero]
+          padding = F.FunCall "replicate" [(BinApp Minus len size), padElement]
           posTake = IfThenElse (len `less` size) takeLessBody padRight
           negTake = IfThenElse (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
 
+zero :: F.Type -> F.Exp
+zero F.IntT = Constant (Int 0)
+zero F.RealT = Constant (Float 0)
+zero F.BoolT = Constant (Bool False)
+zero F.CharT = Constant (Char ' ')
+zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
+
+takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp))) btypes
 
 -- Expressionis --
 compileExp :: T.Exp -> F.Exp
@@ -134,6 +146,7 @@ compileOpExp ident instDecl args = case ident of
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
   "take" -> compileTake instDecl args
+  "takeV" -> compileTake instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
