@@ -141,6 +141,7 @@ compileOpExp :: [Char] -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
+  "each"   -> compileEach instDecl args
   "firstV" -> compileFirstV instDecl args
   "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
@@ -226,6 +227,20 @@ compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)
    where kernelExp = compileKernel kernel (makeBTp outtp) 
+
+compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileEach (Just ([intp,outtp],[rank])) [kernel,array] = Map kernelExp (compileExp array)
+  -- | rank == 1 = Map (compileKernel kernel (makeBTp outtp)) (compileExp array)
+  -- | otherwise = Map kernelExp (compileExp array)
+  where kernelExp = nestMaps rank (makeBTp outtp) (compileKernel kernel (makeBTp outtp))
+compileEach Nothing _ = error "Need instance declaration for each"
+compileEach _ _ = error "each takes two arguments"
+
+nestMaps :: Integer -> F.Type -> Kernel -> Kernel
+nestMaps depth tp kernel = mkMapNest 1 tp kernel
+  where mkMapNest n tp kernel 
+          | n == depth = kernel
+          | otherwise = mkMapNest (n+1) (ArrayT tp) $ F.Fn (ArrayT tp) [(ArrayT tp,"x")] (Map kernel (F.Var "x"))
 
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
