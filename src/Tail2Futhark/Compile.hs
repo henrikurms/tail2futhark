@@ -232,26 +232,27 @@ compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEach (Just ([intp,outtp],[rank])) [kernel,array] = Map kernelExp (compileExp array)
   -- | rank == 1 = Map (compileKernel kernel (makeBTp outtp)) (compileExp array)
   -- | otherwise = Map kernelExp (compileExp array)
-  where kernelExp = nestMaps rank (makeBTp outtp) (compileKernel kernel (makeBTp outtp))
+  where kernelExp = nestMaps rank (makeBTp outtp) (makeBTp outtp) (compileKernel kernel (makeBTp outtp))
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
 
-nestMaps :: Integer -> F.Type -> Kernel -> Kernel
-nestMaps depth tp kernel = mkMapNest 1 tp kernel
-  where mkMapNest n tp kernel 
+nestMaps :: Integer -> F.Type -> F.Type -> Kernel -> Kernel
+nestMaps depth itp otp kernel = mkMapNest 1 itp otp kernel
+  where mkMapNest n itp otp kernel 
           | n == depth = kernel
-          | otherwise = mkMapNest (n+1) (ArrayT tp) $ F.Fn (ArrayT tp) [(ArrayT tp,"x")] (Map kernel (F.Var "x"))
+          | otherwise = mkMapNest (n+1) (ArrayT itp) (ArrayT otp)$ F.Fn (ArrayT otp) [(ArrayT itp,"x")] (Map kernel (F.Var "x"))
 
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
 compileReduce (Just ([tp],[rank])) [kernel,id,array]
   | rank == 0 = Reduce kernelExp idExp arrayExp
-  | otherwise = error "Reduce operation - Not supported" 
+  -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
+  | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
           idExp = compileExp id
           arrayExp = compileExp array
+          ftp = makeArrTp (makeBTp tp) rank
 compileReduce _ _ = error "reduce needs 3 arguments" 
--- compileReduce for arrays
 
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = makeKernel ident
