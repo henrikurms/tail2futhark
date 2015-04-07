@@ -1,4 +1,5 @@
 import Test.Tasty
+import Test.Tasty.Providers
 import Test.Tasty.Program
 import Test.Tasty.Golden
 import Test.Tasty.Golden.Manage as G
@@ -7,11 +8,12 @@ import System.FilePath.Posix
 
 main = do
     files <- findByExtension [".tail"] "tests/our_tests"
-    let tests = testGroup "Tests"$ map (\f -> goldenVsFile f (replaceExtension f "fut") (replaceExtension f "out") (makeTest f)) files
+    let tests = testGroup "Tests"$ map (\f -> goldenVsFile f (replaceExtension f "ok") (replaceExtension f "out") (makeTest f)) files
     G.defaultMain tests
 
 makeTest :: FilePath -> IO ()
-makeTest file = rawSystem "tail2futhark" ["--no-include-lib-funs",file,"-o",replaceExtension file "out"] >> return ()
+makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "fout"] >>
+                system ("futharki " ++ replaceExtension file "fout" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
 
 
 --tests = testGroup "Tests" [crashTests,outputTests]
