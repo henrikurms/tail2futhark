@@ -141,12 +141,13 @@ compileOpExp :: [Char] -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
+  "each"   -> compileEach instDecl args
   "firstV" -> compileFirstV instDecl args
   "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
   "take" -> compileTake instDecl args
-  "takeV" -> compileTake instDecl args
+  "takeV" -> compileTakeV instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -180,6 +181,12 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+
+compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileTakeV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
+    where fname = "take1_" ++ showTp (makeBTp tp)
+compileTakeV Nothing _ = error "Need instance declaration for takeV"
+compileTakeV _ _ = error "TakeV needs 2 arguments"
 
 -- Compilation of take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -221,16 +228,31 @@ compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
+compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileEach (Just ([intp,outtp],[rank])) [kernel,array] = Map kernelExp (compileExp array)
+  -- | rank == 1 = Map (compileKernel kernel (makeBTp outtp)) (compileExp array)
+  -- | otherwise = Map kernelExp (compileExp array)
+  where kernelExp = nestMaps rank (makeBTp outtp) (makeBTp outtp) (compileKernel kernel (makeBTp outtp))
+compileEach Nothing _ = error "Need instance declaration for each"
+compileEach _ _ = error "each takes two arguments"
+
+nestMaps :: Integer -> F.Type -> F.Type -> Kernel -> Kernel
+nestMaps depth itp otp kernel = mkMapNest 1 itp otp kernel
+  where mkMapNest n itp otp kernel 
+          | n == depth = kernel
+          | otherwise = mkMapNest (n+1) (ArrayT itp) (ArrayT otp)$ F.Fn (ArrayT otp) [(ArrayT itp,"x")] (Map kernel (F.Var "x"))
+
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
 compileReduce (Just ([tp],[rank])) [kernel,id,array]
   | rank == 0 = Reduce kernelExp idExp arrayExp
-  | otherwise = error "Reduce operation - Not supported" 
+  -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
+  | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
           idExp = compileExp id
           arrayExp = compileExp array
+          ftp = makeArrTp (makeBTp tp) rank
 compileReduce _ _ = error "reduce needs 3 arguments" 
--- compileReduce for arrays
 
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = makeKernel ident
