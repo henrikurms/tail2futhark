@@ -27,6 +27,7 @@ getFunCalls name exp = getFuns exp
         getFuns (Array es) = concat $ map getFuns es
         getFuns (BinApp _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Map _ e) = getFuns e
+--        getFuns (Zip e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Filter _ e) = getFuns e
         getFuns (Scan _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Reduce _ e1 e2) = getFuns e1 ++ getFuns e2
@@ -148,6 +149,7 @@ compileOpExp ident instDecl args = case ident of
   "reshape" -> compileReshape instDecl args
   "take" -> compileTake instDecl args
   "takeV" -> compileTakeV instDecl args
+  "zipWith" -> compileZipWith instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -175,6 +177,8 @@ convertBinOp op = case op of
 makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
   | otherwise = error "shape takes one argument"
+
+
 
 multExp :: [F.Exp] -> F.Exp
 multExp = foldr (BinApp Mult) (Constant (Int 1))
@@ -236,11 +240,24 @@ compileEach (Just ([intp,outtp],[rank])) [kernel,array] = Map kernelExp (compile
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
 
+-- Nested maps with one argument in the lambda --
 nestMaps :: Integer -> F.Type -> F.Type -> Kernel -> Kernel
 nestMaps depth itp otp kernel = mkMapNest 1 itp otp kernel
   where mkMapNest n itp otp kernel 
           | n == depth = kernel
           | otherwise = mkMapNest (n+1) (ArrayT itp) (ArrayT otp)$ F.Fn (ArrayT otp) [(ArrayT itp,"x")] (Map kernel (F.Var "x"))
+
+-- Nested maps with two arguments in the lambda --
+nestMapsZip :: Integer -> F.Type -> F.Type -> Kernel -> Kernel
+nestMapsZip depth itp otp kernel = mkMapNest 1 itp otp kernel
+    where mkMapNest n itp otp kernel 
+            | n == depth = kernel
+            | otherwise =  mkMapNest (n+1) (ArrayT itp) (ArrayT otp) $ F.Fn (ArrayT otp) [(ArrayT itp,"x"), (ArrayT itp, "y")] (Map kernel (F.FunCall "zip" [F.Var "x", F.Var "y"]))
+
+compileZipWith :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileZipWith (Just([a1tp,a2tp,rtp],[rk])) [kernel,a1,a2] = Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
+    where kernelExp = nestMapsZip rk (makeBTp rtp) (makeBTp rtp) (compileKernel kernel (makeBTp rtp))  
+compileZipWith Nothing _ = error "Need instance declaration for zipWith"
 
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
