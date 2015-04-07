@@ -1,6 +1,0 @@
-fun real main() =
-  let t_v1 = reshape((3,2),reshape1_int((3 * (2 * 1)),reshape(((size(0,[1,2,3,4,5,6]) * 1)),[1,2,3,4,5,6]))) in
-  let t_v2 = reshape((3,2),reshape1_int((3 * (2 * 1)),reshape(((size(0,[7,8,9,10,11,12]) * 1)),[7,8,9,10,11,12]))) in
-  let t_v3 = concat(t_v1,t_v2) in
-  let t_v6 = reduce(+,0,[size(0,t_v3),size(1,t_v3)]) in
-  toReal(t_v6)
