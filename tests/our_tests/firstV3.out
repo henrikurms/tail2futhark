@@ -1,2 +1,0 @@
-fun real main() =
-  toReal(iota(5)[0])
