@@ -268,7 +268,7 @@ compileReduce (Just ([tp],[rank])) [kernel,id,array]
     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
           idExp = compileExp id
           arrayExp = compileExp array
-          ftp = makeArrTp (makeBTp tp) rank
+          ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
 compileReduce _ _ = error "reduce needs 3 arguments" 
 
 compileKernel :: T.Exp -> F.Type -> Kernel

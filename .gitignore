@@ -5,6 +5,7 @@ doc/*.log
 doc/*.pdf
 tests/Test
 *.fout
+*.out
 
 *.pdf
 *.log
