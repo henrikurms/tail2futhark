@@ -24,24 +24,24 @@
 }
 
 \author{
-  \Large{Anna Sofie Kiehn}
-  \\ \texttt{a.kiehn89@gmail.com} \\ \\
-  \Large{Henriks Urms}
-  \\ \texttt{urmshenrik@gmail.com}
+  \Large{Anna Sofie Kiehn and Henriks Urms}
+  %\\ \texttt{a.kiehn89@gmail.com} \\ \\
+  %\Large{Henriks Urms}
+  %\\ \texttt{urmshenrik@gmail.com}
 }
 
 \title{
-  \vspace{3cm}
-  \Huge{Bachelor thisis} \\
-  \Large{Compiling TAIL to Futhark}
+  \vspace{5cm}
+  \Large{Bachelor's thesis} \\
+  \Huge{Compiling TAIL to Futhark}
 }
 
 \begin{document}
 
 %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
 %% `natbio-farve` to use SCIENCE's new colors and logo.
-\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{include/ku-farve}}}
-\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{include/ku-farve}}}
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{include/natbio-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{include/natbio-farve}}}
 
 %% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
 \AddToShipoutPicture*{\put(0,0){\includegraphics*{include/ku-en}}}
@@ -64,6 +64,8 @@ A language that expresses data-parallelism very well is APL. APL is a mature lan
 
 Efforts in compiling APL to parallel backends already exist in the form of the language TAIL(Typed array intermediate language) and it’s compiler. The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form. In our work we provide a compiler from TAIL to Futhark thus bridging the gap between APL and Futhark. While doing  this, we will focus on generating efficient code. In particular, we will try to preserve the parallelism in the source code.
 
+
+
 \section{Overview of TAIL}
 Tail is a typed intermidiate language to the multidimentional array language APL (reference). Tail is designed as a practical and well-defined intermidiate format for targeting parallel architectures.\\ 
 
@@ -72,10 +74,14 @@ The types in Tail consist of types that classify shapes i.e. multidimentional ar
 Tail implements a subset of the array operators found in APL.
 Besides shape (multidimentional array) and vector types Tail has primitive types such as \verb|int|, \verb|double| and \verb|bool|.
 
+
+
 \section{Overview of Futhark}
 Futhark is a functionel language, created to be an independent language designed for parallel exectution. In order to be better suted for compiler optimisation such as transposition and simplefied size analysis Futhark only support nested parallelism on regular arrays i.e. arrays where all rows have the same length.\\
 
 The reason Futhark support nested parallelism insted of just flat parallelism is that many programs includes several layers of parallellism and this cannot be exploided using flat parallelism %[in the stile if REPA see troelses speciale p 4]
+
+
 
 \section{The difference betweet TAIL and Futhark}
 There are no tubles in TAIL and therefore the pattern constructor will be used only to create id's wich is realy just a variable name. Therefore it was decided not to implement the pattern constructor in the Futhark AST and instead use the identifyer in the form of an var with type Ident (that has type String). \\
@@ -100,8 +106,16 @@ fun [int] takeV(int l, [int] x) =
 \section{The compilation scheme}
 An overview of the combilation scheme can be found in figure ???????. 
 
-\section{Implementation ?????????}
-% not sure if this sould be a section. 
+
+
+\section{Implementation}
+Several of the primitive functions in TAIL have an imidiate useable counter function in futhark with the exact same functionality. The implementation of these primitive functions are therefore trivial. An exaple of such a function is ????????? and the implementation of that can be seen below. 
+
+\begin{lstlisting}
+Add code !!!!!!!
+\end{lstlisting}
+
+
 
 \subsubsection{shape}
 \verb|shape| is implemented by mapping \verb|size| on each of the dimentions and then wrapping the resulting array in the Futhark array type constructor. 
