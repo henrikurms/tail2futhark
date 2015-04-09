@@ -62,8 +62,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Compilation strategy}
+As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
+Thus the chalenge boils down to translating Tail expressions to Futhark expressions. 
+There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really if the expression is an operator expression.\\
+
+These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat. \\
+
+The scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at. 
 
 \section{The parallel operators}
+
 
 \section{Other interesting operators}
 
