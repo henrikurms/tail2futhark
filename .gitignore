@@ -3,6 +3,7 @@ aplacc/tests/newtests/*.fut
 doc/*.aux
 doc/*.log
 doc/*.pdf
+doc/*.toc
 tests/Test
 *.fout
 *.out

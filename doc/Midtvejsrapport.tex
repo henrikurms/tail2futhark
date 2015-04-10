@@ -129,6 +129,11 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 
 \subsection{reshape}
 
+The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
+array is either truncated or the elements are repeated until the array is long enough.
+
+Futhark has a reshape function that only works for arrays of the correct dimensions.
+
 The {\tt reshape} operator in TAIL 
 
 \section{Implementation of the compiler}
