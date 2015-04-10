@@ -61,6 +61,11 @@
 %%%%%%%%%%%  REPORT STARTS HERE  %%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+\section{TAIL}
+
+\section{futhark}
 
 \section{Compilation strategy}
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
@@ -103,7 +108,7 @@ Fore example reducing an array of rank 2 emits the following code:
 
 \begin{lstlisting}[numbers=none,frame=none]
 reduce(+,a)	=> 	map(fn x => reduce(+,x), a)
-\end{lstlisting}j
+\end{lstlisting}
 
 \subsection{zipWith}
 
@@ -119,19 +124,35 @@ produce a third array of the same shape as the input arrays.
 The {\tt take} operator in TAIL has very unique semantics, for a positive arguement that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array. For a negative argument {\tt take} returns the last n elements of the array. If there are not enough elements in the array, {\tt take} pads with zeros. 
 
 \subsection{reshape}
+
 The {\tt reshape} operator in TAIL 
 
+\section{Implementation of the compiler}
+
+\section{Test}
+
+\section{Discussion}
+
+\section{Conslusion (and future work)}
+
 \section{Methods and tools}
+
 cabal\\
 git\\
-test - golden, \\
+\subsection{Test}
+We have decided on making integration test testing the pipeline all the ray from apl through TAIL to futhark.
+golden, \\
+
 \section{Project status}
-We are about half way with the implementation of the functions in TAIL. 
+The project is comming along as planed. We used the fist couple of weeks after handing in the synopsis to get a more detailed understanding of the TAIL and futhark and began creating the framework we wanted to use for the compiler. 
+We thought it would take longer time adapting the parser to work with the new version of TAIL than it did and therefore ended up starting on the acutal compiler about 3 days ahed of time. 
+
+We are creently about half way with the implementation of the functions in TAIL. We have done testing from the beginning but 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%% REFERENCES / LITTERATURE %%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\section{Litterature}
 % in order to make a reference use \cite[]{} exaple \cite[p.~2]{Henriksen} referes to page 2 in Troels' MSc thesis
 \begin{thebibliography}{widest entry}
 
