@@ -69,7 +69,23 @@
 
 \section{TAIL}
 
-\section{futhark}
+TAIL stands for Typed Array Intermidiate Language and is an intermidiate language for the array programming language APL. APL is an older language created in the 1960's by Kenneth E. Iverson. The central datatype of the APL language is a multidimentional array. The language is dynamicly typed and has a functional core supporting fist and second order functions. A noteworthy thing about APL is its extencive use of special caracters wich is used to denote the build in functions and operators. 
+
+APL is still extencively in some arreas such as the finacial world where large code bases are still operational and being actively developed. \cite{Elsman0} \\
+
+TAIL is created as an intermidiate language to be ''a practical and well-defined intermidate formate for targeting parallel-architectures through a large number of exsisting tools and frameworks.'' \cite{Elsman0}. 
+
+The main datatype in TAIL is also a multidimantional array. Array types are in TAIL annotated with their ranks explicetly. 
+
+  called shapes,  where the number of dimentions are the rank of the shape. 
+A couple of special cases for this datatype is the vector type
+
+
+\section{Futhark}
+The futhark language is designed to \dots
+
+\section{The difference between TAIL and futhark}
+Her skal vi forklare essensen af problemet ved at compilere tail kode til futhark kode. Dette afsnit er sindsygt vigtigt i forhold til at være overbevisende om at vores projekt er interessant. 
 
 \section{Compilation strategy}
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
@@ -132,9 +148,8 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
 array is either truncated or the elements are repeated until the array is long enough.
 
-Futhark has a reshape function that only works for arrays of the correct dimensions.
+Futhark has a reshape function that only works for arrays of the correct dimensions. 
 
-The {\tt reshape} operator in TAIL 
 
 \section{Implementation of the compiler}
 
@@ -166,6 +181,8 @@ We are creently about half way with the implementation of the functions in TAIL.
 \begin{thebibliography}{widest entry}
 
   \bibitem[Henriksen]{Henriksen} \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\ Troels Henriksen.  MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
+  
+  \bibitem[Elsman]{Elsman0} \textbf{Compiling a subset of APL...} Martin Elsman and Martin Dybdal
 
 \end{thebibliography}
 
