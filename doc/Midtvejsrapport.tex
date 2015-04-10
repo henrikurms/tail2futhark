@@ -69,18 +69,73 @@ There are 10 different kind of Tail expressions most of whitch has exact equival
 
 These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat. \\
 
-The scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at. 
+The scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at.
 
 \section{The parallel operators}
 
+\subsection{each}
+The type of the {\tt each} function is $each(f,a) :: \forall\alpha\beta\gamma.(\alpha \to \beta) \to [\alpha]^\gamma \to [\beta]^\gamma$.
+
+The {\tt each} function in TAIL applies a function to every element in the flat representation of the array. This is a completely parallel operation more commonly known as map. The {\tt map} combinator in futhark has slightly different semantics.
+Since futhark views a multidimensional array as nested simple arrays it applies the function to every array element.
+Thas is, it maps the function into the outer-most dimention of the array.
+
+To solve this problem we have nested {\tt map}s to the depth of the array with the required function, for example, an {\tt each} operation over an array of rank 2 would have two {\tt map}s nested in each other so the kernel is mapped on each element of basic type.
+
+For example an each operation on an array of rank 2 will look like:
+\begin{lstlisting}[numbers=none,frame=none]
+each(f,a)	=>	map(fn x => map (f,x), a)
+\end{lstlisting}
+
+This means the parallel {\tt each} operations in TAIL are compiled to parallel code in the futhark language.
+
+\subsection{eachV}
+The {\tt eachV } is just a special case of the {\tt each} operator that works on vectors, i.e. flat arrays where the size
+is known at compile time. We do not use this extra information so this special case is not important for us.
+
+\subsection{reduce}
+The type of the {\tt each} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
+The {\tt reduce} function in TAIL uses an associative binary operator to reduce an array of rank $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension. The futhark reduce on the other hand reduces each array in the outer array, i.e. it reduces along the outer-most dimension. 
+
+We have adopted the samme approach as with each by using nested maps to map the reduce on the innermost dimension.
+
+Fore example reducing an array of rank 2 emits the following code:
+
+\begin{lstlisting}[numbers=none,frame=none]
+reduce(+,a)	=> 	map(fn x => reduce(+,x), a)
+\end{lstlisting}j
+
+\subsection{zipWith}
+
+The zipWith operator applies a scalar binary operator on pairs of elements from two arrays of the same shape two
+produce a third array of the same shape as the input arrays.
+
+ To do this in futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples.
 
 \section{Other interesting operators}
 
+\subsection{take}
+
+The {\tt take} operator in TAIL has very unique semantics, for a positive arguement that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array. For a negative argument {\tt take} returns the last n elements of the array. If there are not enough elements in the array, {\tt take} pads with zeros. 
+
+\subsection{reshape}
+The {\tt reshape} operator in TAIL 
+
+\section{Methods and tools}
+cabal\\
+git\\
+test - golden, \\
+\section{Project status}
+We are about half way with the implementation of the functions in TAIL. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% REFERENCES / LITTERATURE %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % in order to make a reference use \cite[]{} exaple \cite[p.~2]{Henriksen} referes to page 2 in Troels' MSc thesis
 \begin{thebibliography}{widest entry}
- \bibitem[Henriksen]{Henriksen} \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\ Troels Henriksen.  MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
 
+  \bibitem[Henriksen]{Henriksen} \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\ Troels Henriksen.  MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
 
 \end{thebibliography}
 
