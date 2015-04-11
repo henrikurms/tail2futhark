@@ -162,12 +162,31 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
 array is either truncated or the elements are repeated until the array is long enough.
 
-Futhark has a reshape function that only works for arrays of the correct dimensions. 
+Futhark has a reshape function that only works for arrays of the correct dimensions.
 
+Our general strategy for compiling reshape is to first ensure that the array is the correct size and then use the futhark reshape
+function to do the final step. To adjust the size we operate on the flat representation of the array, this is easy to produce also
+using futhark reshape. To adjust the array we first make sure it is long enough by extending it using the function replicate and then
+truncate it to the correct length with split.
+
+To keep the implementation simple we generate code that calls generated library functions written in futhark which do most of the work.
+Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in futhark
+for the one dimensional cases. If we wanted to simply call a function instead we would need a seperate library function for each
+rank and basic type combination which we needed to call reshape on since futhark only allows declaration of monomorphic functions.
+
+We have to decide where to put the library functions.
+We would like the compiler to always output a valid (runnable) futhark program given a valid TAIL input program, so we would like to
+be able to include the library in the output when we run the compiler.
+Furthermore since futhark has no polymorphism we have to include versions of all types, but we would like to only maintain one version.
+Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
+extensive. Therefore we have coded the functions in the compiler itself.
+\subsection{take}
+
+The {\tt take} operator in TAIL has very unique semantics, for a positive arguement that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array. For a negative argument {\tt take} returns the last n elements of the array. If there are not enough elements in the array, {\tt take} pads with zeros. 
 
 \section{Implementation of the compiler}
 
-\section{Test}
+\section{Testing}
 
 \section{Discussion}
 
@@ -177,6 +196,7 @@ Futhark has a reshape function that only works for arrays of the correct dimensi
 
 cabal\\
 git\\
+\subsection{Test}
 We have decided on making integration test testing the pipeline all the ray from apl through TAIL to futhark.
 golden, \\
 
