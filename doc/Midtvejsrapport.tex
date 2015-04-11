@@ -66,27 +66,43 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+The TAIL operators that we will compile to code using the parallel SOACs of Futhark are: each, reduce and zipWith.
 
 \section{TAIL}
+TAIL is a typed array intermidiate language and the target of an APL compiler. APL is an older laguage created in the 1960's by Kenneth E. Iverson. APL is an array programming language, its main type is the multi-dimentional array. All of its build-in functions or operators are represented by special graphic symbols allowing for very concise code, it is dynamicly typed and support  first and second order functions. APL supports polymophism in both its first and second order functions and operators. Even though it is not a new language it is still used in the financial world where large code bases are still operational and activly developed. \\
 
-TAIL is a typed array intermidiate language to the array programming language APL an older laguage created in the 1960's by Kenneth E. Iverson. The central datatype in APL is the multidimentional array. All of its build-in functions or operators are represented by special graphic symbols allowing for very concise code, it is dynamicly typed and support  first and second order functions. APL support polymophism in both its first and second order functions and operators. Even though it is not a new language it is still used in the financial world where large code bases are still operational and activly developed. \\
+TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists. TAIL can also be compiled efficiently into a C-like language \cite{Elsman0}. \\
 
-TAIL was created as an intermidiate format for parallel execution of APL code by targeting parallel-achitectures though a large number of of existing tools and frameworks \cite{Elsman0}.
-The explicit types of TAIL is used to compile away some of operators of APL instead substituting it with simpler APL functions. \\
+The expressivity of TAILs type system allows the compiler to express some operators wich are primitive in APL such as the inner product operator using simpler operators. \\
 
-The types in TAIL are devided into four types. Firstly there are base types $\kappa$ comsisting of {\tt int}, {\tt double}, {\tt bool} and {\tt $\alpha$}. Secondly, there are shape types ($\rho$) that can be either a scalar value/variable of type int, denoted $i$,  or a shape variable denoted $\gamma$ or a combination of two shape variables, denoted $\rho + \rho'$\\
+The central type in taiil is the multi-dimentional array type. Array types consist of a base type and a rank. The base type of an array is the type of the elements in the array.  The currently supported base types are {\tt int}, {\tt double}, {\tt bool} {\tt char}. Scalars are arrays of rank 0. Most operators i TAIL are polymorphic in respect to array ranks and base types. 
+
+Certain operators (such as shape) produce one dimensional array for wich the length is known at compile time. The types of such values are captured in a special vector type that keep track of the vector sizes. 
+TAIL include special operators that operate on vectors and peserve this type information. 
+
+The explicit types of TAIL is used to compile away some operators of APL, instead substituting them with simpler APL functions. \\
+
+TAIL program always consist of a single expression. SEE ARTICLE FOR REFERENCE \\
+
+Below we discuss some selected operators from TAIL.
+
+{\tt each} takes as arguments a kernel and an array and functions as the generel map, applying the kernel to each element in the flattened array. 
+{\tt eachV} is a special case of {\tt each} ...\\
+{\tt reduce} takes as arguments a kernel, a neural element and and array. It works similar to fold in ML starting by aplying the kernel to the neural element and the first element of the array and then the continuesly the kernel applied to the result and the next element in the array. 
+{\tt zipWith} takes a kernel and two arrays. It then applies the kernel on the censecutive pair of elements consisting of the i-th element from the first array and the i-th element from the second array. 
+
+%The types in TAIL are devided into four types. Firstly there are base types comsisting of {\tt int}, {\tt double}, {\tt bool} and the polymorphic type {\tt $\alpha$} that can represent any one of them. Secondly, there are shape types that can be either a scalar value/variable of type int,  or a shape variable or a combination of two shape variables. \\
+%Then there is array types that consist of a base type and a rank. Finaly there is 
 
 
-The main datatype in TAIL is also a multidimantional array. Array types are in TAIL annotated with their ranks explicetly. 
-TAILs type system treats scalar values as special cases of the array time namly an array with rank 0. 
+%The main datatype in TAIL is also a multidimantional array. Array types are in TAIL annotated with their ranks explicetly. 
+%TAILs type system treats scalar values as special cases of the array time namly an array with rank 0. 
 
- There are two seperate representations of vectors, either the special vector type used when the length of the vector is known or the general array type where the rank is 1.  
+%There are two seperate representations of vectors, either the special vector type used when the length of the vector is known or the general array type where the rank is 1.  
  
-Besides array and vector types, TAIL also have base types in the form of {\tt int}, {\tt double}, {\tt bool} and {\tt $\alpha$}.
+%Besides array and vector types, TAIL also have base types in the form of {\tt int}, {\tt double}, {\tt bool} and {\tt $\alpha$}.
 
-\dots
-
-So far TAIL only support a subset of the APL functions and operators. 
+%So far TAIL only support a subset of the APL functions and operators. 
 
 
 \section{Futhark}
@@ -152,10 +168,6 @@ produce a third array of the same shape as the input arrays.
 
 \section{Other interesting operators}
 
-\subsection{take}
-
-The {\tt take} operator in TAIL has very unique semantics, for a positive arguement that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array. For a negative argument {\tt take} returns the last n elements of the array. If there are not enough elements in the array, {\tt take} pads with zeros. 
-
 \subsection{reshape}
 
 The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
@@ -179,6 +191,7 @@ be able to include the library in the output when we run the compiler.
 Furthermore since futhark has no polymorphism we have to include versions of all types, but we would like to only maintain one version.
 Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
 extensive. Therefore we have coded the functions in the compiler itself.
+
 \subsection{take}
 
 The {\tt take} operator in TAIL has very unique semantics, for a positive arguement that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array. For a negative argument {\tt take} returns the last n elements of the array. If there are not enough elements in the array, {\tt take} pads with zeros. 
@@ -212,9 +225,11 @@ We are creently about half way with the implementation of the functions in TAIL.
 % in order to make a reference use \cite[]{} exaple \cite[p.~2]{Henriksen} referes to page 2 in Troels' MSc thesis
 \begin{thebibliography}{widest entry}
 
-  \bibitem[Henriksen]{Henriksen} Troels Henriksen. \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\   MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
+  \bibitem[1]{Elsman0} Martin Elsman and Martin Dybdal. \textbf{Compiling a Subset of APL Into a Typed Intermediate Language} In ACM SIGPLAN International Workshop on Libraries, Languages and Compilers for Array Programming (ARRAY’14). Edinburgh, UK. June, 2014
+
+  \bibitem[2]{Henriksen} Troels Henriksen. \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\   MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
   
-  \bibitem[Elsman]{Elsman0} Martin Elsman and Martin Dybdal. \textbf{Compiling a Subset of APL Into a Typed Intermediate Language} In ACM SIGPLAN International Workshop on Libraries, Languages and Compilers for Array Programming (ARRAY’14). Edinburgh, UK. June, 2014
+
 \end{thebibliography}
 
 \end{document}
