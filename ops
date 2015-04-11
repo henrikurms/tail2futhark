@@ -1,0 +1,35 @@
+Funktioner  Testet*     Kommentarer 
+addi        testet
+addd        ikke testet
+iotaV       ikke testet
+iota        ikke testet     ens med iotaV
+eachV       testet
+each        testst
+reduce(V)   testet
+reduce      ikke testet
+shapeV      ikke testet             ens med shape
+shape       ikke testet
+reshape     -----------------       eksisterer ikke!! Er erstattet med reshape0
+reshape0    delvis testet       is the normal reshape, NB virker ikke på tom liste
+reverse     -----------------       erstattet med vreverse
+vreverse                note: testet i vrev i Martins tests
+rotateV 
+vrotateV        
+rotate      -----------------       erstattet med reshape og rotateV    
+transp      ikke testet
+transp2 
+takeV       delvis testet       
+take        delvis testet       
+dropV       
+drop        
+consV       
+cons        
+snocV       
+snoc        
+firstV      ikke testet     NB!! test failed - not correct - futhark parse error
+first           
+zipWith     testet
+catV        testet
+cat         ikke testet
+
+addi, addd, iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV, cat

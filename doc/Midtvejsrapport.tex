@@ -69,15 +69,14 @@
 
 \section{TAIL}
 
-TAIL stands for Typed Array Intermidiate Language and is an intermidiate language for the array programming language APL. APL is an older language created in the 1960's by Kenneth E. Iverson. The central datatype of the APL language is a multidimentional array. The language is dynamicly typed and has a functional core supporting fist and second order functions. A noteworthy thing about APL is its extencive use of special caracters wich is used to denote the build in functions and operators. 
+TAIL is a typed array intermidiate language to the array programming language APL an older laguage created in the 1960's by Kenneth E. Iverson. The central datatype in APL is the multidimentional array. All of its build-in functions or operators are represented by special graphic symbols allowing for very concise code, it is dynamicly typed and support  first and second order functions. APL support polymophism in both its first and second order functions and operators. Even though it is not a new language it is still used in the financial world where large code bases are still operational and activly developed. \\
 
-APL is still extencively in some arreas such as the finacial world where large code bases are still operational and being actively developed. \cite{Elsman0} \\
-
-TAIL is created as an intermidiate language to be ''a practical and well-defined intermidate formate for targeting parallel-architectures through a large number of exsisting tools and frameworks.'' \cite{Elsman0}. 
-
-The reson for introducing a more typed language is in order to use the type information to make optimizations. ????????????????????????
+TAIL was created as an intermidiate format for parallel execution of APL code by targeting parallel-achitectures though a large number of of existing tools and frameworks \cite{Elsman0}.
+The explicit types of TAIL is used to compile away some of operators of APL instead substituting it with simpler APL functions. \\
 
 \dots
+
+The types in TAIL are devided into four, base types $\kappa$ comsisting of {\tt int}, {\tt double}, {\tt bool} and {\tt $\alpha$}
 
 The main datatype in TAIL is also a multidimantional array. Array types are in TAIL annotated with their ranks explicetly. 
 TAILs type system treats scalar values as special cases of the array time namly an array with rank 0. 
@@ -92,10 +91,14 @@ So far TAIL only support a subset of the APL functions and operators.
 
 
 \section{Futhark}
+
 The futhark language is designed to \dots
 
 \section{The differences between TAIL and futhark}
+
 Her skal vi forklare essensen af problemet ved at compilere tail kode til futhark kode. Dette afsnit er sindsygt vigtigt i forhold til at være overbevisende om at vores projekt er interessant. 
+
+\subsection{Polymorphism}
 
 \section{Compilation strategy}
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
@@ -109,6 +112,7 @@ The scalar operators have equivalents in the Futhark language and are therefore 
 \section{The parallel operators}
 
 \subsection{each}
+
 The type of the {\tt each} function is $each(f,a) :: \forall\alpha\beta\gamma.(\alpha \to \beta) \to [\alpha]^\gamma \to [\beta]^\gamma$.
 
 The {\tt each} function in TAIL applies a function to every element in the flat representation of the array. This is a completely parallel operation more commonly known as map. The {\tt map} combinator in futhark has slightly different semantics.
