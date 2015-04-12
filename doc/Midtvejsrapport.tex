@@ -107,7 +107,14 @@ Below we discuss some selected operators from TAIL.
 
 \section{Futhark}
 
-The futhark language is designed to \dots
+Futhark is a functional programming language inspired by Haskell and Standard ML. It was designed to be an atratice choise for expressing complex programs by having enogh expressive power without loosing the posibility to do agressive optimization and creating parallelisation even though the higher the expressive power of the language the more difficult optimization ofthen become. Due to this the Futhark language only support regular arrays (arrays where all inner dimentions are of the same length) because of the complication to size analysis supporting non-regular arrays would create.
+However Futhark do support nested parallalism as this is a feature many programs depend upon \cite{Henriksen}.\\
+
+Futhark is a mostly first order language but support bulk (parallel) operations on arrays using the build-in second-order array combinators (SOACs) of the language. The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}. The language is expressive enought that the same functionality as these functions present can be created using do-loops but that should be avoided do to the fact that the optimization Futhark make available are based on the transformation on these.
+
+%Does not support polymorfism in types
+
+%A Futhark program consist of a list of function declarations
 
 \section{The differences between TAIL and futhark}
 
@@ -118,7 +125,7 @@ Her skal vi forklare essensen af problemet ved at compilere tail kode til futhar
 \section{Compilation strategy}
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
 Thus the chalenge boils down to translating Tail expressions to Futhark expressions. 
-There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really if the expression is an operator expression.\\
+There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really if the expression is an operator expression. \\
 
 These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat. \\
 
