@@ -4,6 +4,7 @@
 \usepackage{graphicx} % \includegraphics
 \usepackage{listings}
 \usepackage{setspace}
+\usepackage{cite}
 %\usepackage{thebibliography}
 
 \definecolor{Background}{rgb}{0.98,0.98,0.98}
@@ -71,7 +72,7 @@ The TAIL operators that we will compile to code using the parallel SOACs of Futh
 \section{TAIL}
 TAIL is a typed array intermidiate language and the target of an APL compiler. APL is an older laguage created in the 1960's by Kenneth E. Iverson. APL is an array programming language, its main type is the multi-dimentional array. All of its build-in functions or operators are represented by special graphic symbols allowing for very concise code, it is dynamicly typed and support  first and second order functions. APL supports polymophism in both its first and second order functions and operators. Even though it is not a new language it is still used in the financial world where large code bases are still operational and activly developed. \\
 
-TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists. TAIL can also be compiled efficiently into a C-like language \cite{Elsman0}. \\
+TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists. TAIL can also be compiled efficiently into a C-like language \cite{ElsmanDybdal:Array:2014}%\cite{Elsman0}. \\
 
 The expressivity of TAILs type system allows the compiler to express some operators wich are primitive in APL such as the inner product operator using simpler operators. \\
 
@@ -108,9 +109,11 @@ Below we discuss some selected operators from TAIL.
 \section{Futhark}
 
 Futhark is a functional programming language inspired by Haskell and Standard ML. It was designed to be an atratice choise for expressing complex programs by having enogh expressive power without loosing the posibility to do agressive optimization and creating parallelisation even though the higher the expressive power of the language the more difficult optimization ofthen become. Due to this the Futhark language only support regular arrays (arrays where all inner dimentions are of the same length) because of the complication to size analysis supporting non-regular arrays would create.
-However Futhark do support nested parallalism as this is a feature many programs depend upon \cite{Henriksen}.\\
+However Futhark do support nested parallalism as this is a feature many programs depend upon \cite{TroelsHenriksen}.\\
 
-Futhark is a mostly first order language but support bulk (parallel) operations on arrays using the build-in second-order array combinators (SOACs) of the language. The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}. The language is expressive enought that the same functionality as these functions present can be created using do-loops but that should be avoided do to the fact that the optimization Futhark make available are based on the transformation on these.
+Futhark is a mostly first order language but support bulk (parallel) operations on arrays using the build-in second-order array combinators (SOACs) of the language. The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}. The language is expressive enought that the same functionality as these functions present can be created using do-loops but that should be avoided do to the fact that the optimization Futhark make available are based on the transformation on these. \\
+
+The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays. The type system of Futhark does not support polymorphism, however the build-in SOACs work on all regular arrays created of the basic types. 
 
 %Does not support polymorfism in types
 
@@ -205,6 +208,9 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 
 \section{Implementation of the compiler}
 
+\subsection{Adabtion of the parser}
+The parser that we make use of was created in a precius project \cite{APLACC}. In the time between that project finished and ours commenced the TAIL language had been updated with new features and we therefore had to update the parser so that it 
+
 \section{Testing}
 
 \section{Discussion}
@@ -212,6 +218,12 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 \section{Summery and future work}
 
 \section{Methods and tools}
+In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the  compiler. 
+
+\subsection{Creating a compilation scheme}
+We will use the creation of a more formal compilation scheme using a form of mathematical nottation as a method to express the ideas behind the compilation we have done and also a method to remove the compilation strategy and scheme from implementation details making it independent of the concrete implementation of the compiler. 
+
+\subsection{}
 
 cabal\\
 git\\
@@ -220,23 +232,33 @@ We have decided on making integration test testing the pipeline all the ray from
 golden, \\
 
 \section{Project status}
-The project is comming along as planed. We used the fist couple of weeks after handing in the synopsis to get a more detailed understanding of the TAIL and futhark and began creating the framework we wanted to use for the compiler. 
-We thought it would take longer time adapting the parser to work with the new version of TAIL than it did and therefore ended up starting on the acutal compiler about 3 days ahed of time. 
+The project is comming along as planed and we are keeping to our time schedule that can be seen in Figure \ref{fig:gantt}. It took shorter time than expected to adabt the parser to work with the latest version of TAIL and we therefore started on the implementation of the TAIL functions in the compiler a few days before sceduled.  We are done with implementing half of the functions in TAIL to Futhark source code.
 
-We are creently about half way with the implementation of the functions in TAIL. We have done testing from the beginning but 
+\begin{figure}%[p]
+    \centering
+    \includegraphics[width=16cm]{midvejsgantt3.png}
+    \caption{Gantt chart of the project activities. The remaining time of the project is highlighted by a red box.}
+    \label{fig:gantt}
+\end{figure}
+
+The remainder of the time in the project we will focus on getting the last functions implemented and tested. We will also focus on creating a more formal translation/compilation scheme in order to learn how use a more mathematic semantic to describe the translation/compilation and in order to present the compilation in a way that is independent from the implementation. 
+
+We will also test the efficiency of our generated Futhark code using benchmarks to compare it to the C-code generated by the TAIL compiler. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%% REFERENCES / LITTERATURE %%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\bibliography{references}{}
+\bibliographystyle{plain}
+
 % in order to make a reference use \cite[]{} exaple \cite[p.~2]{Henriksen} referes to page 2 in Troels' MSc thesis
-\begin{thebibliography}{widest entry}
+%\begin{thebibliography}{widest entry}
 
-  \bibitem[1]{Elsman0} Martin Elsman and Martin Dybdal. \textbf{Compiling a Subset of APL Into a Typed Intermediate Language} In ACM SIGPLAN International Workshop on Libraries, Languages and Compilers for Array Programming (ARRAY’14). Edinburgh, UK. June, 2014
+%  \bibitem[1]{Elsman0} Martin Elsman and Martin Dybdal. \textbf{Compiling a Subset of APL Into a Typed Intermediate Language} In ACM SIGPLAN International Workshop on Libraries, Languages and Compilers for Array Programming (ARRAY’14). Edinburgh, UK. June, 2014
 
-  \bibitem[2]{Henriksen} Troels Henriksen. \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\   MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
+%  \bibitem[2]{Henriksen} Troels Henriksen. \textbf{Exploiting Functional Invariants to Optimise Parallelism: a dataflow approach}.\\   MSc thesis. Department of Computer Science, University of Copenhagen. February 2014.
   
-
-\end{thebibliography}
+%\end{thebibliography}
 
 \end{document}

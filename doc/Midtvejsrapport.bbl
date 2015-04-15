@@ -1,0 +1,23 @@
+\begin{thebibliography}{1}
+
+\bibitem{APLACC}
+Michael Budde.
+\newblock Compiling apl to accelerate through a typed il.
+\newblock Msc project, Department of Computer Science, University of
+  Copenhagen, November 2014.
+
+\bibitem{ElsmanDybdal:Array:2014}
+Martin Elsman and Martin Dybdal.
+\newblock Compiling a subset of {APL} into a typed intermediate language.
+\newblock In {\em Proceedings of the 1st ACM SIGPLAN International Workshop on
+  Libraries, Languages and Compilers for Array Programming}, ARRAY'14. ACM,
+  2014.
+
+\bibitem{TroelsHenriksen}
+Troels Henriksen.
+\newblock Exploiting functional invariants to optimise parallelism: a dataflow
+  approach.
+\newblock Msc thesis, Department of Computer Science, University of Copenhagen,
+  February 2014.
+
+\end{thebibliography}
