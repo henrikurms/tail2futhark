@@ -82,7 +82,7 @@ TAIL include special operators that operate on vectors and peserve this type inf
 
 The explicit types of TAIL is used to compile away some operators of APL, instead substituting them with simpler APL functions. \\
 
-TAIL program always consist of a single expression. SEE ARTICLE FOR REFERENCE \\
+TAIL programs always consist of a single expression. SEE ARTICLE FOR REFERENCE \\
 
 Below we discuss some selected operators from TAIL.
 
@@ -104,18 +104,34 @@ Below we discuss some selected operators from TAIL.
 
 %So far TAIL only support a subset of the APL functions and operators. 
 
-
+\newpage
 \section{Futhark}
 
-Futhark is a functional programming language inspired by Haskell and Standard ML. It was designed to be an atratice choise for expressing complex programs by having enogh expressive power without loosing the posibility to do agressive optimization and creating parallelisation even though the higher the expressive power of the language the more difficult optimization ofthen become. Due to this the Futhark language only support regular arrays (arrays where all inner dimentions are of the same length) because of the complication to size analysis supporting non-regular arrays would create.
-However Futhark do support nested parallalism as this is a feature many programs depend upon \cite{Henriksen}.\\
+Futhark is a functional programming language inspired by Haskell and Standard ML. It was designed to be an attractive choice for expressing complex programs by having enough expressive power without loosing the posibility to do agressive optimization and creating parallelisation even though the higher the expressive power of the language the more difficult optimization ofthen become. Due to this the Futhark language only supports regular arrays (arrays where all inner dimentions are of the same length) because of the complication to size analysis supporting non-regular arrays would create.
+However Futhark does support nested parallalism as this is a feature many programs depend upon \cite{Henriksen}.\\
 
-Futhark is a mostly first order language but support bulk (parallel) operations on arrays using the build-in second-order array combinators (SOACs) of the language. The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}. The language is expressive enought that the same functionality as these functions present can be created using do-loops but that should be avoided do to the fact that the optimization Futhark make available are based on the transformation on these.
+Futhark is a mostly first order language but supports bulk (parallel) operations on arrays
+using the build-in second-order array combinators (SOACs) of the language. 
+The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
+The operators have the expected functionality also found in Haskell and Standard ML.
+Futhark supports nesting of array types, an int array array will contain int arrays and so on.
+{\tt map} maps a function onto each element in the array.
+If the array mapped over contains arrays the function will be applied to each array,
+so in other words the function is mapped over the outer-most dimension of the multi-dimensional array.
+The language is expressive enough that the same functionality as these functions present can be created using do-loops
+but that should be avoided do to the fact that the optimization Futhark make available are based on the
+transformation on the four SOACs. \\
 
 %Does not support polymorfism in types
 
-%A Futhark program consist of a list of function declarations
+A Futhark program consist of a list of function declarations like
+\begin{lstlisting}[numbers=none,frame=none]
+fun return-type name(params...) = body
+\end{lstlisting}
 
+Except for inline anonymus functions all functions are defined globaly. 
+
+\newpage
 \section{The differences between TAIL and futhark}
 
 Her skal vi forklare essensen af problemet ved at compilere tail kode til futhark kode. Dette afsnit er sindsygt vigtigt i forhold til at være overbevisende om at vores projekt er interessant. 
