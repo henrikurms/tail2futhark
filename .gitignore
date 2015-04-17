@@ -4,6 +4,8 @@ doc/*.aux
 doc/*.log
 doc/*.pdf
 doc/*.toc
+doc/*.bbl
+doc/*.blg
 tests/Test
 *.fout
 *.out
