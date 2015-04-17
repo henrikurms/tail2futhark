@@ -68,7 +68,17 @@
 %%%%%%%%%%%  REPORT STARTS HERE  %%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\section{Prelude}
+\subsection{Problem Definition}
+Is it possible, effectively to compile TAIL programs, produced by the APL compiler AplTail,
+into Futhark programs and thereby make use of the Futhark infrastructure for optimisation
+and the possibility for targeting parallel hardware?
+\subsection{Problem Elaboration}
+The language APL is a mature array programming that gives rise to parallelism. The AplTail compiler produces
+a typed intermediate language TAIL from APL source code. It also possible express parallelism in Futhark source code,
+we wish to assess the possibility of compiling TAIL to Futhark thereby making it possible to execute APL in parallel through
+the Futhark backend.
+\subsection{Methods and Tools}
 \section{Introduction}
 
 In recent years, there has been a lot of focus on leveraging the power of parallel hardware. 
@@ -281,7 +291,7 @@ One of the things that had changed was that boleans was added to the TAIL langua
 
 Another thing that had changed was that the shape type in the older version of TAIL was replaced with a vector type in the newer version.\\
 
-\subsection{Describtion of the system}
+\subsection{Description of the system}
 Flags, test..
 we expect that the tems we get in are well typed and correct. 
 
@@ -297,7 +307,7 @@ The second way are going to do testing is by benchmark test. This we will do in 
 
 \subsection{The problem of polymorphism vs. no polymorphism}
 
-\section{Summery and future work}
+\section{Summary and future work}
 
 \section{Methods and tools}
 In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the  compiler. 
@@ -313,8 +323,11 @@ We used an alredy existing compiler in order not to use our resources on work th
 cabal, golden ...
 
 \section{Project status}
-The project is comming along as planed and we are keeping to our time schedule that can be seen in Figure \ref{fig:gantt}. It took shorter time than expected to adabt the parser to work with the latest version of TAIL and we therefore started on the implementation of the TAIL functions in the compiler a few days before sceduled. 
-We are done with implementing half of the functions in TAIL to Futhark source code.As we are work on testing the implementation while we develop we are halfway through testing the functionality as well. 
+The project is comming along as planed and we are keeping to our time schedule that can be seen in Figure \ref{fig:gantt}.
+It took shorter time than expected to adabt the parser to work with the latest version of TAIL
+which meant that we started on the implementation of the TAIL functions in the compiler a few days before sceduled. 
+We are done with implementing half of the functions in TAIL to Futhark source code.As we are work on testing the
+implementation while we develop we are halfway through testing the functionality as well. 
 
 \begin{figure}[width=\textwidth]%[p]
     \centering
