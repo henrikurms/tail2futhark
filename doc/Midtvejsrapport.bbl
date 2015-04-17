@@ -11,7 +11,7 @@ Martin Elsman and Martin Dybdal.
 \newblock Compiling a subset of {APL} into a typed intermediate language.
 \newblock In {\em Proceedings of the 1st ACM SIGPLAN International Workshop on
   Libraries, Languages and Compilers for Array Programming}, ARRAY'14. ACM,
-  2014.
+  June 2014.
 
 \bibitem{TroelsHenriksen}
 Troels Henriksen.
@@ -19,5 +19,16 @@ Troels Henriksen.
   approach.
 \newblock Msc thesis, Department of Computer Science, University of Copenhagen,
   February 2014.
+
+\bibitem{T.Henriksen&C.Oancea}
+Troels Henriksen and Cosmin~E. Oancea.
+\newblock Bounds checking: An instance of hybrid analysis.
+\newblock In {\em ACM SIGPLAN International Workshop on Libraries, Languages
+  and Compilers for Array Programming}, ARRAY'14. ACM, September 2014.
+
+\bibitem{TorbenMogensen}
+Torben Mogensen.
+\newblock {\em Introduction to Compiler Design}.
+\newblock Springer, 2011.
 
 \end{thebibliography}

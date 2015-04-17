@@ -3,44 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: Midtvejsrapport.aux
 The style file: plain.bst
 Database file #1: references.bib
-You've used 3 entries,
+You've used 5 entries,
             2118 wiz_defined-function locations,
-            516 strings with 4555 characters,
-and the built_in function-call counts, 705 in all, are:
-= -- 71
-> -- 27
+            527 strings with 4859 characters,
+and the built_in function-call counts, 1214 in all, are:
+= -- 119
+> -- 47
 < -- 0
-+ -- 11
-- -- 8
-* -- 35
-:= -- 138
-add.period$ -- 10
-call.type$ -- 3
-change.case$ -- 15
++ -- 19
+- -- 14
+* -- 62
+:= -- 225
+add.period$ -- 17
+call.type$ -- 5
+change.case$ -- 23
 chr.to.int$ -- 0
-cite$ -- 3
-duplicate$ -- 30
-empty$ -- 58
-format.name$ -- 8
-if$ -- 143
+cite$ -- 5
+duplicate$ -- 56
+empty$ -- 108
+format.name$ -- 14
+if$ -- 254
 int.to.chr$ -- 0
-int.to.str$ -- 3
-missing$ -- 1
-newline$ -- 18
-num.names$ -- 6
-pop$ -- 13
+int.to.str$ -- 5
+missing$ -- 4
+newline$ -- 28
+num.names$ -- 10
+pop$ -- 27
 preamble$ -- 1
-purify$ -- 10
+purify$ -- 17
 quote$ -- 0
-skip$ -- 18
+skip$ -- 32
 stack$ -- 0
-substring$ -- 15
-swap$ -- 2
+substring$ -- 25
+swap$ -- 5
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 12
+type$ -- 18
 warning$ -- 0
-while$ -- 6
-width$ -- 4
-write$ -- 36
+while$ -- 10
+width$ -- 6
+write$ -- 58
