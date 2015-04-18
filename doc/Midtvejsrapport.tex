@@ -94,7 +94,7 @@ does so at the level of arrays.
 We will not test the produced code on parallel hardware as no parallel backend for Futhark yet exists.
 
 \subsection{Methods and tools}
-In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the  compiler. 
+In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the compiler. 
 
 \subsubsection{Symbolic notation describe the compilation scheme}
 We are going to use a symbolic notation to illustrate a compilation scheme showing the compilation in a way that abstracts away implementation details. We use this tool to create a description of the compilation scheme that is independent of the implementation and which should make it possible to implement the compiler in any language.
@@ -103,8 +103,28 @@ We are going to use a symbolic notation to illustrate a compilation scheme showi
 We used a parser that was created douring an earlier project \cite{APLACC} instead of creating our own. This was done in order to use alredy existing tools and save our resources for work that had not alredy been done by others. We did however have to update the parser a little as it was a few months old and therefore did not support the newest additions to the TAIL language. Details about this implementation can be found in the section \textit{Implementation of the compiler}. 
 We used an alredy existing compiler in order not to use our resources on work that had alredy been done, that way opening up more time to work on the actural compilation.
 
+
 \subsubsection{Libaries used}
-cabal, golden ...
+
+In our implementation we have used various external libraries, we will discuss some of the non-standard used libraries here.
+For building our project and managing external libraries we have used the cabal package. This is a very common thing to
+do in haskell projects and should make it easy for anyone to build our code.
+We use the tasty package which provides a testframework that we use to implement our tests. Furthermore we have used the
+package tasty-golden which is a plugin for the tasty framework that allows to test against "golden" files.
+A lot of projects implement their own test frameworks and we could have done the same.
+We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
+test framework which could prove time consuming.
+Finally the existing parser for TAIL makes use of the popular parsec library and we have continued to use parsec in our continuation
+of the parser
+
+\subsubsection{Testing}
+
+We provide a test suite for testing of our compiler.
+Each test compiles an TAIL program and tries to run it in the Futhark interpreter and the matches the result against a reference value found in a file with the extension ok.
+This testing procedure makes sure that our compiler produces valid Futhark code from our test programs.
+Most of the tests are generated from APL code with the AplTail compiler.
+
+We also plan to provide bechmarks that test the speed of our code in the future.
 
 \section{Project status}
 The project is comming along as planed and we are keeping to our time schedule that can be seen in Figure \ref{fig:gantt}.
