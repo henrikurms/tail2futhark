@@ -5,6 +5,7 @@
 \usepackage{listings}
 \usepackage{setspace}
 \usepackage{cite}
+\usepackage{stmaryrd}
 
 \lstset{
   moredelim=[is][\underbar]{_}{_}
@@ -46,6 +47,8 @@
 
 \begin{document}
 
+\newcommand{\evals}[1]{\llbracket #1 \rrbracket}
+
 %% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
 %% `natbio-farve` to use SCIENCE's new colors and logo.
 \AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{include/natbio-farve}}}
@@ -81,21 +84,21 @@ and the possibility for targeting parallel hardware?
 
 \subsection{Problem Elaboration}
 The language APL is a mature array programming that gives rise to parallelism. The AplTail compiler produces
-a typed intermediate language TAIL from APL source code. It also possible express parallelism in Futhark source code,
+a typed intermediate language TAIL from APL source code. It is also possible to express parallelism in Futhark source code,
 we wish to assess the possibility of compiling TAIL to Futhark thereby making it possible to execute APL in parallel through
 the Futhark backend.
 
-\section{Methods and tools}
+\subsection{Methods and tools}
 In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the  compiler. 
 
-\subsection{Symbolic notation describe the compilation scheme}
+\subsubsection{Symbolic notation describe the compilation scheme}
 We are going to use a symbolic notation to illustrate a compilation scheme showing the compilation in a way that abstracts away implementation details. We use this tool to create a description of the compilation scheme that is independent of the implementation and which should make it possible to implement the compiler in any language.
 
-\subsection{Parser}
+\subsubsection{Parser}
 We used a parser that was created douring an earlier project \cite{APLACC} instead of creating our own. This was done in order to use alredy existing tools and save our resources for work that had not alredy been done by others. We did however have to update the parser a little as it was a few months old and therefore did not support the newest additions to the TAIL language. Details about this implementation can be found in the section \textit{Implementation of the compiler}. 
 We used an alredy existing compiler in order not to use our resources on work that had alredy been done, that way opening up more time to work on the actural compilation.
 
-\subsection{Libaries used}
+\subsubsection{Libaries used}
 cabal, golden ...
 
 \section{Project status}
@@ -268,6 +271,12 @@ These operators consist of the scalar operators: add, addi, subi, subd, multi, m
 
 The scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at.
 
+%%% Table
+
+\begin{tabular}{l c l}
+$\evals{f x}$ & $=$ & $\evals{f} \evals{x}$
+\end{tabular}
+
 \section{The parallel operators}
 
 \subsection{each}
@@ -308,7 +317,7 @@ reduce(+,a)	=> 	map(fn x => reduce(+,x), a)
 The zipWith operator applies a scalar binary operator on pairs of elements from two arrays of the same shape two
 produce a third array of the same shape as the input arrays.
 
- To do this in futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples.
+To do this in futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples.
 
 \section{Other interesting operators}
 
