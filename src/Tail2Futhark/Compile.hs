@@ -2,7 +2,7 @@ module Tail2Futhark.Compile (compile) where
 
 import APLAcc.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
-import GHC.Float (double2Float)
+--import GHC.Float (double2Float)
 import Data.List
 import Data.Maybe
 import Data.Char
@@ -117,7 +117,7 @@ takeBody padElement = IfThenElse (zero `less` len) posTake negTake
 
 zero :: F.Type -> F.Exp
 zero F.IntT = Constant (Int 0)
-zero F.RealT = Constant (Float 0)
+zero F.RealT = Constant (Real 0)
 zero F.BoolT = Constant (Bool False)
 zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
@@ -128,9 +128,9 @@ takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp)))
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) = F.Var ("t_" ++ ident)
 compileExp (I int) = Constant (Int int)
-compileExp (D double) = Constant (Float (double2Float double)) -- isn't this supporsed to be real??????????
+compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -- isn't this supporsed to be real??????????
 compileExp (C char)   = Constant (Char char)
-compileExp Inf = Constant (Float (read "Infinity"))
+compileExp Inf = Constant (Real (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
 compileExp (T.Let id _ e1 e2) = F.Let (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args

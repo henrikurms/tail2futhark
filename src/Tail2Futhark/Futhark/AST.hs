@@ -30,7 +30,7 @@ data Pattern = Ident Ident
   deriving (Show, Eq)
 
 data Constant = Int Integer
-              | Float Float
+              | Real Double
               | Char Char
               | Bool Bool
               | ArrayConstant [Constant]

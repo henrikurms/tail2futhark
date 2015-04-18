@@ -58,7 +58,7 @@ ppOp op = text $ case op of
   Div -> "/"
 
 ppConstant (Int int) = integer int
-ppConstant (Float f) = float f
+ppConstant (Real f) = double f
 ppConstant (Char c) = quotes $ char c
 ppConstant (Bool b) = text (if b then "True" else "False")
 ppConstant (ArrayConstant arr) = braces . hcat . punctuate comma . map ppConstant $ arr
