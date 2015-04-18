@@ -87,6 +87,10 @@ The language APL is a mature array programming that gives rise to parallelism. T
 a typed intermediate language TAIL from APL source code. The purpose of the Futhark language is to make it possible for the programmer ro express parallelism in a high level language while at the same time targeting parallel architectures.
 We wish to assess the possibility of compiling TAIL to Futhark thereby making it possible to execute APL in parallel by using the Futhark language as backend. This also allows us to take advantage of the various optimizations that futhark provides, most notably fusion.
 
+The challanges of mapping TAIL to Futhark lie mainly in the differences between how the two languages express parallelism.
+The TAIL the parallelism is always flat, even for multi-dimensional arrays where as Futhark permits nested parallelism but always
+does so at the level of arrays.
+
 We will not test the produced code on parallel hardware as no parallel backend for Futhark yet exists.
 
 \subsection{Methods and tools}
