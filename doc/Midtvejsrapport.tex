@@ -77,6 +77,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Prelude}
 
+In the prelude part of this paper we forfill the requirements of the Midvejsrapport assignment. After the prelude section this rapport contains draft versions of the final report. Some of these sections are futher along than other so pleace keep in mind that the sections are draft an not a finished product. Some of the sections only contain a shourt describtion of what we expect the final sections should contain, however we still have the section in place to get an idea of the structure of the final report.  
+
 \subsection{Problem Definition}
 Is it possible, effectively to compile TAIL programs, produced by the APL compiler AplTail,
 into Futhark programs and thereby make use of the Futhark infrastructure for optimisation
@@ -96,13 +98,15 @@ We will not test the produced code on parallel hardware as no parallel backend f
 \subsection{Methods and tools}
 In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the compiler. 
 
-\subsubsection{Symbolic notation describe the compilation scheme}
+\subsubsection{Symbolic notation to describe the compilation scheme}
 We are going to use a symbolic notation to illustrate a compilation scheme showing the compilation in a way that abstracts away implementation details. We use this tool to create a description of the compilation scheme that is independent of the implementation and which should make it possible to implement the compiler in any language.
 
 \subsubsection{Parser}
 We used a parser that was created douring an earlier project \cite{APLACC} instead of creating our own. This was done in order to use alredy existing tools and save our resources for work that had not alredy been done by others. We did however have to update the parser a little as it was a few months old and therefore did not support the newest additions to the TAIL language. Details about this implementation can be found in the section \textit{Implementation of the compiler}. 
 We used an alredy existing compiler in order not to use our resources on work that had alredy been done, that way opening up more time to work on the actural compilation.
 
+\subsubsection{Language used}
+The implimintation of the compiler is written in the functional programming language Haskell. We chose to write in Haskell because it is a functional language that lend itself to ????????????????
 
 \subsubsection{Libaries used}
 
@@ -283,11 +287,13 @@ fun return-type name(params...) = body
 Except for inline anonymus functions all functions are defined globaly. 
 
 \section{The differences between TAIL and Futhark}
-The difficulty in compiling TAIL to Futhark is creating the same functionality in 
+In this section we are going to flesh out the concrete differences between the two languages. 
 
 \subsection{Polymorphism}
 
 \section{Compilation strategy}
+In this section we are going to introduce our compilation scheme and explain the problems in compiling the differenct functions having a special focus on the more interesting cases. We will also explain our reasoning behind the chosen compilation and what alternatives there are. The rest of this section contains a draft of some of the content for the finished paper. 
+
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
 Thus the chalenge boils down to translating Tail expressions to Futhark expressions. 
 There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really if the expression is an operator expression. \\
@@ -383,6 +389,7 @@ We flatten the array, let the library function work on the flat representation a
 This approach has all the benifits mentioned earlier.
 
 \section{Implementation of the compiler}
+In this section we will present the Haskell implementation of the compiler. We will show code snippets that illustrate interesting parts of the compilation.
 
 \subsection{Adabtion of the parser}
 The parser that we make use of was created in a precius project \cite{APLACC}. In the time between that project finished and ours commenced the TAIL language had been updated with new features and we therefore had to update the parser so that it worked with the latest version of TAIL.\\
@@ -392,16 +399,21 @@ One of the things that had changed was that boleans was added to the TAIL langua
 Another thing that had changed was that the shape type in the older version of TAIL was replaced with a vector type in the newer version.\\
 
 \subsection{Description of the system}
-Flags, test..
-we expect that the tems we get in are well typed and correct. 
+In this section we are going to explain an overview of how the system (compiler) works. For instance what flags the compiler can be given and how that make it work. 
+
+%we expect that the tems we get in are well typed and correct. 
 
 \section{Testing}
+In this section we will present our testing scheme, why we have chosen to test in that way and the results of the test.\\
+
+
 We have used two methods to test the compiler we have created. One is unit or integration test where we test the entire pipeline from giving it APL source code to running Futhark source code. The code is parsed whrough the APL to TAIL compiler \cite{ElsmanDybdal:Array:2014} through our compiler (TAIL to Futhark) and then through the Futhark compiler \cite{TroelsHenriksen} that returns a result, a result that is then compair to a file containing the expected result using the golden REFERENCE!!!!!!!! %\cite{}
 libary. This form of testing will test the correctness of our code. \\
 
 The second way are going to do testing is by benchmark test. This we will do in order to evaluate the efficiency of our code. 
 
 \section{Discussion}
+In this section we will disscuss benefits and drawbacks with our chosen compilation strategy. We will discuss how thing can be inproved for instance how polymorphism in Futhark could make the compilation easier. We will also disucss the test results. 
 
 \subsection{No parallalism yet}
 
