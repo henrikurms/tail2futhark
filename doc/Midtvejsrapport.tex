@@ -77,7 +77,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Prelude}
 
-In the prelude part of this paper we forfill the requirements of the Midvejsrapport assignment. After the prelude section this rapport contains draft versions of the final report. Some of these sections are futher along than other so pleace keep in mind that the sections are draft an not a finished product. Some of the sections only contain a shourt describtion of what we expect the final sections should contain, however we still have the section in place to get an idea of the structure of the final report.  
+In the prelude part of this paper we forfill the requirements of the `midvejsrapport' assignment. After the prelude section this rapport contains draft versions of the final report. Some of these sections are futher along than other so pleace keep in mind that the sections are draft an not a finished product. Some of the sections only contain a shourt describtion of what we expect the final sections should contain, however we still have the section in place to get an idea of the structure of the final report.  
 
 \subsection{Problem Definition}
 Is it possible, effectively to compile TAIL programs, produced by the APL compiler AplTail,
@@ -86,12 +86,12 @@ and the possibility for targeting parallel hardware?
 
 \subsection{Problem clarification}
 The language APL is a mature array programming that gives rise to parallelism. The AplTail compiler produces
-a typed intermediate language TAIL from APL source code. The purpose of the Futhark language is to make it possible for the programmer ro express parallelism in a high level language while at the same time targeting parallel architectures.
-We wish to assess the possibility of compiling TAIL to Futhark thereby making it possible to execute APL in parallel by using the Futhark language as backend. This also allows us to take advantage of the various optimizations that futhark provides, most notably fusion.
+a typed intermediate language TAIL from APL source code \cite{ElsmanDybdal:Array:2014}. The purpose of the Futhark language is to make it possible for the programmer ro express parallelism in a high level language while at the same time targeting parallel architectures \cite{TroelsHenriksen}.
+We wish to assess the possibility of compiling TAIL to Futhark thereby making it possible to execute APL in parallel by using the Futhark language as backend. This also allows us to take advantage of the various optimizations that futhark provides, most notably fusion \cite{TroelsHenriksen}.
 
 The challanges of mapping TAIL to Futhark lie mainly in the differences between how the two languages express parallelism.
 The TAIL the parallelism is always flat, even for multi-dimensional arrays where as Futhark permits nested parallelism but always
-does so at the level of arrays.
+does so at the level of arrays\cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}.
 
 We will not test the produced code on parallel hardware as no parallel backend for Futhark yet exists.
 
@@ -99,7 +99,7 @@ We will not test the produced code on parallel hardware as no parallel backend f
 In this section we will describe the methods and tools used to create the compilitalion scheme and implementation of the compiler. 
 
 \subsubsection{Symbolic notation to describe the compilation scheme}
-We are going to use a symbolic notation to illustrate a compilation scheme showing the compilation in a way that abstracts away implementation details. We use this tool to create a description of the compilation scheme that is independent of the implementation and which should make it possible to implement the compiler in any language.
+We are going to use a symbolic notation to illustrate a compilation scheme showing the compilation in a way that abstracts away implementation details \cite{MartinElsmanNotation}. We use this tool to create a description of the compilation scheme that is independent of the implementation and which should make it possible to implement the compiler in any language.
 
 \subsubsection{Parser}
 We used a parser that was created douring an earlier project \cite{APLACC} instead of creating our own. This was done in order to use alredy existing tools and save our resources for work that had not alredy been done by others. We did however have to update the parser a little as it was a few months old and therefore did not support the newest additions to the TAIL language. Details about this implementation can be found in the section \textit{Implementation of the compiler}. 
@@ -114,14 +114,14 @@ represents the program code. Haskell has more features than Standard ML and that
 \subsubsection{Libaries used}
 
 In our implementation we have used various external libraries, we will discuss some of the non-standard used libraries here.
-For building our project and managing external libraries we have used the cabal package. This is a very common thing to
-do in haskell projects and should make it easy for anyone to build our code.
-We use the tasty package which provides a testframework that we use to implement our tests. Furthermore we have used the
-package tasty-golden which is a plugin for the tasty framework that allows to test against "golden" files.
+For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to
+do in Haskell projects and should make it easy for anyone to build our code.
+We use the tasty package \cite{tasty} which provides a testframework that we use to implement our tests. Furthermore we have used the
+package tasty-golden \cite{tasty-golden} which is a plugin for the tasty framework that allows to test against "golden" files.
 A lot of projects implement their own test frameworks and we could have done the same.
 We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
 test framework which could prove time consuming.
-Finally the existing parser for TAIL makes use of the popular parsec library and we have continued to use parsec in our continuation
+Finally the existing parser for TAIL makes use of the popular parsec library \cite{parsec} and we have continued to use parsec in our continuation
 of the parser
 
 \subsubsection{Testing}
@@ -226,7 +226,8 @@ TAIL was designed with the purpose of targeting parallel architectures, though n
 Another backend to TAIL exists however which compile TAIL efficiently into a C-like language. TAIL does not support
  all APLs operators but only a subset of these \cite{ElsmanDybdal:Array:2014}.\\
 
-A TAIL programs always consist of a single expression. An expression can then be a ..\\
+A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
+list of expressions, a let expression or an operator. \\
 
 TAILs type system takes the parallelism of APL and transforms it to a more managable form adding explicit type
  information to the constructs. Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators wich are primitive in APL using simpler operators, one such operator is that of the inner product. \\
@@ -295,7 +296,7 @@ The Futhark languages supprots multidimentional arrays in the form of nesting of
 Futhark is a mostly first order language but supports bulk (parallel) operations on arrays
 using the build-in second-order array combinators (SOACs) of the language. 
 The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
-The operators have the expected functionality also found in Haskell and Standard ML, that is {\tt map} takes a function and an array and apply the function on the array. If the array is multi-dimentionel the function is applied to the outer most dimention. The function {\tt reduce} takes as arguments a function, a neutral element and an array. Like the {\tt map} function, the {\tt reduce} function takes the function it is given in the arguments and apply it on the outer-most dimention of the array. \\ 
+The operators have the expected functionality also found in Haskell and Standard ML, that is {\tt map} takes a function and an array and apply the function on the array. If the array is multi-dimentionel the function is applied to the outer most dimention. The function {\tt reduce} takes as arguments a function, a neutral element and an array. Like the {\tt map} function, the {\tt reduce} function takes the function it is given in the arguments and apply it on the outer-most dimention of the array \cite{TroelsHenriksen}. \\ 
 
 %The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays.
 %The type system of Futhark does not support polymorphism,
@@ -424,17 +425,14 @@ In this section we are going to explain an overview of how the system (compiler)
 In this section we will present our testing scheme, why we have chosen to test in that way and the results of the test.\\
 
 
-We have used two methods to test the compiler we have created. One is unit or integration test where we test the entire pipeline from giving it APL source code to running Futhark source code. The code is parsed whrough the APL to TAIL compiler \cite{ElsmanDybdal:Array:2014} through our compiler (TAIL to Futhark) and then through the Futhark compiler \cite{TroelsHenriksen} that returns a result, a result that is then compair to a file containing the expected result using the golden REFERENCE!!!!!!!! %\cite{}
-libary. This form of testing will test the correctness of our code. \\
+We have used two methods to test the compiler we have created. One is unit or integration test where we test the entire pipeline from giving it APL source code to running Futhark source code. The code is parsed whrough the APL to TAIL compiler \cite{ElsmanDybdal:Array:2014} through our compiler (TAIL to Futhark) and then through the Futhark compiler \cite{TroelsHenriksen}. The result is then compaired to the content of a file containg the expected result. If they match the test is positive. This form of testing will test the correctness of our code. \\
 
-The second way are going to do testing is by benchmark test. This we will do in order to evaluate the efficiency of our code. 
+The second way is benchmark test to test efficiency. 
+
+%The second way are going to do testing is by benchmark test. This we will do in order to evaluate the efficiency of our code. 
 
 \section{Discussion}
-In this section we will disscuss benefits and drawbacks with our chosen compilation strategy. We will discuss how thing can be inproved for instance how polymorphism in Futhark could make the compilation easier. We will also disucss the test results. 
-
-\subsection{No parallalism yet}
-
-\subsection{The problem of polymorphism vs. no polymorphism}
+In this section we will disscuss benefits and drawbacks with our chosen compilation strategy. We will discuss how thing can be inproved for instance how polymorphism in Futhark could make the compilation easier. We will also disucss the test results. Ideas to some themes are: No polymophism in Futhark yet makes the compilation more difficult and create a lot of dublicate code. There are no way of realy testing the generated code as no parallel backend exixts for either TAIL or Futhark.
 
 \section{Summary and future work}
 
