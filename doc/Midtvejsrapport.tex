@@ -224,7 +224,9 @@ where large code bases are still operational and activly developed \cite{ElsmanD
 
 TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists.
 Another backend to TAIL exists however which compile TAIL efficiently into a C-like language. TAIL does not support
- all APLs operators but only a subset of thouse \cite{ElsmanDybdal:Array:2014}.\\
+ all APLs operators but only a subset of these \cite{ElsmanDybdal:Array:2014}.\\
+
+A TAIL programs always consist of a single expression. An expression can then be a ..\\
 
 TAILs type system takes the parallelism of APL and transforms it to a more managable form adding explicit type
  information to the constructs. Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators wich are primitive in APL using simpler operators, one such operator is that of the inner product. \\
@@ -238,14 +240,17 @@ The central type in TAIL is, like in APL, the multi-dimentional array type. Arra
 Scalars are a special case of the array type and is represented as an array of rank 0. 
 Vecors can be represented in two different ways in TAIL. Either as an array of rank 1 or as the special vector type. The special vector type is used for vector litterals where the length of the vector is known at compile time. \\
 
-%hvor skal den nedenstående sætning være?????
-????????????TAIL programs always consist of a single expression. SEE ARTICLE FOR REFERENCE \\
 
 There are four parallel opeartors in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}. The functions {\tt each} and
  {\tt eachV} are known in many languages as map. The function takes two arguments: a function and an array and then apply this function on the array. If the rank of the array is greater than 1 the {\tt each} function work as a map on the fattened representation of the array, that is, the function is applied on the inner most dimention of the array. The {\tt eachV} function is a special case of {\tt each} and is used on the special vector type.\\
 
-The function reduce {\tt reduce} works similar to fold known in functional languages. Ther function takes as arguments a function, a neural element and and array. It produces the result of the function ????????????????????? \\
-The {\tt zipWith} function takes as arguments a function and two arrays. It then applies the function on the censecutive pair of elements consisting of the i-th element from the first array and the i-th element from the second array. \\
+The function reduce {\tt reduce} works similar to fold known in functional languages. Ther function takes as arguments 
+a associative binary operator, a neural element and and array. The {\tt reduce} function the uses the binary operator 
+to reduce an array of rank $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension. 
+
+
+The {\tt zipWith} function takes as arguments a function and two arrays. It then applies the function on the censecutive pair of elements consisting of the i-th element from the first array and the i-th element from the second array. Like the
+ other tree operators it works on the inner-most dimention of the array. \\
 
 If we do not show the type schemes here we should reference to where they can be found in the article!!!!!!!!!!
 
@@ -271,13 +276,21 @@ language the more difficult optimization ofthen become.
 Due to the focus on optimization the Futhark language only supports regular arrays (arrays where all inner dimentions are of the same length)
 because of the complication to size analysis supporting non-regular arrays would create.
 However Futhark do support nested parallalism as this is a feature many programs 
-depend upon even though this feature does make optimization more difficult \cite{TroelsHenriksen}.\\
+depend upon even though this feature does make optimization more difficult \cite{TroelsHenriksen}.
 
-something more about specific optimization????????????????
+something more about specific optimization????????????????\\
 
-The Futhark languages supprots multidimentional arrays in the form of nesting of array types, i.e. an int array array will contain int arrays and so on. The Futhark language has four base types: {\tt int}, {\tt real}, {\tt char} and {\tt bool}. In general the Futhark language does not support polymorphism in functions, the only exeption to is the build-in second-order array compinators that work on arrays of any base type. \\
+
+A Futhark program consist of a list of function declarations of the form:
+\begin{lstlisting}[numbers=none,frame=none]
+fun return-type name(params...) = body
+\end{lstlisting}
+
+The body of the Futhark function then consist of ...\\
 
 The Futhark language support anonymus fuctions, but it is not possible to curry functions in the Futhark language, so the the anonymus function can only take one argument. If the function needs more than one argument it needs to be given as a tuple. Except for inline anonymus functions all functions are defined globaly. \\
+
+The Futhark languages supprots multidimentional arrays in the form of nesting of array types, i.e. an int array array will contain int arrays and so on. The Futhark language has four base types: {\tt int}, {\tt real}, {\tt char} and {\tt bool}. In general the Futhark language does not support polymorphism in functions, the only exeption to is the build-in second-order array compinators that work on arrays of any base type. \\
 
 Futhark is a mostly first order language but supports bulk (parallel) operations on arrays
 using the build-in second-order array combinators (SOACs) of the language. 
@@ -289,13 +302,6 @@ The operators have the expected functionality also found in Haskell and Standard
 %owever the build-in SOACs work on all regular arrays created of the basic types. 
 
 %Does not support polymorfism in types
-
-A Futhark program consist of a list of function declarations like
-\begin{lstlisting}[numbers=none,frame=none]
-fun return-type name(params...) = body
-\end{lstlisting}
-
-
 
 \section{The differences between TAIL and Futhark}
 In this section we are going to flesh out the concrete differences between the two languages. 
