@@ -6,11 +6,13 @@
 \usepackage{setspace}
 \usepackage{cite}
 \usepackage{stmaryrd}
+\usepackage{fixltx2e}
+\usepackage{amsmath}
 
 \lstset{
+  mathescape,
   moredelim=[is][\underbar]{_}{_}
 }
-%\usepackage{thebibliography}
 
 \definecolor{Background}{rgb}{0.98,0.98,0.98}
 \lstset{
@@ -313,24 +315,56 @@ of the array. This means that the operators that the array operators take as arg
 arrays in futhark can be of any type, even other arrays. Arrays of arrays are how multi-dimensional arrays are represented in Futhark.
 This means that the SOACs in Futhark can apply the functions they take as arguments to arrays themselves, these functions can then
 map other functions and so on, this leads to nested parallelism.
-\subsection{Polymorphism}
+%\subsection{Polymorphism}
 
 \section{Compilation strategy}
-In this section we are going to introduce our compilation scheme and explain the problems in compiling the differenct functions having a special focus on the more interesting cases. We will also explain our reasoning behind the chosen compilation and what alternatives there are. The rest of this section contains a draft of some of the content for the finished paper. 
+In this section we are going to introduce our compilation scheme and explain the problems in compiling the differenct functions having a special focus on the more interesting cases. We will also explain our reasoning behind the chosen compilation and what alternatives there are. The rest of this section contains a draft of some of the content for the finished paper.\\
+
+Below we introduce a scheme of the compilation from TAIL to Futhark. This scheme works as an overview where
+of the compilation and should be indenpendent from the implementation. \\
+
+The TAIL language consist of the following expressions: 
+
+\begin{lstlisting}[numbers=none,frame=none]
+e$_T$ ::= x | i | d | c | inf | -e | let x:t = e$_1$ in e$_2$ |
+      op[e$_1$,...,e$_n$] | fn x:t e | [e$_1$,...,e$_n$]
+      
+\end{lstlisting}
+
+The Futhark language consist of the following expressions: 
+\begin{lstlisting}[numbers=none,frame=none]
+e$_F$ ::= 
+      
+\end{lstlisting}
+
+The compilation between these two languages can be seen below: \\
+
+%%% Table
+\begin{tabular}{l c l}
+$\evals{x}$ & $=$ & $x$ \\
+$\evals{i}$ & $=$ & $i$ \\
+$\evals{d}$ & $=$ & $d$ \\
+$\evals{c}$ & $=$ & $c$ \\
+$\evals{-e}$ & $=$ & -$\evals{e}$ \\
+$\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} : \evals{t} = \evals{e_1} \text{ in } \evals{e_2} $\\
+$\evals{ \text{fn } x:t = e} $ & $=$ & $\evals{x} : \evals{t} \Rightarrow \evals{e}$\\
+$\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
+$\evals{\text{op } [e_1,...,e_n]}$ & $=$ & \text{compileOp} $\evals{[e_1,...,e_n]}$\\
+$\evals{\text{each}(f,a)}$ & $=$ & $  \alpha(x)=\begin{cases}
+                                                                               a , r=0 \\
+                                                                               ... \\
+                                                                              ... \\
+                                                                           \end{cases}$\\
+\end{tabular}\\
 
 As mentiont previusly a Tail program always consist of one single expression, whereas a Futhark program is a list of function declarations. The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
 Thus the chalenge boils down to translating Tail expressions to Futhark expressions. 
-There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really if the expression is an operator expression. \\
+There are 10 different kind of Tail expressions most of whitch has exact equivalents in the Futhark language. This includes but are not limited to, veriables, let ecpressions and litterals. Thus the interesting case is really when the expression is an operator expression. \\
 
 These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat. \\
 
-The scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at.
+Most of the scalar operators have equivalents in the Futhark language and are therefore straight forward to compile. Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage but most have not and are therefore interesting to take a closer look at.
 
-%%% Table
-
-\begin{tabular}{l c l}
-$\evals{f x}$ & $=$ & $\evals{f} \evals{x}$
-\end{tabular}
 
 \section{The parallel operators}
 
@@ -413,9 +447,11 @@ We flatten the array, let the library function work on the flat representation a
 This approach has all the benifits mentioned earlier.
 
 \section{Implementation of the compiler}
+
 In this section we will present the Haskell implementation of the compiler. We will show code snippets that illustrate interesting parts of the compilation.
 
 \subsection{Adabtion of the parser}
+
 The parser that we make use of was created in a precius project \cite{APLACC}. In the time between that project finished and ours commenced the TAIL language had been updated with new features and we therefore had to update the parser so that it worked with the latest version of TAIL.\\
 
 One of the things that had changed was that boleans was added to the TAIL language. That meant that it had to be added ..\\
@@ -423,6 +459,7 @@ One of the things that had changed was that boleans was added to the TAIL langua
 Another thing that had changed was that the shape type in the older version of TAIL was replaced with a vector type in the newer version.\\
 
 \subsection{Description of the system}
+
 In this section we are going to explain an overview of how the system (compiler) works. For instance what flags the compiler can be given and how that make it work. 
 
 %we expect that the tems we get in are well typed and correct. 
