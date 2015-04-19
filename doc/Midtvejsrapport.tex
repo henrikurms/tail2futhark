@@ -229,7 +229,7 @@ Another backend to TAIL exists however which compile TAIL efficiently into a C-l
 TAILs type system takes the parallelism of APL and transforms it to a more managable form adding explicit type
  information to the constructs. Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators wich are primitive in APL using simpler operators, one such operator is that of the inner product. \\
  
-Most of the operators i TAIL are polymorphic in respect to array ranks and base types. Some of theme only take some
+Most of the operators i TAIL are polymorphic in respect to array ranks and base types. Some of them only take some
 polymorphic arguments but also take specific type arguments. An exaple is the {\tt take} function. It takes as argument 
 a number (of type int) and an array of type $\alpha$.\\
 
@@ -271,24 +271,22 @@ language the more difficult optimization ofthen become.
 Due to the focus on optimization the Futhark language only supports regular arrays (arrays where all inner dimentions are of the same length)
 because of the complication to size analysis supporting non-regular arrays would create.
 However Futhark do support nested parallalism as this is a feature many programs 
-depend upon \cite{TroelsHenriksen}.\\
+depend upon even though this feature does make optimization more difficult \cite{TroelsHenriksen}.\\
+
+something more about specific optimization????????????????
+
+The Futhark languages supprots multidimentional arrays in the form of nesting of array types, i.e. an int array array will contain int arrays and so on. The Futhark language has four base types: {\tt int}, {\tt real}, {\tt char} and {\tt bool}. In general the Futhark language does not support polymorphism in functions, the only exeption to is the build-in second-order array compinators that work on arrays of any base type. \\
+
+The Futhark language support anonymus fuctions, but it is not possible to curry functions in the Futhark language, so the the anonymus function can only take one argument. If the function needs more than one argument it needs to be given as a tuple. Except for inline anonymus functions all functions are defined globaly. \\
 
 Futhark is a mostly first order language but supports bulk (parallel) operations on arrays
 using the build-in second-order array combinators (SOACs) of the language. 
 The SOACs consist of {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
 The operators have the expected functionality also found in Haskell and Standard ML, that is {\tt map} takes a function and an array and apply the function on the array. If the array is multi-dimentionel the function is applied to the outer most dimention. The function {\tt reduce} takes as arguments a function, a neutral element and an array. Like the {\tt map} function, the {\tt reduce} function takes the function it is given in the arguments and apply it on the outer-most dimention of the array. \\ 
 
-Futhark supports nesting of array types, an int array array will contain int arrays and so on.
-{\tt map} maps a function onto each element in the array.
-If the array mapped over contains arrays the function will be applied to each array,
-so in other words the function is mapped over the outer-most dimension of the multi-dimensional array.
-The language is expressive enough that the same functionality as these functions present can be created using do-loops
-but that should be avoided do to the fact that the optimization Futhark make available are based on the
-transformation on the four SOACs. \\
-
-The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays.
-The type system of Futhark does not support polymorphism,
-owever the build-in SOACs work on all regular arrays created of the basic types. 
+%The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays.
+%The type system of Futhark does not support polymorphism,
+%owever the build-in SOACs work on all regular arrays created of the basic types. 
 
 %Does not support polymorfism in types
 
@@ -297,7 +295,7 @@ A Futhark program consist of a list of function declarations like
 fun return-type name(params...) = body
 \end{lstlisting}
 
-Except for inline anonymus functions all functions are defined globaly. 
+
 
 \section{The differences between TAIL and Futhark}
 In this section we are going to flesh out the concrete differences between the two languages. 
