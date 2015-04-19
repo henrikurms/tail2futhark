@@ -138,7 +138,7 @@ A lot of projects implement their own test frameworks and we could have done the
 We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
 test framework which could prove time consuming.
 Finally the existing parser for TAIL makes use of the popular parsec library \cite{parsec} and we have continued to use
-parsec in our continuation of the parser
+parsec in our continuation of the parser.
 
 \subsubsection{Testing}
 
@@ -186,7 +186,7 @@ parallelism \cite{T.Henriksen&C.Oancea}.\\
 
 APL is an array language and includes various operations that are central to the language and are good candidates 
 for parallel execution. Efforts in compiling APL to parallel backends already exist in the form of the language 
-TAIL (Typed array intermediate language) and it’s compiler. The TAIL compiler captures the parallelism inherent in 
+TAIL (Typed array intermediate language) and it’s compiler \cite{ElsmanDybdal:Array:2014}. The TAIL compiler captures the parallelism inherent in 
 APL source code and brings it to a much more manageable form. In our work we provide a compiler from TAIL 
 to Futhark thus bridging the gap between APL and Futhark.\\
 
@@ -208,7 +208,7 @@ Futhark source code. \\
 One of the main point of interest in the compilation between TAIL and Futhark is compiling the four array operators 
 of TAIL: {\tt each}, {\tt eachV}, 
  {\tt reduce} and {\tt zipWith} to Futhark source code that include the four second-order array compinators in Futhark:  
- {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}. However as the functionality of these fuctions are not completly 
+ {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan} \cite{ElsmanDybdal:Array:2014}\cite{TroelsHenriksen}. However as the functionality of these fuctions are not completly 
  identical the work lies in creating a mapping that retains the parallalism in the original code in the target language.\\
  This can be seen in the exaple below which illustrate this difference. The reduce function in the
   TAIL language is maped to a nested reduce function in the Futhark language.
@@ -255,7 +255,7 @@ list of expressions, a let expression or an operator. \\
 TAILs type system takes the parallelism of APL and transforms it to a more managable form adding explicit type
  information to the constructs.
 Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators wich
-are primitive in APL using simpler operators, one such operator is that of the inner product. \\
+are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
  
 Most of the operators i TAIL are polymorphic in respect to array ranks and base types.
 Some of them only take some polymorphic arguments but also take specific type arguments.
@@ -268,7 +268,7 @@ type: {\tt int}, {\tt double}, {\tt bool} {\tt char}.
 Scalars are a special case of the array type and is represented as an array of rank 0. 
 Vectors can be represented in two different ways in TAIL.
 Either as an array of rank 1 or as the special vector type.
-The special vector type is used for vector literals where the length of the vector is known at compile time. \\
+The special vector type is used for vector literals where the length of the vector is known at compile time \cite{ElsmanDybdal:Array:2014}. \\
 
 
 There are four parallel opeartors in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
@@ -288,7 +288,7 @@ because the execution is parallel.
 The {\tt zipWith} function takes as arguments a function and two arrays.
 It then applies the function on the pair of elements consisting of the i-th element
 from the first array and the i-th element from the second array.
-Like the other tree operators it works on the inner-most dimention of the array. \\
+Like the other tree operators it works on the inner-most dimention of the array\cite{ElsmanDybdal:Array:2014}. \\
 
 %%If we do not show the type schemes here we should reference to where they can be found in the article!!!!!!!!!!
 
@@ -330,7 +330,7 @@ The body of the Futhark function then consist of an expression.\\
 The Futhark language support anonymous fuctions, but it is not possible to curry functions in the Futhark language,
 so the the anonymous function can only take one argument.
 If the function needs more than one argument it needs to be given as a tuple.
-Except for inline anonymus functions all functions are defined globaly. \\
+Except for inline anonymus functions all functions are defined globaly \cite{TroelsHenriksen}. \\
 
 The Futhark language supports multidimentional arrays in the form of nesting of array types,
 i.e. an int array array will contain int arrays and so on.
@@ -359,10 +359,10 @@ In this section we are going to flesh out the concrete differences between the t
 
 The differences in how Futhark and TAIL handles parallellism is tightly connected with the differences in their type systems.
 Multi-dimensional arrays in TAIL are typed by a base type and a rank. The array oprators of TAIL are polymporphic in the rank
-of the array. This means that the operators that the array operators take as arguments always work on base types. In contrast
+of the array. This means that the operators that the array operators take as arguments always work on base types \cite{ElsmanDybdal:Array:2014}. In contrast
 arrays in Futhark can be of any type, even other arrays. Arrays of arrays are how multi-dimensional arrays are represented in Futhark.
 This means that the SOACs in Futhark can apply the functions they take as arguments to arrays themselves, these functions can then
-map other functions and so on, this leads to nested parallelism.
+map other functions and so on, this leads to nested parallelism \cite{TroelsHenriksen}.
 %\subsection{Polymorphism}
 
 \section{Compilation strategy}
@@ -372,9 +372,9 @@ We will also explain our reasoning behind the chosen compilation and what altern
 The rest of this section contains a draft of some of the content for the finished paper.\\
 
 Below we introduce a scheme of the compilation from TAIL to Futhark.
-This scheme works as an abstract model of the transformation and is implementation independent. \\
+This scheme works as an abstract model of the transformation and is implementation independent \cite{MartinElsmanNotation}. \\
 
-The TAIL language consist of the following expressions: 
+The TAIL language consist of the following expressions \cite{ElsmanDybdal:Array:2014}: 
 
 \begin{lstlisting}[numbers=none,frame=none]
 e$_T$ ::= x | i | d | c | inf | -e | let x:t = e$_1$ in e$_2$ |
@@ -382,7 +382,7 @@ e$_T$ ::= x | i | d | c | inf | -e | let x:t = e$_1$ in e$_2$ |
       
 \end{lstlisting}
 
-The Futhark language consist of the following expressions: 
+The Futhark language consist of the following expressions\cite{TroelsHenriksen}: 
 \begin{lstlisting}[numbers=none,frame=none]
 e$_F$ ::= 
       
@@ -410,13 +410,13 @@ $\evals{\text{each}(f,a)}$ & $=$ & $  \alpha(x)=\begin{cases}
 
 As mentioned previously a Tail program always consists of a single expression,
 whereas a Futhark program is a list of function declarations.
-The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function. 
+The Tail expression is therefore translated/compiled to a Futhark expression by making it the body of the Futhark function\cite{ElsmanDybdal:Array:2014}\cite{TroelsHenriksen}. 
 Thus the focus should be on translating Tail expressions to Futhark expressions. 
 There are 10 different kind of Tail expressions most of which has exact equivalents in the Futhark language.
 This includes but are not limited to, variables, let expressions and literals.
 Thus the interesting case is really when the expression to compile is an operator expression. \\
 
-These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat. \\
+These operators consist of the scalar operators: add, addi, subi, subd, multi, multd, mini, mind, maxi, maxd, andb, orb, xorb, nandb, norb, notb, lti, ltd, ltei, lted, gti, gtd, gtei, gted, eqi, eqd, negi, negd, i2d and b2i, and the array operators: iotaV, iota, eachV, each, reduce(V), reduce, shapeV, shape, reshape, reshape0, reverse, vreverse, rotateV, vrotateV, rotate, transp, transp2, takeV, take, dropV, drop, consV, cons, snocV, snoc, firstV, first, zipWith, catV and cat \cite{ElsmanDybdal:Array:2014}. \\
 
 Most of the scalar operators have equivalents in the Futhark language and are therefore straight forward to compile.
 Some of the Tail array operators also have eqivalent or almost eqivalent counterparts in the Futhark laguage
@@ -427,13 +427,13 @@ but most have not and are therefore interesting to take a closer look at.
 
 \subsection{each}
 
-The type of the {\tt each} function is $each(f,a) :: \forall\alpha\beta\gamma.(\alpha \to \beta) \to [\alpha]^\gamma \to [\beta]^\gamma$.
+The type scheme of the {\tt each} function is $each(f,a) :: \forall\alpha\beta\gamma.(\alpha \to \beta) \to [\alpha]^\gamma \to [\beta]^\gamma$.
 
 The {\tt each} function in TAIL applies a function to every element in the flat representation of the array.
 This is a completely parallel operation more commonly known as map.
-The {\tt map} combinator in Futhark has slightly different semantics.
+The {\tt map} combinator in Futhark has slightly different semantics\cite{ElsmanDybdal:Array:2014}.
 Since Futhark views a multidimensional array as nested simple arrays it applies the function to every array element.
-That is, it maps the function into the outer-most dimention of the array.
+That is, it maps the function into the outer-most dimention of the array\cite{TroelsHenriksen}.
 
 To solve this problem we have nested {\tt map}s to the depth of the array with the required function,
 for example, an {\tt each} operation over an array of rank 2 would have two {\tt map}s nested in each other so the kernel is
@@ -453,23 +453,23 @@ is known at compile time. We do not use this extra information so this special c
 \subsection{reduce}
 The type of the {\tt each} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
 The {\tt reduce} function in TAIL uses an associative binary operator to reduce an array of rank
-$\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension.
-The Futhark reduce on the other hand reduces each array in the outer array, i.e. it reduces along the outer-most dimension. 
+$\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension\cite{ElsmanDybdal:Array:2014}.
+The Futhark reduce on the other hand reduces each array in the outer array, i.e. it reduces along the outer-most dimension\cite{TroelsHenriksen}. 
 
 We have adopted the samme approach as with each by using nested maps to map the reduce on the innermost dimension.
 
 Fore example reducing an array of rank 2 emits the following code:
 
 \begin{lstlisting}[numbers=none,frame=none]
-reduce(+,a)	=> 	map(fn x => reduce(+,x), a)
+reduce(+,a)	=> 	map(fn x => _reduce_(+,x), a)
 \end{lstlisting}
 
 \subsection{zipWith}
 
 The zipWith operator applies a scalar binary operator on pairs of elements from two arrays of the same shape two
-produce a third array of the same shape as the input arrays.
+produce a third array of the same shape as the input arrays \cite{ElsmanDybdal:Array:2014}.
 
-To do this in Futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples.
+To do this in futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples \cite{TroelsHenriksen}.
 
 \section{Other interesting operators}
 
@@ -478,9 +478,9 @@ Besides the parallel operators there are other operators worth mentioning mostly
 \subsection{reshape}
 
 The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
-array is either truncated or the elements are repeated until the array is long enough.
+array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
 
-Futhark has a reshape function that only works for arrays of the correct dimensions.
+Futhark has a reshape function that only works for arrays of the correct dimensions \cite{TroelsHenriksen}.
 
 Our general strategy for compiling reshape is to first ensure that the array is the correct size and then use the Futhark reshape
 function to do the final step. To adjust the size we operate on the flat representation of the array, this is easy to produce also
@@ -490,14 +490,14 @@ truncate it to the correct length with split.
 To keep the implementation simple we generate code that calls generated library functions written in Futhark which do most of the work.
 Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
 for the one dimensional cases. If we wanted to simply call a function instead we would need a seperate library function for each
-rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions.
+rank and basic type combination which we needed to call reshape on since futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 
 We have to decide where to put the library functions.
 We would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to
 be able to include the library in the output when we run the compiler.
 Furthermore since Futhark has no polymorphism we have to include versions of all types, but we would like to only maintain one version.
 Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
-extensive. Therefore we have coded the functions in the compiler itself.
+extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
 
 We have used this approach throughout our compiler, e.g. the take operator is implemented similarily.
 
@@ -507,7 +507,7 @@ The {\tt take} operator in TAIL has very unique semantics, for a positive arguem
 For a negative argument {\tt take} returns the last n elements of the array.
 If there are not enough elements in the array, {\tt take} padds with zeros.
 
-In a similar fashion to reshape we have used library functions do most of the work.
+In a similar fashion to the TAIL {\tt reshape} function we have used library functions do most of the work.
 We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
 This approach has all the benifits mentioned earlier.
 
@@ -517,7 +517,8 @@ In this section we will present the Haskell implementation of the compiler and d
 %We will show code snippets that illustrate interesting parts of the compilation.
 
 The compiler is made up of three parts, the parser, the compiler and the pretty-printer. Once the input is parsed into an AST the
-TAIL expression represented by the AST is passed to the the compileProgram function in the file {\tt src/Tail2Futhark/Compile.hs}.
+TAIL expression represented by the AST is passed to the the compileProgram function in the file \\
+{\tt src/Tail2Futhark/Compile.hs}.
 This function mainly pattern-matches on the tree and in the case of an operator passes the expression to the compileOpExpression
 function.
 This function matches on the operator name and most operators have their own seperate functions that compile them.
@@ -531,7 +532,7 @@ The parser that we make use of was created in a precius project \cite{APLACC}. I
 
 One of the things that had changed was that booleans was added to the TAIL language. %That meant that it had to be added ..\\
 
-Another thing that had changed was that the shape type in the older version of TAIL was replaced with a vector type in the newer version.\\
+Another thing that had changed was that the shape type in the older version of TAIL was replaced with a vector type in the newer version \cite{ElsmanDybdal:Array:2014}.\\
 
 \section{Testing}
 In this section we will present our testing scheme, why we have chosen to test in that way and the results of the test.\\
