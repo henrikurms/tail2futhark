@@ -133,7 +133,7 @@ Most of the tests are generated from APL code with the AplTail compiler.
 
 We also plan to provide bechmarks that test the speed of our code in the future.
 
-\section{Project status}
+\subsection{Project status}
 The project is comming along as planed and we are keeping to our time schedule that can be seen in Figure \ref{fig:gantt}.
 It took shorter time than expected to adabt the parser to work with the latest version of TAIL
 which meant that we started on the implementation of the TAIL functions in the compiler a few days before sceduled. 
@@ -306,6 +306,12 @@ The operators have the expected functionality also found in Haskell and Standard
 \section{The differences between TAIL and Futhark}
 In this section we are going to flesh out the concrete differences between the two languages. 
 
+The differences in how Futhark and TAIL handles parallellism is tightly connected with the differences in their type systems.
+Multi-dimensional arrays in TAIL are typed by a base type and a rank. The array oprators of TAIL are polymporphic in the rank
+of the array. This means that the operators that the array operators take as arguments always work on base types. In contrast
+arrays in futhark can be of any type, even other arrays. Arrays of arrays are how multi-dimensional arrays are represented in Futhark.
+This means that the SOACs in Futhark can apply the functions they take as arguments to arrays themselves, these functions can then
+map other functions and so on, this leads to nested parallelism.
 \subsection{Polymorphism}
 
 \section{Compilation strategy}
