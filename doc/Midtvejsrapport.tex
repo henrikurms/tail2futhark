@@ -313,6 +313,8 @@ of the array. This means that the operators that the array operators take as arg
 arrays in futhark can be of any type, even other arrays. Arrays of arrays are how multi-dimensional arrays are represented in Futhark.
 This means that the SOACs in Futhark can apply the functions they take as arguments to arrays themselves, these functions can then
 map other functions and so on, this leads to nested parallelism.
+
+% Futhark declarations, TAIL expression
 \subsection{Polymorphism}
 
 \section{Compilation strategy}
@@ -414,6 +416,14 @@ This approach has all the benifits mentioned earlier.
 
 \section{Implementation of the compiler}
 In this section we will present the Haskell implementation of the compiler. We will show code snippets that illustrate interesting parts of the compilation.
+
+The compiler is made up of three parts, the parser, the compiler and the pretty-printer. Once the input is parsed into an AST the
+TAIL expression represented by the AST is passed to the the compileProgram function in the file {\tt src/Tail2Futhark/Compile.hs}.
+This function mainly pattern-matches on the tree and in the case of an operator passes the expression to the compileOpExpression
+function.
+This function matches on the operator name and most operators have their own seperate functions that compile them.
+In the process every variable has the prefix "t\_" prepended to make sure that when we make new names they cannot clash
+with the old ones as long as they don't start with "t\_".
 
 \subsection{Adabtion of the parser}
 The parser that we make use of was created in a precius project \cite{APLACC}. In the time between that project finished and ours commenced the TAIL language had been updated with new features and we therefore had to update the parser so that it worked with the latest version of TAIL.\\
