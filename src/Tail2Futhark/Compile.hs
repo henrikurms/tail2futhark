@@ -259,17 +259,23 @@ compileZipWith (Just([a1tp,a2tp,rtp],[rk])) [kernel,a1,a2] = Map kernelExp $ F.F
     where kernelExp = nestMapsZip rk (makeBTp rtp) (makeBTp rtp) (compileKernel kernel (makeBTp rtp))  
 compileZipWith Nothing _ = error "Need instance declaration for zipWith"
 
-compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileReduce Nothing _ = error "Need instance declaration for reduce"
-compileReduce (Just ([tp],[rank])) [kernel,id,array]
-  | rank == 0 = Reduce kernelExp idExp arrayExp
-  -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
-  | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
-    where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
-          idExp = compileExp id
-          arrayExp = compileExp array
-          ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
-compileReduce _ _ = error "reduce needs 3 arguments" 
+-- compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
+-- compileReduce Nothing _ = error "Need instance declaration for reduce"
+-- compileReduce (Just ([tp],[rank])) [kernel,id,array]
+--   | rank == 0 = Reduce kernelExp idExp arrayExp
+--   -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
+--   | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
+--     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
+--           idExp = compileExp id
+--           arrayExp = compileExp array
+--           ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
+-- compileReduce _ _ = error "reduce needs 3 arguments" 
+
+-- compileReduce Nothing _ = error "Need instance declaration for reduce"
+-- compileReduce ()
+-- compileReduce (Just ([tp],[rank]))[kernel,id,array] = Map (F.Fn mkType(tp,rank-1) [mkType(tp,rank),"x"] compileReduce(tp,rank-1,kernel,id,F.Var "x")) arrayExp
+--      where arrayExp = compileExp array
+
 
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = makeKernel ident
@@ -293,4 +299,14 @@ makeBTp T.CharT = F.CharT
 
 makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
-makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
+leReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileReduce Nothing _ = error "Need instance declaration for reduce"
+compileReduce (Just ([tp],[rank])) [kernel,id,array]
+  | rank == 0 = Reduce kernelExp idExp arrayExp
+    -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
+      | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
+          where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
+                    idExp = compileExp id
+                              arrayExp = compileExp array
+                                        ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
+                                        compileReduce _ _ = error "reduce needs 3 arguments"makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
