@@ -401,11 +401,11 @@ $\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} : \eval
 $\evals{ \text{fn } x:t = e} $ & $=$ & $\evals{x} : \evals{t} \Rightarrow \evals{e}$\\
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
 $\evals{\text{op } [e_1,...,e_n]}$ & $=$ & \text{compileOp} $\evals{[e_1,...,e_n]}$\\
-$\evals{\text{each}(f,a)}$ & $=$ & $  \alpha(x)=\begin{cases}
-                                                                               a , r=0 \\
-                                                                               ... \\
-                                                                              ... \\
-                                                                           \end{cases}$\\
+$\evals{\text{each}(f,a)}$ & $=$ & $  \begin{cases}
+                                                                 a , r=0 \\
+                                                                 ... \\
+                                                                 ... \\
+                                                                 \end{cases}$\\
 \end{tabular}\\
 
 As mentioned previously a Tail program always consists of a single expression,
