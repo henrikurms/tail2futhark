@@ -271,10 +271,17 @@ compileZipWith Nothing _ = error "Need instance declaration for zipWith"
 --           ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
 -- compileReduce _ _ = error "reduce needs 3 arguments" 
 
--- compileReduce Nothing _ = error "Need instance declaration for reduce"
--- compileReduce ()
--- compileReduce (Just ([tp],[rank]))[kernel,id,array] = Map (F.Fn mkType(tp,rank-1) [mkType(tp,rank),"x"] compileReduce(tp,rank-1,kernel,id,F.Var "x")) arrayExp
---      where arrayExp = compileExp array
+compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileReduce Nothing _ = error "Need instance declaration for reduce"
+compileReduce (Just ([tp],[rank]))[kernel,id,array] = makeReduce tp rank kernelExp (compileExp id) (compileExp array)
+  where
+  mkType (tp,rank) = makeArrTp (makeBTp tp) rank
+  kernelExp = compileKernel kernel (makeBTp tp)
+  makeReduce :: BType -> Integer -> Kernel -> F.Exp -> F.Exp -> F.Exp
+  makeReduce tp rank kernel idExp arrayExp
+    | rank == 0 = Reduce kernel idExp arrayExp
+    | otherwise = Map (F.Fn (mkType(tp,rank-1)) [(mkType(tp,rank),"x")] (makeReduce tp (rank-1) kernel idExp (F.Var "x"))) arrayExp
+compileReduce _ _ = error "reduce needs 3 arguments"
 
 
 compileKernel :: T.Exp -> F.Type -> Kernel
@@ -299,14 +306,4 @@ makeBTp T.CharT = F.CharT
 
 makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
-leReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileReduce Nothing _ = error "Need instance declaration for reduce"
-compileReduce (Just ([tp],[rank])) [kernel,id,array]
-  | rank == 0 = Reduce kernelExp idExp arrayExp
-    -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
-      | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
-          where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
-                    idExp = compileExp id
-                              arrayExp = compileExp array
-                                        ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
-                                        compileReduce _ _ = error "reduce needs 3 arguments"makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
+makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
