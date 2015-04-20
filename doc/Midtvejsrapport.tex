@@ -405,8 +405,12 @@ $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
 $\evals{\text{op } [e_1,...,e_n]}$ & $=$ & \text{compileOp} $\evals{[e_1,...,e_n]}$\\
 $\evals{\text{each}_{[t,r]}(f,a)}$ & $=$ & $ \begin{cases}
                                                                                a , r=0 \\
-                                                                               ... \\
-                                                                              ... \\
+                                                                               $map$(\evals{f},\evals{a}) , r=1\\
+                                                                               $map (fn $x$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) , r > 1  \\
+                                                                           \end{cases}$\\
+$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $ \begin{cases}
+                                                                               \text{reduce}(\evals{f},\evals{n},\evals{a}) , r=1 \\
+                                                                               $map (fn $x$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) , r>1\\
                                                                            \end{cases}$\\
 \end{tabular}\\
 
