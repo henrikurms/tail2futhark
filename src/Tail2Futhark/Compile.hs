@@ -172,6 +172,12 @@ convertFun fun = case fun of
 convertBinOp op = case op of
   "addi" -> Just F.Plus
   "addd" -> Just F.Plus
+  "subi" -> Just F.Minus
+  "subd" -> Just F.Minus
+  "multi" -> Just F.Mult
+  "multd" -> Just F.Mult
+  "ltei" -> Just F.LessEq
+  "lted" -> Just F.LessEq
   _      -> Nothing
 
 -- AUX shape --
