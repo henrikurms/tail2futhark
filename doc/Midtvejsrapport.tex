@@ -403,29 +403,33 @@ $\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} : \eval
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
 $\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{op}_{op} \evals{[e_1,...,e_n]}$\\
 
-$\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $ \begin{cases}
-                                                                               $map$(\evals{f},\evals{a}) & r=1\\
-                                                                               $map (fn $tp(t_2,r) \; (\evals{t_1} \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
-                                                                           \end{cases}$\\
+$\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
+  \begin{cases}
+    $map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) & r=1\\
+    $map (fn $tp(t_2,r) \; (\evals{t_1} \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
+  \end{cases}$\\
                                                                            
-$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $ \begin{cases}
-                                                                               \text{reduce}(\evals{f},\evals{n},\evals{a}) & r=1 \\
-                                                                               $map (fn $ tp(t,r) \; (\evals{t} \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
-                                                                           \end{cases}$\\
+$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
+  \begin{cases}
+    \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
+    $map (fn $ tp(t,r) \; (\evals{t} \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
+  \end{cases}$\\
                                                                            
-$\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & $\begin{cases}
-                                                                               $map$(\evals{f},$zip($\evals{a_1},\evals{a_2}) & r=1 \\
-                                                                               $map( fn $tp(t_3,r) \; (\evals{t_1} \; x, \evals{t_2} \; y) $ {\tt =>} $\\
-                                                                                \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1},
-                                                                                \evals{a_2}) & r>1\\
-                                                                               \end{cases}$\\
+$\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
+  \multicolumn{3}{r}{ $\begin{cases}
+    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2}) & r=1 \\
+    $map(fn $tp(t_3,r) \; (\evals{t_1} \; x, \evals{t_2} \; y) $ {\tt =>} $
+      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2}) & r>1\\
+  \end{cases}$ }\\
 
 $\evals{\text{take}(i,a)}$ & $=$ $$\\
-\end{tabular}\\
 
-The compilation of fn are descirbed in a table of its own\\
-
-\begin{tabular}{l c l}
+\\
+%\end{tabular}\\
+%
+%The compilation of fn are descirbed in a table of its own\\
+%
+%\begin{tabular}{l c l}
 $\evals{ \text{fn } x:t => e}^{\tau}_{fn} $ & $=$ & $ \text{\underline{fn} } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1 = >\text{fn } y:t_2 => e}^{\tau}_{fn} $ & $=$ & $ \text{\underline{fn} } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 \end{tabular}\\
@@ -434,7 +438,7 @@ The gereral compilation of operators:\\
 
 \begin{tabular}{l c l}
 $\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$\\
-$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{op}_{fun} \; \evals{e_2}$\\
+$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$\\
 $\evals{addi}_{op}$ & $=$ & $+$\\
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
 \end{tabular}\\
