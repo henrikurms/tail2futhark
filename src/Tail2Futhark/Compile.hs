@@ -165,7 +165,7 @@ convertFun fun = case fun of
   "iotaV"  -> Just "iota"
   "iota"   -> Just "iota"
 --  "cat"    -> Just "concat"
---  "catV"   -> Just "concat"
+  "catV"   -> Just "concat"
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
@@ -185,12 +185,14 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
-compileCat (Just([tp],[0])) [a1,a2] = FunCall "concat" [compileExp a1, compileExp a2]
-compileCat (Just([tp],[r])) [a1,a2] = Map kernelExp (FunCall "zip" [compileExp a1, compileExp a2])
-    where
-       kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r),"x"), (mkType(tp,r),"y")] recursiveCall
-       recursiveCall = compileCat (Just([tp],[r-1])) [T.Var "x",T.Var "y"]
-       mkType (tp,rank) = makeArrTp (makeBTp tp) rank
+compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
+  where
+    makeCat tp 1 a1 a2 = FunCall "concat" [a1, a2]
+    makeCat tp r a1 a2 = Map kernelExp (FunCall "zip" [a1, a2])
+      where
+        kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1),"x"), (mkType(tp,r-1),"y")] recursiveCall
+        recursiveCall = makeCat tp (r-1) (F.Var "x") (F.Var "y")
+    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileTakeV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
