@@ -406,20 +406,20 @@ $\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{op}_{op} \evals{[e_1,...,e_n]
 $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
   \begin{cases}
     $map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) & r=1\\
-    $map (fn $tp(t_2,r) \; (\evals{t_1} \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
+    $map (fn $t_2^r \; (t_1^r \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
   \end{cases}$\\
                                                                            
 $\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
   \begin{cases}
     \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
-    $map (fn $ tp(t,r) \; (\evals{t} \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
+    $map (fn $ t^{r-1} \; (t^r \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
   \end{cases}$\\
                                                                            
 $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
   \multicolumn{3}{r}{ $\begin{cases}
-    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2}) & r=1 \\
-    $map(fn $tp(t_3,r) \; (\evals{t_1} \; x, \evals{t_2} \; y) $ {\tt =>} $
-      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2}) & r>1\\
+    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2})) & r=1 \\
+    $map(fn $t_3^{r-1} \; (t_1^{r-1} \; x, t_2^{r-1} \; y) $ {\tt =>} $
+      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
   \end{cases}$ }\\
 
 $\evals{\text{take}(i,a)}$ & $=$ $$\\
