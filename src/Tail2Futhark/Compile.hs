@@ -151,6 +151,7 @@ compileOpExp ident instDecl args = case ident of
   "takeV" -> compileTakeV instDecl args
   "zipWith" -> compileZipWith instDecl args
   "cat" -> compileCat instDecl args
+  "vreverse" -> compileVReverse instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -190,6 +191,16 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+
+
+compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
+  where
+    kernelExp = F.Fn (mkType (tp,r)) [(mkType (tp,r-1),"x")] (F.Index (F.Var "a") [F.BinApp F.Minus sizeCall minusIndex])
+    sizeCall = F.FunCall "size" [zero, compileExp a] 
+    minusIndex = F.BinApp F.Minus (F.Var "x")  one
+    zero = F.Constant (F.Int 0)
+    one = F.Constant (F.Int 1)
+    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
   where
