@@ -422,7 +422,8 @@ $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
       \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
   \end{cases}$ }\\
 
-$\evals{\text{take}(i,a)}$ & $=$ $$\\
+$\evals{\text{take}(i,a)}$ & $=$ & $\underline{reshape}([|i|, size(1,a),..,size(r,a)],
+                                                           take1_t(|i|))$\\
 
 \\
 %\end{tabular}\\
