@@ -20,7 +20,7 @@ compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
 getFunCalls :: F.Ident -> F.Exp -> [[Char]]
 getFunCalls name exp = getFuns exp
   where getFuns (FunCall ident _) = maybeToList $ stripPrefix name ident
-        getFuns (F.Let _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (F.Let _ _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Index e es) = getFuns e ++ concat (map getFuns es)
         getFuns (IfThenElse e1 e2 e3) = getFuns e1 ++ getFuns e2 ++ getFuns e3
         getFuns (F.Neg e) = getFuns e
@@ -73,7 +73,7 @@ readBType tp = case tp of
 btypes = map readBType ["int","real","bool","char"]
 
 -- AUX reshape: create split part of reshape function 
-mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
+mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
   where name = "takeLess_" ++ showTp tp
@@ -132,7 +132,7 @@ compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -
 compileExp (C char)   = Constant (Char char)
 compileExp Inf = Constant (Real (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
-compileExp (T.Let id _ e1 e2) = F.Let (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
+compileExp (T.Let id _ e1 e2) = F.Let Indent (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
@@ -232,7 +232,7 @@ compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
 
 compileFirstV _ args
-  | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
+  | [e] <- args = F.Let Inline (Ident "x") (compileExp e) $ F.Index (F.Var "x")[F.Constant (F.Int 0)]
   | otherwise = error "firstV takes one argument"
 
 compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp
