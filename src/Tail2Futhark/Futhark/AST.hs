@@ -46,7 +46,7 @@ data Operator = Plus | Mult | LessEq | Minus | Div
 
 data Exp = Var Ident
          | Let Mode Pattern Exp Exp
-         | IfThenElse Exp Exp Exp
+         | IfThenElse Mode Exp Exp Exp
          | Constant Constant
          | Index Exp [Exp]
          | Neg Exp

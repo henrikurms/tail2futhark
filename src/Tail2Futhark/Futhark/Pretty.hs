@@ -27,9 +27,10 @@ ppType CharT = text "char"
 ppType (ArrayT at) = brackets (ppType at)
 
 ppExp (Var ident) = text ident
-ppExp (Let mode pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" `modeop` ppExp exp2
-  where modeop = case mode of Inline -> (<+>) ; Indent -> ($+$)
-ppExp (IfThenElse e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
+ppExp (Let Indent pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
+ppExp (Let Inline pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" <+> ppExp exp2
+ppExp (IfThenElse Indent e1 e2 e3) = text "if" <+> ppExp e1 $+$ text "then" <+> ppExp e2 $+$ text "else" <+> ppExp e3
+ppExp (IfThenElse Inline e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
 ppExp (Constant c) = ppConstant c
 ppExp (Neg exp)    = text "-" <> ppExp exp
 ppExp (Index exp exps) = ppExp exp <> brackExps exps
