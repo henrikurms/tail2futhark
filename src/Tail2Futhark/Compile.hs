@@ -38,7 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = []
+builtins = [boolToInt]
         ++ reshapeFuns 
         ++ takeFuns
 
@@ -89,6 +89,9 @@ extendBody = F.FunCall2 "reshape" [BinApp Mult size length] (F.FunCall "replicat
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
 makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
+
+boolToInt :: FunDecl
+boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0)))
 
 -- AUX: brainfart (Henrik)
 reshapeArgs :: F.Type -> [F.Arg]
@@ -166,8 +169,8 @@ convertFun fun = case fun of
   "i2d"    -> Just "toReal"
   "iotaV"  -> Just "iota"
   "iota"   -> Just "iota"
---  "cat"    -> Just "concat"
   "catV"   -> Just "concat"
+  "b2i"    -> Just "boolToInt"
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
@@ -180,6 +183,7 @@ convertBinOp op = case op of
   "multd" -> Just F.Mult
   "ltei" -> Just F.LessEq
   "lted" -> Just F.LessEq
+  "eqi"  -> Just F.Eq
   _      -> Nothing
 
 -- AUX shape --
@@ -262,10 +266,10 @@ compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compile
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
 compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileEach (Just ([intp,outtp],[rank])) [kernel,array] = Map kernelExp (compileExp array)
-  -- | rank == 1 = Map (compileKernel kernel (makeBTp outtp)) (compileExp array)
-  -- | otherwise = Map kernelExp (compileExp array)
-  where kernelExp = nestMaps rank (makeBTp outtp) (makeBTp outtp) (compileKernel kernel (makeBTp outtp))
+compileEach (Just ([intp,outtp],[rank])) [kernel,array] = makeEach intp outtp rank kernel (compileExp array) 
+  where makeEach tp1 tp2 r kernel array
+          | r == 1 = Map (compileKernel kernel (makeBTp tp2)) array
+          | otherwise = Map (F.Fn (mkType (tp2,r-1)) [(mkType (tp1,r-1),"x")] (makeEach tp1 tp2 (r-1) kernel (F.Var "x"))) array
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
 
@@ -276,29 +280,17 @@ nestMaps depth itp otp kernel = mkMapNest 1 itp otp kernel
           | n == depth = kernel
           | otherwise = mkMapNest (n+1) (ArrayT itp) (ArrayT otp)$ F.Fn (ArrayT otp) [(ArrayT itp,"x")] (Map kernel (F.Var "x"))
 
--- Nested maps with two arguments in the lambda --
-nestMapsZip :: Integer -> F.Type -> F.Type -> Kernel -> Kernel
-nestMapsZip depth itp otp kernel = mkMapNest 1 itp otp kernel
-    where mkMapNest n itp otp kernel 
-            | n == depth = kernel
-            | otherwise =  mkMapNest (n+1) (ArrayT itp) (ArrayT otp) $ F.Fn (ArrayT otp) [(ArrayT itp,"x"), (ArrayT itp, "y")] (Map kernel (F.FunCall "zip" [F.Var "x", F.Var "y"]))
+mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 compileZipWith :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileZipWith (Just([a1tp,a2tp,rtp],[rk])) [kernel,a1,a2] = Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
-    where kernelExp = nestMapsZip rk (makeBTp rtp) (makeBTp rtp) (compileKernel kernel (makeBTp rtp))  
+compileZipWith (Just([tp1,tp2,rtp],[rk])) [kernel,a1,a2] = makeZipWith rk kernel (compileExp a1) (compileExp a2)
+  where
+  makeZipWith r kernel a1 a2
+    | r == 1 = Map (compileKernel kernel (makeBTp rtp)) (FunCall "zip" [a1,a2])
+    | otherwise = Map (F.Fn (mkType (rtp,r-1)) [(mkType(tp1,r-1),"x"),(mkType(tp2,r-1),"y")] (makeZipWith (r-1) kernel (F.Var "x") (F.Var "y"))) (FunCall "zip" [a1, a2])
+    --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = error "Need instance declaration for zipWith"
-
--- compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
--- compileReduce Nothing _ = error "Need instance declaration for reduce"
--- compileReduce (Just ([tp],[rank])) [kernel,id,array]
---   | rank == 0 = Reduce kernelExp idExp arrayExp
---   -- | rank == 1 = Map (F.Fn ftp [(ArrayT ftp, "x")] (Reduce kernelExp idExp (F.Var "x"))) arrayExp
---   | otherwise = Map (nestMaps rank (ArrayT ftp) ftp (F.Fn ftp [(ArrayT ftp,"x")] (Reduce kernelExp idExp (F.Var "x")))) arrayExp
---     where kernelExp = compileKernel kernel (makeArrTp (makeBTp tp) rank)
---           idExp = compileExp id
---           arrayExp = compileExp array
---           ftp = makeBTp tp --makeArrTp (makeBTp tp) (rank)
--- compileReduce _ _ = error "reduce needs 3 arguments" 
+compileZipWith _ _ = error "zipWith takes 3 arguments"
 
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
