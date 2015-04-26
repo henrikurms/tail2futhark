@@ -20,9 +20,9 @@ compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
 getFunCalls :: F.Ident -> F.Exp -> [[Char]]
 getFunCalls name exp = getFuns exp
   where getFuns (FunCall ident _) = maybeToList $ stripPrefix name ident
-        getFuns (F.Let _ e1 e2) = getFuns e1 ++ getFuns e2
+        getFuns (F.Let _ _ e1 e2) = getFuns e1 ++ getFuns e2
         getFuns (Index e es) = getFuns e ++ concat (map getFuns es)
-        getFuns (IfThenElse e1 e2 e3) = getFuns e1 ++ getFuns e2 ++ getFuns e3
+        getFuns (IfThenElse _ e1 e2 e3) = getFuns e1 ++ getFuns e2 ++ getFuns e3
         getFuns (F.Neg e) = getFuns e
         getFuns (Array es) = concat $ map getFuns es
         getFuns (BinApp _ e1 e2) = getFuns e1 ++ getFuns e2
@@ -73,7 +73,7 @@ readBType tp = case tp of
 btypes = map readBType ["int","real","bool","char"]
 
 -- AUX reshape: create split part of reshape function 
-mkSplit id1 id2 dims exp retExp = F.Let (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
+mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
 takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
 reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
   where name = "takeLess_" ++ showTp tp
@@ -103,7 +103,7 @@ reshapeFuns = let
 
 -- AUX: create the body for take
 takeBody :: F.Exp -> F.Exp
-takeBody padElement = IfThenElse (zero `less` len) posTake negTake
+takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
     where less = BinApp LessEq
           zero = Constant (Int 0)
           sum  = BinApp Plus len size
@@ -112,8 +112,8 @@ takeBody padElement = IfThenElse (zero `less` len) posTake negTake
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate" [(BinApp Minus len size), padElement]
-          posTake = IfThenElse (len `less` size) takeLessBody padRight
-          negTake = IfThenElse (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
+          posTake = IfThenElse Indent (len `less` size) takeLessBody padRight
+          negTake = IfThenElse Indent (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
 
 zero :: F.Type -> F.Exp
 zero F.IntT = Constant (Int 0)
@@ -132,7 +132,7 @@ compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -
 compileExp (C char)   = Constant (Char char)
 compileExp Inf = Constant (Real (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
-compileExp (T.Let id _ e1 e2) = F.Let (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
+compileExp (T.Let id _ e1 e2) = F.Let Indent (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
@@ -152,6 +152,7 @@ compileOpExp ident instDecl args = case ident of
   "zipWith" -> compileZipWith instDecl args
   "cat" -> compileCat instDecl args
   "vreverse" -> compileVReverse instDecl args
+  "transp" -> compileTransp instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -190,7 +191,7 @@ multExp :: [F.Exp] -> F.Exp
 multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 absExp :: F.Exp -> F.Exp
-absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
 
 compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
@@ -242,14 +243,17 @@ compileReshape Nothing args = error "Need instance declaration for reshape"
 compileReshape _ _ = error "Reshape needs 2 arguments"
 
 -- Compilation of Transp --
-compileTransp (Just(_,_)) args = F.FunCall "transpose" $ map compileExp args
+compileTransp (Just(_,[r])) [exp] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp exp)
 compileTransp Nothing args = error "Need instance declaration for transp"
+compileTransp _ _ = error "Transpose takes 1 argument"
+
+makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
 
 compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
 
 compileFirstV _ args
-  | [e] <- args = F.Index (compileExp e) [F.Constant (F.Int 0)]
+  | [e] <- args = F.Let Inline (Ident "x") (compileExp e) $ F.Index (F.Var "x")[F.Constant (F.Int 0)]
   | otherwise = error "firstV takes one argument"
 
 compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp

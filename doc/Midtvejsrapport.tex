@@ -48,6 +48,7 @@
 }
 
 \begin{document}
+\renewcommand{\arraystretch}{1.2}
 
 \newcommand{\evals}[1]{\llbracket #1 \rrbracket}
 
@@ -392,6 +393,7 @@ e$_F$ ::=
 
 The compilation between these two languages can be seen below: \\
 
+
 %%% Table
 \begin{tabular}{l c l}
 $\evals{x}$ & $=$ & $x$ \\
@@ -399,7 +401,7 @@ $\evals{i}$ & $=$ & $i$ \\
 $\evals{d}$ & $=$ & $d$ \\
 $\evals{c}$ & $=$ & $c$ \\
 $\evals{-e}$ & $=$ & -$\evals{e}$ \\
-$\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} : \evals{t} = \evals{e_1} \text{ in } \evals{e_2} $\\
+$\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} = \evals{e_1} \text{ in } \evals{e_2} $\\
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
 $\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{op}_{op} \evals{[e_1,...,e_n]}$\\
 
@@ -411,7 +413,17 @@ $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
     $map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) & r=1\\
     $map (fn $t_2^r \; (t_1^r \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
   \end{cases}$\\
-                                                                           
+
+$\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\         
+
+$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map $($ fn {\tt =>} $x + i \; mod \; (\text{size}(0,a))) \; \text{iota}(\text{size}(0,a)) $  \\         
+
+$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map $($ fn {\tt =>} $a[\text{size}(0,a)-x-1, \text{iota}(\text{size}(0,a))$ , a = fresh \\         
+
+$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}[\text{size}
+(0,a_1)*...*\text{size}(r_1,a_1), \text{reshape}(\text{size}
+(0,a_2)*...*\text{size}(r_2,a_2), \evals{a_2})])) $\\
+
 $\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
   \begin{cases}
     \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
@@ -425,17 +437,51 @@ $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
       \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
   \end{cases}$ }\\
 
-$\evals{\text{take}(i,a)}$ & $=$ & $\underline{reshape}([|i|, size(1,a),..,size(r,a)],
-                                                           take1_t[|i|*size(1,a)*..*size(r,a)])$\\
+$\evals{\text{first}_{[t,r]}(a)}$ & $=$ & let x = $\evals{a}$ in $x[\underbrace{0,...,0}_\text{r times}]$\\
 
+$\evals{\text{firstV}_{[t,r]}(a)}$ & $=$ & $\evals{\text{first}_{t,1}(a)}$\\
+
+$\evals{\text{take}(i,a)}$ & $=$ & $reshape([|i|, size(1,a),..,size(r,a)], \text{take1}_t[|i|*size(1,a)*..*size(r,a)], \text{reshape}(\text{size}
+(0,a)*...*\text{size}(r,a),\evals{a}))$\\
+
+$\evals{\text{takeV}_t(d,a)}$ & $=$ & $\text{take1}_{\evals{t}}(\evals{d},\evals{a})$\\
+
+$\evals{\text{drop}(i,a)}$ & $=$ & $reshape(size(0,a), \text{drop1}_t[i*size(1,a)*..*size(r,a)], \text{reshape}(\text{size}
+(0,a)*...*\text{size}(r,a),\evals{a}))$\\
+
+$\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
+                                                           
+$\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
+
+$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let x = $\evals{a_1}$ in rearrange$((x[0]-1,...,x[r-1]-1),\evals{a_2})$\\
+
+$\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
+  $\begin{cases}
+    \text{concat}([\evals{e}],\evals{a}) & r= 1\\
+    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{cons}_{[t,r]}(x,y)}, \text{ zip}(\evals{e},\evals{a}))$$ & r > 1
+  \end{cases}$\\
+  
+$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ &  
+  $\begin{cases}
+    \text{concat}([\evals{a}],\evals{e}) & r= 1\\
+    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{snoc}_{[t,r]}(x,y)}, \text{ zip}(\evals{a},\evals{e}))$$ & r > 1
+  \end{cases}$\\
+
+$\evals{\text{iota}(a)}$ & $=$ & map$(+ \; (1), \text{iota}(\evals{a})$\\
+
+$\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
+
+$\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
+
+shapeV & $=$ & shape\\
 \\
 %\end{tabular}\\
 %
 %The compilation of fn are descirbed in a table of its own\\
 %
 %\begin{tabular}{l c l}
-$\evals{ \text{fn } x:t => e}^{\tau}_{fn} $ & $=$ & $ \text{\underline{fn} } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
-$\evals{ \text{fn } x:t_1 = >\text{fn } y:t_2 => e}^{\tau}_{fn} $ & $=$ & $ \text{\underline{fn} } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
+$\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
+$\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 \end{tabular}\\
 
 The gereral compilation of operators:\\
@@ -444,6 +490,9 @@ The gereral compilation of operators:\\
 $\evals{addi}_{op}$ & $=$ & $+$\\
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
 \end{tabular}\\
+
+\paragraph{reshape}
+reshape gets as argument the return type\\\\
 
 As mentioned previously a Tail program always consists of a single expression,
 whereas a Futhark program is a list of function declarations.
