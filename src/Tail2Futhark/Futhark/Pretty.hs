@@ -58,6 +58,7 @@ ppOp op = text $ case op of
   LessEq -> "<="
   Mult -> "*"
   Div -> "/"
+  Eq -> "=="
 
 ppConstant (Int int) = integer int
 ppConstant (Real f) = double f

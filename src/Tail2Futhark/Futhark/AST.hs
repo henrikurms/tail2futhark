@@ -41,7 +41,7 @@ data Kernel = Fn Type [Arg] Exp
               | Op Operator
   deriving (Show, Eq)
 
-data Operator = Plus | Mult | LessEq | Minus | Div
+data Operator = Plus | Mult | LessEq | Minus | Div | Eq
   deriving (Show, Eq)
 
 data Exp = Var Ident

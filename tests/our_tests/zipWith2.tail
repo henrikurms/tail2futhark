@@ -1,0 +1,7 @@
+let v1:[int]2 = reshape{[int],[1,2]}([2,2],[1,2,3,4]) in
+let v2:[int]2 = reshape{[int],[1,2]}([2,2],[5,6,7,8]) in
+let v5:[int]2 = zipWith{[int,int,int],[2]}(addi,v1,v2) in
+let v8:[int]1 = reduce{[int],[1]}(addi,0,v5) in
+let v11:[int]0 = reduce{[int],[0]}(addi,0,v8) in
+i2d(v11)
+

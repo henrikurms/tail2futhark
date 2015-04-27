@@ -8,6 +8,7 @@
 \usepackage{stmaryrd}
 \usepackage{fixltx2e}
 \usepackage{amsmath}
+\usepackage{tabu}
 
 \lstset{
   mathescape,
@@ -397,7 +398,7 @@ The compilation between these two languages can be seen below: \\
 
 
 %%% Table
-\begin{tabular}{l c l}
+\begin{tabular}{l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
 $\evals{d}$ & $=$ & $d$ \\
@@ -418,13 +419,16 @@ $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
 
 $\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\         
 
-$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map $($ fn {\tt =>} $x + i \; mod \; (\text{size}(0,a))) \; \text{iota}(\text{size}(0,a)) $  \\         
-
-$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map $($ fn {\tt =>} $a[\text{size}(0,a)-x-1, \text{iota}(\text{size}(0,a))$ , a = fresh \\         
-
-$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}[\text{size}
-(0,a_1)*...*\text{size}(r_1,a_1), \text{reshape}(\text{size}
-(0,a_2)*...*\text{size}(r_2,a_2), \evals{a_2})])) $\\
+$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a))\\ 
+$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$\\
+$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_t(
+% \prod_{i=0}^{r_1} \text{size}(i,a_1)
+\text{osize}%(\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)
+, \text{reshape}(
+\text{isize}%\text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2)
+, \evals{a_2})))) $ \\
+&& \hspace{4ex} where osize = $\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)$ \\
+&& \hspace{4ex} \phantom{where} isize = $ \text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2) $ \\
 
 $\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
   \begin{cases}
@@ -443,19 +447,26 @@ $\evals{\text{first}_{[t,r]}(a)}$ & $=$ & let x = $\evals{a}$ in $x[\underbrace{
 
 $\evals{\text{firstV}_{[t,r]}(a)}$ & $=$ & $\evals{\text{first}_{t,1}(a)}$\\
 
-$\evals{\text{take}(i,a)}$ & $=$ & $reshape([|i|, size(1,a),..,size(r,a)], \text{take1}_t[|i|*size(1,a)*..*size(r,a)], \text{reshape}(\text{size}
-(0,a)*...*\text{size}(r,a),\evals{a}))$\\
+$\evals{\text{take}(i,a)}$ & $=$ & reshape(oshape,\text{take1}$_t$(osize,\text{reshape}(isize,$\evals{a})))$\\
+&& \hspace{4ex} where oshape = [$|i|, \text{size}(1,a),\cdots,$size(r,a)]\\
+&& \hspace{4ex} \phantom{where} osize = [$|i|* \text{size}(1,a) *\ldots*$size(r,a)]\\
+&& \hspace{4ex} \phantom{where} isize = \text{size}(0,a)$*...*$\text{size}(r,a)\\
 
 $\evals{\text{takeV}_t(d,a)}$ & $=$ & $\text{take1}_{\evals{t}}(\evals{d},\evals{a})$\\
 
-$\evals{\text{drop}(i,a)}$ & $=$ & $reshape(size(0,a), \text{drop1}_t[i*size(1,a)*..*size(r,a)], \text{reshape}(\text{size}
-(0,a)*...*\text{size}(r,a),\evals{a}))$\\
+$\evals{\text{drop}(i,a)}$ & $=$ & $reshape(
+oshape %size(0,a)
+, \text{drop1}_t(
+osize %[i*size(1,a)*..*size(r,a)]
+, \text{reshape}(
+isize %\text{size}(0,a)*...*\text{size}(r,a)
+,\evals{a}))$\\
 
 $\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
                                                            
 $\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
 
-$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let x = $\evals{a_1}$ in rearrange$((x[0]-1,...,x[r-1]-1),\evals{a_2})$\\
+$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let x = $\evals{a_1}$ in rearrange((x[0]-1,...,x[r-1]-1),$\evals{a_2})$\\
 
 $\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
   $\begin{cases}
@@ -475,7 +486,7 @@ $\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
 
 $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
 
-shapeV & $=$ & shape\\
+$\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 
 \\
 %\end{tabular}\\
