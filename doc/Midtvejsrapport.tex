@@ -291,7 +291,7 @@ because the execution is parallel.
 The {\tt zipWith} function takes as arguments a function and two arrays.
 It then applies the function on the pair of elements consisting of the i'th element
 from the first array and the i'th element from the second array.
-Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}. \\
+Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}\cite{TorbenMogensen}. \\
 
 %%If we do not show the type schemes here we should reference to where they can be found in the article!!!!!!!!!!
 
@@ -372,10 +372,12 @@ map other functions and so on, this leads to nested parallelism \cite{TroelsHenr
 In this section we are going to introduce our compilation scheme and explain the problems in compiling the different functions
 having a special focus on the more interesting cases.
 We will also explain our reasoning behind the chosen compilation and what alternatives there are.
-The rest of this section contains a draft of some of the content for the finished paper.\\
 
-Below we introduce a scheme of the compilation from TAIL to Futhark.
-This scheme works as an abstract model of the transformation and is implementation independent \cite{MartinElsmanNotation}. \\
+Below we introduce a scheme of the compilation from TAIL to Futhark. The scheme uses a mathematical notation to illustrate
+the compilation of the TAIL expressions to Futhark code/expressions?
+
+
+This scheme works as an abstract model of the transformation and is implementation independent. It is based on similar schemes \cite{MartinElsmanNotation} . \\
 
 The TAIL language consist of the following expressions \cite{ElsmanDybdal:Array:2014}: 
 
@@ -474,6 +476,7 @@ $\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
 $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
 
 shapeV & $=$ & shape\\
+
 \\
 %\end{tabular}\\
 %

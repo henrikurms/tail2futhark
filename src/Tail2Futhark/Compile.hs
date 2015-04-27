@@ -153,6 +153,7 @@ compileOpExp ident instDecl args = case ident of
   "cat" -> compileCat instDecl args
   "vreverse" -> compileVReverse instDecl args
   "transp" -> compileTransp instDecl args
+  "drop" -> compileDrop instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -228,6 +229,13 @@ compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall f
           shape = makeShape r [exp]
 compileTake Nothing args = error "Need instance declaration for take"
 compileTake _ _ = error "Take needs 2 arguments"
+
+compileDrop (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh] 
+    where dims = [F.FunCall "size" [Constant (Int 0), compileExp exp]]
+          resh = F.FunCall2 "reshape" [multExp shape] (compileExp exp)
+          sizeProd = multExp $ compileExp len : tail shape
+          fname = "drop1_" ++ showTp (makeBTp tp)
+          shape = makeShape r [exp]
 
 -- Compilation of reshape --
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
