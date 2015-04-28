@@ -198,6 +198,8 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
+maxExp :: F.Exp -> F.Exp -> F.Exp
+maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
 compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
   where
@@ -234,8 +236,11 @@ compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall f
 compileTake Nothing args = error "Need instance declaration for take"
 compileTake _ _ = error "Take needs 2 arguments"
 
+isExp :: F.Exp -> F.Exp
+isExp = id
+
 compileDrop (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh] 
-    where dims = [F.FunCall "size" [Constant (Int 0), compileExp exp]]
+    where dims = maxExp (Constant (Int 0)) (F.BinApp F.Minus (F.FunCall "size" [Constant (Int 0), compileExp exp])  (absExp (compileExp len))) : tail shape
           resh = F.FunCall2 "reshape" [multExp shape] (compileExp exp)
           sizeProd = multExp $ compileExp len : tail shape
           fname = "drop1_" ++ showTp (makeBTp tp)

@@ -455,14 +455,14 @@ $\evals{\text{firstV}_{[t,r]}(a)}$ & $=$ & $\evals{\text{first}_{t,1}(a)}$\\
 
 $\evals{\text{take}(i,a)}$ & $=$ & reshape(oshape,\text{take1}$_{\evals{t}}$(osize,\text{reshape}(isize,$\evals{a})))$\\
 && \hspace{4ex} where oshape = ($|i|, \text{size}(1,\evals{a}),\cdots,$size(r,$\evals{a}$))\\
-&& \hspace{4ex} \phantom{where} osize = ($|i|* \text{size}(1,\evals{a}) *\ldots*$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($i* \text{size}(1,\evals{a}) *\ldots*$size(r,$\evals{a}$))\\
 && \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
 
 $\evals{\text{takeV}_t(d,a)}$ & $=$ & $\text{take1}_{\evals{t}}(\evals{d},\evals{a})$\\
 
 $\evals{\text{drop}(i,a)}$ & $=$ & \text{reshape}(\text{oshape}, $\text{drop1}_{\evals{t}}(\text{osize}, \text{reshape}(\text{isize},\evals{a}))$\\
 && \hspace{4ex} where oshape = (max(0,size(0,$\evals{a}$)-$|i|$),size(1,$\evals{a}$)$,\ldots,$size(r,$\evals{a}$))\\
-&& \hspace{4ex} \phantom{where} osize = ($|i| *$size(1,$\evals{a}$)$ * \ldots*$size(r, $\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($i *$size(1,$\evals{a}$)$ * \ldots*$size(r, $\evals{a}$))\\
 && \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
 
 $\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
