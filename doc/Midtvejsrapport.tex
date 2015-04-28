@@ -49,7 +49,7 @@
 }
 
 \begin{document}
-\renewcommand{\arraystretch}{1.2}
+%\renewcommand{\arraystretch}{1.2}
 
 \newcommand{\evals}[1]{\llbracket #1 \rrbracket}
 
@@ -406,7 +406,7 @@ $\evals{c}$ & $=$ & $c$ \\
 $\evals{-e}$ & $=$ & -$\evals{e}$ \\
 $\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} = \evals{e_1} \text{ in } \evals{e_2} $\\
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
-$\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{op}_{op} \evals{[e_1,...,e_n]}$\\
+$\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{op} \evals{[e_1,...,e_n]}$\\
 
 $\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$\\
 $\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$\\
@@ -421,7 +421,7 @@ $\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_
 
 $\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a))\\ 
 $\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$\\
-$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_t(
+$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
 % \prod_{i=0}^{r_1} \text{size}(i,a_1)
 \text{osize}%(\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)
 , \text{reshape}(
@@ -435,7 +435,7 @@ $\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
     \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
     $map (fn $ t^{r-1} \; (t^r \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
   \end{cases}$\\
-                                                                           
+
 $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
   \multicolumn{3}{r}{ $\begin{cases}
     $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2})) & r=1 \\
@@ -443,30 +443,33 @@ $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
       \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
   \end{cases}$ }\\
 
+$\evals{\text{cat}_{[t,r]}(a_1,a_2)}$ & $=$ & $
+  \begin{cases}
+    \text{concat}(\evals{a_1},\evals{a_2}) & r=1 \\
+    $map (fn $ \evals{t}^{r-1} \; (\evals{t} \; x, \evals{t} \; y)$ {\tt =>} $ \evals{\text{cat}_{[t,r-1]}(x,y)}, \text{zip}(\evals{a_1}, \evals{a_2}) & r>1\\
+  \end{cases}$\\
+
 $\evals{\text{first}_{[t,r]}(a)}$ & $=$ & let x = $\evals{a}$ in $x[\underbrace{0,...,0}_\text{r times}]$\\
 
 $\evals{\text{firstV}_{[t,r]}(a)}$ & $=$ & $\evals{\text{first}_{t,1}(a)}$\\
 
-$\evals{\text{take}(i,a)}$ & $=$ & reshape(oshape,\text{take1}$_t$(osize,\text{reshape}(isize,$\evals{a})))$\\
-&& \hspace{4ex} where oshape = [$|i|, \text{size}(1,a),\cdots,$size(r,a)]\\
-&& \hspace{4ex} \phantom{where} osize = [$|i|* \text{size}(1,a) *\ldots*$size(r,a)]\\
-&& \hspace{4ex} \phantom{where} isize = \text{size}(0,a)$*...*$\text{size}(r,a)\\
+$\evals{\text{take}(i,a)}$ & $=$ & reshape(oshape,\text{take1}$_{\evals{t}}$(osize,\text{reshape}(isize,$\evals{a})))$\\
+&& \hspace{4ex} where oshape = ($|i|, \text{size}(1,\evals{a}),\cdots,$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($|i|* \text{size}(1,\evals{a}) *\ldots*$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
 
 $\evals{\text{takeV}_t(d,a)}$ & $=$ & $\text{take1}_{\evals{t}}(\evals{d},\evals{a})$\\
 
-$\evals{\text{drop}(i,a)}$ & $=$ & $reshape(
-oshape %size(0,a)
-, \text{drop1}_t(
-osize %[i*size(1,a)*..*size(r,a)]
-, \text{reshape}(
-isize %\text{size}(0,a)*...*\text{size}(r,a)
-,\evals{a}))$\\
+$\evals{\text{drop}(i,a)}$ & $=$ & \text{reshape}(\text{oshape}, $\text{drop1}_{\evals{t}}(\text{osize}, \text{reshape}(\text{isize},\evals{a}))$\\
+&& \hspace{4ex} where oshape = (max(0,size(0,$\evals{a}$)-$|i|$),size(1,$\evals{a}$)$,\ldots,$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($|i| *$size(1,$\evals{a}$)$ * \ldots*$size(r, $\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
 
 $\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
-                                                           
+
 $\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
 
-$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let x = $\evals{a_1}$ in rearrange((x[0]-1,...,x[r-1]-1),$\evals{a_2})$\\
+$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let $x$ = $\evals{a_1}$ in rearrange(($x[0]-1,\ldots,x[r-1]-1$),$\evals{a_2})$\\
 
 $\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
   $\begin{cases}
@@ -487,7 +490,7 @@ $\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
 $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
-
+gi
 \\
 %\end{tabular}\\
 %
