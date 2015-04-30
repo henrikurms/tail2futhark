@@ -176,6 +176,7 @@ compileOpExp ident instDecl args = case ident of
   "drop" -> compileDrop instDecl args
   "iota" -> compileIota instDecl args
   "iotaV" -> compileIota instDecl args
+  "vrotate" -> compileRotate instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -229,6 +230,9 @@ compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "s
     zero = F.Constant (F.Int 0)
     one = F.Constant (F.Int 1)
     mkType (tp,rank) = makeArrTp (makeBTp tp) rank
+
+compileRotate (Just([tp],[r])) [i,a] = Map kernelExp (FunCall ) 
+
 
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
   where
