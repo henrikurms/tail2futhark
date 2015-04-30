@@ -60,6 +60,7 @@ ppOp op = text $ case op of
   Mult -> "*"
   Div -> "/"
   Eq -> "=="
+  Mod -> "%"
 
 ppConstant (Int int) = integer int
 ppConstant (Real f) = double f

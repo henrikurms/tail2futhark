@@ -178,7 +178,8 @@ compileOpExp ident instDecl args = case ident of
   "drop" -> compileDrop instDecl args
   "iota" -> compileIota instDecl args
   "iotaV" -> compileIota instDecl args
-  "vrotate" -> compileRotate instDecl args
+  "vrotate" -> compileVRotate instDecl args
+  "vrotateV" -> compileVRotateV instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -241,8 +242,14 @@ makeVReverse tp r a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (F
     one = F.Constant (F.Int 1)
     mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
-compileRotate (Just([tp],[r])) [i,a] = Map kernelExp (FunCall ) 
+compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i a
+compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i a
 
+makeVRotate tp r i a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [size])
+  where
+    kernelExp = F.Fn (mkType (tp, r-1)) [F.IntT, "x"] (F.Index (F.Var "a") [F.BinApp F.Mod sum size])
+    sum = F.BinApp F.Plus (F.Var "x") compileExp i
+    size = FunCall "size" [F.Constant (F.Int 0), compileExp a]
 
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
   where
