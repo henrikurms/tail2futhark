@@ -233,7 +233,7 @@ compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 a
 
 makeVReverse tp r a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
   where
-    kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1),"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
+    kernelExp = F.Fn (mkType (tp,r-1)) [(F.IntT,"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
     sizeCall = F.FunCall "size" [zero, compileExp a] 
     minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
     zero = F.Constant (F.Int 0)
