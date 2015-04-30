@@ -247,8 +247,8 @@ compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i a
 
 makeVRotate tp r i a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [size])
   where
-    kernelExp = F.Fn (mkType (tp, r-1)) [F.IntT, "x"] (F.Index (F.Var "a") [F.BinApp F.Mod sum size])
-    sum = F.BinApp F.Plus (F.Var "x") compileExp i
+    kernelExp = F.Fn (mkType (tp, r-1)) [(F.IntT, "x")] (F.Index (F.Var "a") [F.BinApp F.Mod sum size])
+    sum = F.BinApp F.Plus (F.Var "x") (compileExp i)
     size = FunCall "size" [F.Constant (F.Int 0), compileExp a]
 
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
