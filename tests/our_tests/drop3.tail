@@ -1,0 +1,1 @@
+i2d(reduce{[int],[0]}(addi,0,dropV{[int],[1]}(4,[2,3,4,5,6])))

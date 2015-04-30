@@ -41,6 +41,7 @@ builtins :: [F.FunDecl]
 builtins = [boolToInt]
         ++ reshapeFuns 
         ++ takeFuns
+        ++ dropFuns
 
 -- AUX: makes FunDecl out of type by adding  signature + return and argument type (that are the same)
 --makeTake :: F.Type -> F.FunDecl
@@ -104,6 +105,18 @@ reshapeFuns = let
   reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
   in concat $ map reshapeFuns btypes
 
+dropBody :: F.Exp
+dropBody = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
+    where zero = Constant (Int 0)
+          less = BinApp LessEq
+          len = F.Var "l"
+          size = F.FunCall "size" [zero, F.Var "x"]
+          sum = BinApp Plus len size
+          emptArr = F.Array []
+          elseBranch = IfThenElse Indent (zero `less` len) negDrop posDrop
+          negDrop = mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")
+          posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
+
 -- AUX: create the body for take
 takeBody :: F.Exp -> F.Exp
 takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
@@ -125,7 +138,11 @@ zero F.BoolT = Constant (Bool False)
 zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
 
+takeFuns :: [F.FunDecl]
 takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp))) btypes
+
+dropFuns :: [F.FunDecl]
+dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody)) btypes
 
 -- Expressions --
 compileExp :: T.Exp -> F.Exp
