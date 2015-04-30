@@ -164,6 +164,7 @@ compileOpExp ident instDecl args = case ident of
   "eachV"  -> compileEachV instDecl args
   "each"   -> compileEach instDecl args
   "firstV" -> compileFirstV instDecl args
+  "first" -> compileFirst instDecl args
   "shapeV" -> F.Array $ makeShape 1 args 
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
@@ -172,6 +173,7 @@ compileOpExp ident instDecl args = case ident of
   "zipWith" -> compileZipWith instDecl args
   "cat" -> compileCat instDecl args
   "vreverse" -> compileVReverse instDecl args
+  "vreverseV" -> compileVReverseV instDecl args
   "transp" -> compileTransp instDecl args
   "drop" -> compileDrop instDecl args
   "iota" -> compileIota instDecl args
@@ -218,14 +220,22 @@ absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
+compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
+  where rInt = fromInteger r :: Int
+compileFirst Nothing _ = error "first needs instance declaration"
+compileFirst _ _ = error "first take one argument"
+
 compileIota _ [a] = Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1)))) (FunCall "iota" [compileExp a])
 compileIota _ _ = error "Iota take one argument"
 
-compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
+compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r a
+compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 a
+
+makeVReverse tp r a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
   where
-    kernelExp = F.Fn (mkType (tp,r)) [(mkType (tp,r-1),"x")] (F.Index (F.Var "a") [F.BinApp F.Minus sizeCall minusIndex])
+    kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1),"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
     sizeCall = F.FunCall "size" [zero, compileExp a] 
-    minusIndex = F.BinApp F.Minus (F.Var "x")  one
+    minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
     zero = F.Constant (F.Int 0)
     one = F.Constant (F.Int 1)
     mkType (tp,rank) = makeArrTp (makeBTp tp) rank
