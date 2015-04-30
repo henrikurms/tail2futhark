@@ -55,6 +55,7 @@ data Exp = Var Ident
          | FunCall Ident [Exp]
          | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args
          -- | Reshape [Exp] Exp -- "old" version of impl
+         | Empty Type
          | Map Kernel Exp
          | Filter Kernel Exp
          | Scan Kernel Exp Exp

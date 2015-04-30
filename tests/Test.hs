@@ -1,6 +1,6 @@
 import Test.Tasty
 import Test.Tasty.Providers
-import Test.Tasty.Program
+--import Test.Tasty.Program
 import Test.Tasty.Golden
 import Test.Tasty.Golden.Manage as G
 import System.Process

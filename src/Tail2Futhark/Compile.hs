@@ -105,14 +105,14 @@ reshapeFuns = let
   reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
   in concat $ map reshapeFuns btypes
 
-dropBody :: F.Exp
-dropBody = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
+dropBody :: F.Type -> F.Exp
+dropBody tp = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
     where zero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
           size = F.FunCall "size" [zero, F.Var "x"]
           sum = BinApp Plus len size
-          emptArr = F.Array []
+          emptArr = F.Empty tp
           elseBranch = IfThenElse Indent (zero `less` len) negDrop posDrop
           negDrop = mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
@@ -142,7 +142,7 @@ takeFuns :: [F.FunDecl]
 takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp))) btypes
 
 dropFuns :: [F.FunDecl]
-dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody)) btypes
+dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody tp)) btypes
 
 -- Expressions --
 compileExp :: T.Exp -> F.Exp
