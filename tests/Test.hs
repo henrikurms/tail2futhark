@@ -13,7 +13,7 @@ main = do
 
 makeTest :: FilePath -> IO ()
 makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "fout"] >>
-                system ("futharki " ++ replaceExtension file "fout" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
+                system ("futhark -i " ++ replaceExtension file "fout" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
 
 
 --tests = testGroup "Tests" [crashTests,outputTests]

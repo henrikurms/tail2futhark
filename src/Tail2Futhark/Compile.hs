@@ -174,6 +174,8 @@ compileOpExp ident instDecl args = case ident of
   "vreverse" -> compileVReverse instDecl args
   "transp" -> compileTransp instDecl args
   "drop" -> compileDrop instDecl args
+  "iota" -> compileIota instDecl args
+  "iotaV" -> compileIota instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -185,8 +187,6 @@ compileOpExp ident instDecl args = case ident of
 -- Operations that are 1:1 --
 convertFun fun = case fun of
   "i2d"    -> Just "toReal"
-  "iotaV"  -> Just "iota"
-  "iota"   -> Just "iota"
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
   _     -> Nothing
@@ -217,6 +217,9 @@ absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
 maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
+
+compileIota _ [a] = Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1)))) (FunCall "iota" [compileExp a])
+compileIota _ _ = error "Iota take one argument"
 
 compileVReverse (Just([tp],[r])) [a] = Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
   where
