@@ -228,18 +228,19 @@ maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
 
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 a e
+compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 (compileExp a) (compileExp e)
 compileSnocV Nothing _ = error "snoc needs instance declaration"
 compileSnocV _ _ = error "snoc take two aguments"
 
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r a e
+compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r (compileExp a) (compileExp e)
 compileSnoc Nothing _ = error "snoc needs instance declaration"
 compileSnoc _ _ = error "snoc take two aguments"
 
-makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] (makeSnoc tp (r-1) a e)) arr 
-   where
-     arr = F.FunCall "zip" [compileExp a, compileExp e]
+makeSnoc tp 1 a e = F.FunCall "concat" [a, F.Array [e]]
+makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] recursiveCall) arr 
+  where arr = F.FunCall "zip" [a, e]
+        recursiveCall = makeSnoc tp (r-1) (F.Var "x") (F.Var "y")
 
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
   where rInt = fromInteger r :: Int
