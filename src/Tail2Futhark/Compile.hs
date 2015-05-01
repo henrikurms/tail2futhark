@@ -182,6 +182,8 @@ compileOpExp ident instDecl args = case ident of
   "iotaV" -> compileIota instDecl args
   "vrotate" -> compileVRotate instDecl args
   "vrotateV" -> compileVRotateV instDecl args
+  "snoc" -> compileSnoc instDecl args
+  "snocV" -> compileSnocV instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -223,6 +225,21 @@ absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
 maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
+
+
+compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 a e
+compileSnocV Nothing _ = error "snoc needs instance declaration"
+compileSnocV _ _ = error "snoc take two aguments"
+
+compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r a e
+compileSnoc Nothing _ = error "snoc needs instance declaration"
+compileSnoc _ _ = error "snoc take two aguments"
+
+makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] (makeSnoc tp (r-1) a e)) arr 
+   where
+     arr = F.FunCall "zip" [compileExp a, compileExp e]
 
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
   where rInt = fromInteger r :: Int

@@ -419,8 +419,8 @@ $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
 
 $\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\         
 
-$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a))\\ 
-$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$\\
+$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a)) \space\space , x = fresh\\
+$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$ \space\space , x = fresh\\
 $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
 % \prod_{i=0}^{r_1} \text{size}(i,a_1)
 \text{osize}%(\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)
