@@ -175,7 +175,7 @@ compileOpExp ident instDecl args = case ident of
   "vreverse" -> compileVReverse instDecl args
   "vreverseV" -> compileVReverseV instDecl args
   "transp" -> compileTransp instDecl args
-  --"transp2" -> compileTransp2 instDecl args
+  "transp2" -> compileTransp2 instDecl args
   "drop" -> compileDrop instDecl args
   "dropV" -> compileDropV instDecl args
   "iota" -> compileIota instDecl args
@@ -323,6 +323,13 @@ makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
 
 --compileTransp2 (Just(_,[r])) [dims,e] = F.Let Inline (Ident "x") (compileExp e) $ makeTransp2 indices (F.Var "x")
 --    where indices = map (F.Index (F.Var "x") . (:[]) . Constant . Int) [0..r-1]
+
+compileTransp2 _ [Vc dims,e] = makeTransp2 (map compileExp dimsExps) (compileExp e)
+    where dimsExps = map (I . (\x -> x - 1) . getInt) dims
+          getInt (I i) = i
+          getInt _ = error "transp2 expects number literals in it's first argument"
+compileTransp2 _ e = case e of [_,_] -> error "transp2 needs litaral as first argument"
+                               _     -> error "transp2 takes 2 arguments"
 
 compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
