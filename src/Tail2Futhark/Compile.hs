@@ -243,7 +243,13 @@ makeVReverse tp r a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (F
     mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i a
+compileVRotate Nothing _ = error "Need instance declaration for vrotate"
+compileVRotate _ _ = error "vrotate needs 2 arguments"
+
+
 compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i a
+compileVRotateV Nothing _ = error "Need instance declaration for vrotateV"
+compileVRotateV _ _ = error "vrotateV needs 2 arguments"
 
 makeVRotate tp r i a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [size])
   where
