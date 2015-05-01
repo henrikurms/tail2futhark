@@ -113,7 +113,7 @@ dropBody tp = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
           size = F.FunCall "size" [zero, F.Var "x"]
           sum = BinApp Plus len size
           emptArr = F.Empty tp
-          elseBranch = IfThenElse Indent (zero `less` len) negDrop posDrop
+          elseBranch = IfThenElse Indent (len `less` zero) negDrop posDrop
           negDrop = mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
 
@@ -175,7 +175,9 @@ compileOpExp ident instDecl args = case ident of
   "vreverse" -> compileVReverse instDecl args
   "vreverseV" -> compileVReverseV instDecl args
   "transp" -> compileTransp instDecl args
+  --"transp2" -> compileTransp2 instDecl args
   "drop" -> compileDrop instDecl args
+  "dropV" -> compileDropV instDecl args
   "iota" -> compileIota instDecl args
   "iotaV" -> compileIota instDecl args
   "vrotate" -> compileVRotate instDecl args
@@ -272,6 +274,12 @@ compileTakeV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileE
 compileTakeV Nothing _ = error "Need instance declaration for takeV"
 compileTakeV _ _ = error "TakeV needs 2 arguments"
 
+compileDropV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileDropV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
+    where fname = "drop1_" ++ showTp (makeBTp tp)
+compileDropV Nothing _ = error "Need instance declaration for dropV"
+compileDropV _ _ = error "DropV needs 2 arguments"
+
 -- Compilation of take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
@@ -312,6 +320,9 @@ compileTransp Nothing args = error "Need instance declaration for transp"
 compileTransp _ _ = error "Transpose takes 1 argument"
 
 makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
+
+--compileTransp2 (Just(_,[r])) [dims,e] = F.Let Inline (Ident "x") (compileExp e) $ makeTransp2 indices (F.Var "x")
+--    where indices = map (F.Index (F.Var "x") . (:[]) . Constant . Int) [0..r-1]
 
 compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing args = error "Need instance declaration for shape"
