@@ -184,6 +184,7 @@ compileOpExp ident instDecl args = case ident of
   "vrotateV" -> compileVRotateV instDecl args
   "snoc" -> compileSnoc instDecl args
   "snocV" -> compileSnocV instDecl args
+  "cons" -> compileCons instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -241,6 +242,11 @@ makeSnoc tp 1 a e = F.FunCall "concat" [a, F.Array [e]]
 makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] recursiveCall) arr 
   where arr = F.FunCall "zip" [a, e]
         recursiveCall = makeSnoc tp (r-1) (F.Var "x") (F.Var "y")
+
+compileCons :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileCons (Just([tp],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (F.FunCall "concat" [exp, arr])
+  where exp = makeTransp e r
+        arr = makeTransp a r 
 
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
   where rInt = fromInteger r :: Int
@@ -336,6 +342,8 @@ compileReshape _ _ = error "Reshape needs 2 arguments"
 compileTransp (Just(_,[r])) [exp] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp exp)
 compileTransp Nothing args = error "Need instance declaration for transp"
 compileTransp _ _ = error "Transpose takes 1 argument"
+
+makeTransp e r = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp e)
 
 makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
 
