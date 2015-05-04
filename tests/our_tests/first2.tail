@@ -1,0 +1,2 @@
+let v1:[int]2 = reshape{[int],[1,2]}([2,2],[2,3,4,5]) in
+i2d(first{[int],[2]}(v1))
