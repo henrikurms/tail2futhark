@@ -471,17 +471,25 @@ $\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
 
 $\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let $x$ = $\evals{a_1}$ in rearrange(($x[0]$-$1,\ldots,x[r$-$1]$-$1$),$\evals{a_2})$\\
 
-$\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
-  $\begin{cases}
-    \text{concat}([\evals{e}],\evals{a}) & r= 1\\
-    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{cons}_{[t,r]}(x,y)}, \text{ zip}(\evals{e},\evals{a}))$$ & r > 1
-  \end{cases}$\\
+%$\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
+%  $\begin{cases}
+%    \text{concat}([\evals{e}],\evals{a}) & r= 1\\
+%    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{cons}_{[t,r]}(x,y)}, \text{ zip}(\evals{e},\evals{a}))$$ & r > 1
+%  \end{cases}$\\
+
+$\evals{\text{cons}_[t,r](e,a)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(exp,arr)})$\\
+&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
   
-$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ &  
-  $\begin{cases}
-    \text{concat}([\evals{a}],\evals{e}) & r= 1\\
-    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{snoc}_{[t,r]}(x,y)}, \text{ zip}(\evals{a},\evals{e}))$$ & r > 1
-  \end{cases}$\\
+$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(arr,exp)})$\\
+&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
+  
+%$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ & 
+%  $\begin{cases}
+%    \text{concat}([\evals{a}],\evals{e}) & r= 1\\
+%    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{snoc}_{[t,r]}(x,y)}, \text{ zip}(\evals{a},\evals{e}))$$ & r > 1
+%  \end{cases}$\\
 
 $\evals{\text{iota}(a)}$ & $=$ & map$(+ \; (1), \text{iota}(\evals{a})$\\
 
@@ -509,7 +517,12 @@ $\evals{i2d}_{fun}$ & $=$ & toReal\\
 \end{tabular}\\
 
 \paragraph{reshape}
-reshape gets as argument the return type\\\\
+reshape gets as argument the return type.\\
+It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
+
+\paragraph{cons} takes an array of rank $\gamma$ and an array of rank $\gamma+1$ and concatinates the elements of the 
+array of rank $\gamma$ in the front of the elements of the array of rank $\gamma +1$. This result in an array of rank $\gamma+1$. 
+The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array. However the Futhark transpose function differs slightly from the wished functionality in that. ...\\
 
 As mentioned previously a Tail program always consists of a single expression,
 whereas a Futhark program is a list of function declarations.

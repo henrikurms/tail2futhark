@@ -185,6 +185,7 @@ compileOpExp ident instDecl args = case ident of
   "snoc" -> compileSnoc instDecl args
   "snocV" -> compileSnocV instDecl args
   "cons" -> compileCons instDecl args
+  "consV" -> compileConsV instDecl args
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -228,25 +229,40 @@ maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
 
+-- compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+-- compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 (compileExp a) (compileExp e)
+-- compileSnocV Nothing _ = error "snoc needs instance declaration"
+-- compileSnocV _ _ = error "snoc take two aguments"
+-- 
+-- compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
+-- compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r (compileExp a) (compileExp e)
+-- compileSnoc Nothing _ = error "snoc needs instance declaration"
+-- compileSnoc _ _ = error "snoc take two aguments"
+
+-- makeSnoc tp 1 a e = F.FunCall "concat" [a, F.Array [e]]
+-- makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] recursiveCall) arr 
+--   where arr = F.FunCall "zip" [a, e]
+--         recursiveCall = makeSnoc tp (r-1) (F.Var "x") (F.Var "y")
+
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 (compileExp a) (compileExp e)
-compileSnocV Nothing _ = error "snoc needs instance declaration"
-compileSnocV _ _ = error "snoc take two aguments"
+compileSnocV (Just([tp],[r])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]
+compileSnocV Nothing _ = error "snocV needs instance declaration"
+compileSnocV _ _ = error "snocV take two aguments"
 
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r (compileExp a) (compileExp e)
-compileSnoc Nothing _ = error "snoc needs instance declaration"
-compileSnoc _ _ = error "snoc take two aguments"
+compileSnoc (Just([tp],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,exp])
+  where exp = F.Array [makeTransp e r]
+        arr = makeTransp a (r+1)
 
-makeSnoc tp 1 a e = F.FunCall "concat" [a, F.Array [e]]
-makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] recursiveCall) arr 
-  where arr = F.FunCall "zip" [a, e]
-        recursiveCall = makeSnoc tp (r-1) (F.Var "x") (F.Var "y")
+compileConsV :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileConsV (Just([tp],[r])) [e,a] = F.FunCall "concat" [F.Array [compileExp e], compileExp a]
+compileConsV Nothing _ = error "consV needs instance declaration"
+compileConsV _ _ = error "consV take two aguments"
 
 compileCons :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileCons (Just([tp],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (F.FunCall "concat" [exp, arr])
-  where exp = makeTransp e r
-        arr = makeTransp a r 
+compileCons (Just([tp],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [exp, arr])
+  where exp = F.Array [makeTransp e r]
+        arr = makeTransp a (r+1)
 
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
   where rInt = fromInteger r :: Int
