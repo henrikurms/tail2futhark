@@ -196,7 +196,7 @@ compileOpExp ident instDecl args = case ident of
 
 -- Operations that are 1:1 --
 convertFun fun = case fun of
-  "i2d"    -> Just "toReal"
+  "i2d"    -> Just "toFloat"
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
   _     -> Nothing
@@ -207,8 +207,8 @@ convertBinOp op = case op of
   "addd" -> Just F.Plus
   "subi" -> Just F.Minus
   "subd" -> Just F.Minus
-  "multi" -> Just F.Mult
-  "multd" -> Just F.Mult
+  "muli" -> Just F.Mult
+  "muld" -> Just F.Mult
   "ltei" -> Just F.LessEq
   "lted" -> Just F.LessEq
   "eqi"  -> Just F.Eq
@@ -344,7 +344,7 @@ compileDrop (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall f
 -- Compilation of reshape --
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
     where dimsList | F.Array dimsList <- dimsExp = dimsList
-                   | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r1-1]
+                   | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
                    | otherwise = error "reshape needs literal or variable as shape argument"
           dimsExp = compileExp dims
           fname = "reshape1_" ++ showTp (makeBTp tp)
