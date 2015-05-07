@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+\usepackage{graphicx} % \includegraphics
+\usepackage{listings}
+\usepackage{setspace}
+\usepackage{cite}
+\usepackage{stmaryrd}
+\usepackage{fixltx2e}
+\usepackage{amsmath}
+\usepackage{tabu}
+
+\lstset{
+  mathescape,
+  moredelim=[is][\underbar]{_}{_}
+}
+
+\definecolor{Background}{rgb}{0.98,0.98,0.98}
+\lstset{
+    numbers=left,
+    numberstyle=\footnotesize,
+    numbersep=1em,
+    xleftmargin=1em,
+    framextopmargin=2em,
+    framexbottommargin=2em,
+    showspaces=false,
+    showtabs=false,
+    showstringspaces=false,
+    frame=l,
+    tabsize=4,
+    % Basic
+    basicstyle=\ttfamily\small\setstretch{1},
+    backgroundcolor=\color{Background}
+}
+
+\author{
+  \Large{Anna Sofie Kiehn \& Henriks Urms}\\
+  \\ \textit{Supervisor:} Martin Elsman
+  % \texttt{a.kiehn89@gmail.com} \\
+  %\\ \texttt{a.kiehn89@gmail.com} \\ \\
+  %\Large{Henriks Urms}
+  %\\ \texttt{urmshenrik@gmail.com}
+}
+
+\title{
+  \vspace{5cm}
+  \Huge{Bachelor's thesis} \\
+  \Large{Compiling TAIL to Futhark}
+}
+
+\begin{document}
+%\renewcommand{\arraystretch}{1.2}
+
+\newcommand{\evals}[1]{\llbracket #1 \rrbracket}
+
+%% Change `ku-farve` to `nat-farve` to use SCIENCE's old colors or
+%% `natbio-farve` to use SCIENCE's new colors and logo.
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{include/natbio-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{include/natbio-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{include/nat-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+\abstract
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%  REPORT STARTS HERE  %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The intermidiate language TAIL}
+
+\section{Futhark}
+\end{document}
