@@ -38,7 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = [boolToInt]
+builtins = [boolToInt,negi]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -94,6 +94,9 @@ makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
 boolToInt :: FunDecl
 boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0)))
 
+negi :: FunDecl
+negi = (F.IntT, "negi", [(F.IntT,"x")], F.Neg (F.Var "x"))
+
 -- AUX: brainfart (Henrik)
 reshapeArgs :: F.Type -> [F.Arg]
 reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
@@ -114,7 +117,7 @@ dropBody tp = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
           sum = BinApp Plus len size
           emptArr = F.Empty tp
           elseBranch = IfThenElse Indent (len `less` zero) negDrop posDrop
-          negDrop = mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")
+          negDrop = mkSplit "v1" "_" sum (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
 
 -- AUX: create the body for take
@@ -199,6 +202,7 @@ convertFun fun = case fun of
   "i2d"    -> Just "toFloat"
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
+  "negi"   -> Just "negi"
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
