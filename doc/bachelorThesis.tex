@@ -91,7 +91,7 @@ both its first and second order functions and operators.
 Even though it is not a new language it is still used in the financial world 
 where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
 
-% TAIL does not support curried functions. 
+
 
 TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists.
 Another backend to TAIL exists however which compile TAIL efficiently into a C-like language. TAIL does not support
@@ -119,6 +119,10 @@ Vectors can be represented in two different ways in TAIL.
 Either as an array of rank 1 or as the special vector type.
 The special vector type is used for vector literals where the length of the vector is known at compile time \cite{ElsmanDybdal:Array:2014}. \\
 
+Some of the operators take types as part of their constructor in form of an instance decleration. 
+The instance decleration consist of a basic type and a vector that either tells the ranks of 
+the resulting array or the length (number of elements) of the one dimentional array (vector).\\
+
 Most of the operators in TAIL are polymorphic in respect to array ranks and base types.
 Some of them only take some polymorphic arguments but also take specific type arguments.
 An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha$.\\
@@ -127,22 +131,6 @@ An example is the {\tt take} function. It takes as argument a number (of type in
  information to the constructs.
 Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators which
 are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
-
-A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
-list of expressions, a let expression or an operator.
-
-The aplacc parser for TAIL represents the TAIL expressions in the apstract syntax tree as variables, constants, infinity, the negative representation of 
-the expression, let expressions, operators and lambda expressions. 
-\begin{lstlisting}[numbers=none,frame=none]
-e ::= x | i | d | c | inf | -e | let x:$t$ = e$_1$ in e$_2$ |
-      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
-\end{lstlisting}
-
-The $t$'s are types that are part of the expression. \\
-
-Some of the operators also takes types. They consist of a basic type and a vector that either tells the ranks of 
-the resulting array or the length (number of elements) of the one dimentional array (vector).\\
-
 
 There are four parallel operators in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
 The functions {\tt each} and {\tt eachV} are known in many languages as map.
@@ -161,7 +149,25 @@ because the execution is parallel.
 The {\tt zipWith} function takes as arguments a function and two arrays.
 It then applies the function on the pair of elements consisting of the i'th element
 from the first array and the i'th element from the second array.
-Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}. %\cite{TorbenMogensen}. \\
+Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.
+
+A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
+list of expressions, a let expression or an operator.
+
+The aplacc parser for TAIL represents the TAIL expressions in the apstract syntax tree as variables, constants, infinity, the negative representation of 
+the expression, let expressions, operators and lambda expressions. 
+\begin{lstlisting}[numbers=none,frame=none]
+e ::= x | i | d | c | inf | -e | let x:$t$ = e$_1$ in e$_2$ |
+      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
+\end{lstlisting}
+
+The $t$'s are types that are part of the expression. \\
+
+TAIL does not support curried functions but require functions to be fully applied.\\
+
+NB!! we use both the word function and operator about the same thing. Should we distinguish?
+
+ %\cite{TorbenMogensen}. \\
 
 
 
