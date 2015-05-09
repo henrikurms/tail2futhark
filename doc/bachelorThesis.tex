@@ -81,5 +81,108 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The intermidiate language TAIL}
 
+TAIL is a typed array intermediate language and the target of an APL compiler.
+APL is an older language created in the 1960's by Kenneth E. Iverson.
+APL is an array programming language, its main type is the multi-dimensional array 
+and most of the built-in functions in the language are array operators that work on this type. 
+All of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
+The APL language is dynamically typed. It supports first and second order functions and it supports polymorphism in 
+both its first and second order functions and operators. 
+Even though it is not a new language it is still used in the financial world 
+where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
+
+% TAIL does not support curried functions. 
+
+TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists.
+Another backend to TAIL exists however which compile TAIL efficiently into a C-like language. TAIL does not support
+ all APLs operators but only a subset of these \cite{ElsmanDybdal:Array:2014}. 
+The subset of APL operators that TAIL support result in the following TAIL build-in operators:
+
+\begin{lstlisting}[numbers=none,frame=none]
+op ::= addi | subi | multi | mini | maxi | addd | subd | 
+       muld | mind | maxd | andb | orb | xorb |  nanb | 
+       norb | notb | lti | ltei | gti | gtei | eqi | neqi |
+       ltd | lted | gtd | gted | eqd | neqe | iota | each |
+       reduce | i2d | b2i | reshape0 | reshape | rotate |
+       transp | transp2 | zipWith | shape | take | drop |
+       first | cat | cons | snoc | shapeV | catV | consV | 
+       snocV | iotaV | rotateV | takeV | dropV | firstV 
+\end{lstlisting}
+
+The 'V' following some of the operators indicate they are a special version of the operator that works on vectors. \\
+
+The central type in TAIL is, like in APL, the multi-dimensional array type. The array type consist of a base type and a rank. The rank are represented as a vector consisting of the dimentions of the array.
+The base type of an array is the type of the elements in the array and can currently be of the
+type: {\tt int}, {\tt double}, {\tt bool} {\tt char}. 
+Scalars are a special case of the array type and is represented as an array of rank 0.
+Vectors can be represented in two different ways in TAIL.
+Either as an array of rank 1 or as the special vector type.
+The special vector type is used for vector literals where the length of the vector is known at compile time \cite{ElsmanDybdal:Array:2014}. \\
+
+Most of the operators in TAIL are polymorphic in respect to array ranks and base types.
+Some of them only take some polymorphic arguments but also take specific type arguments.
+An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha$.\\
+
+ TAILs type system takes the parallelism of APL and transforms it to a more manageable form adding explicit type
+ information to the constructs.
+Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators which
+are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
+
+A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
+list of expressions, a let expression or an operator.
+
+The aplacc parser for TAIL represents the TAIL expressions in the apstract syntax tree as variables, constants, infinity, the negative representation of 
+the expression, let expressions, operators and lambda expressions. 
+\begin{lstlisting}[numbers=none,frame=none]
+e ::= x | i | d | c | inf | -e | let x:$t$ = e$_1$ in e$_2$ |
+      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
+\end{lstlisting}
+
+The $t$'s are types that are part of the expression. \\
+
+Some of the operators also takes types. They consist of a basic type and a vector that either tells the ranks of 
+the resulting array or the length (number of elements) of the one dimentional array (vector).\\
+
+
+There are four parallel operators in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
+The functions {\tt each} and {\tt eachV} are known in many languages as map.
+The function takes two arguments: a function and an array and then apply this function on the array.
+If the rank of the array is greater than 1 the {\tt each} function work as a map on the fattened representation of the array,
+that is, the function is applied on the inner most dimension of the array.
+The {\tt eachV} function is a special case of {\tt each} and is used on the special vector type.\\
+
+The function {\tt reduce} works similar to fold known in functional languages.
+Their function takes as arguments a associative binary operator, a neutral element and array.
+The {\tt reduce} function the uses the binary operator 
+to reduce an array of rank $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension.
+The difference to fold is that the operator has to be associative and the start element has to be neutral
+because the execution is parallel.
+
+The {\tt zipWith} function takes as arguments a function and two arrays.
+It then applies the function on the pair of elements consisting of the i'th element
+from the first array and the i'th element from the second array.
+Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}. %\cite{TorbenMogensen}. \\
+
+
+
+%%If we do not show the type schemes here we should reference to where they can be found in the article!!!!!!!!!!
+
+%The types in TAIL are divided into four types. Firstly there are base types consisting of {\tt int}, {\tt double}, {\tt bool} and the polymorphic type {\tt $\alpha$} that can represent any one of them. Secondly, there are shape types that can be either a scalar value/variable of type int,  or a shape variable or a combination of two shape variables. \\
+%Then there is array types that consist of a base type and a rank. Finally there is 
+
+
+%The main datatype in TAIL is also a multidimensional array. Array types are in TAIL annotated with their ranks explicitly. 
+%TAILs type system treats scalar values as special cases of the array time namely an array with rank 0. 
+
+%There are two separate representations of vectors, either the special vector type used when the length of the vector is known or the general array type where the rank is 1.  
+ 
+%Besides array and vector types, TAIL also have base types in the form of {\tt int}, {\tt double}, {\tt bool} and {\tt $\alpha$}.
+
+%So far TAIL only support a subset of the APL functions and operators. 
+
 \section{Futhark}
+bbb
+\bibliography{references}{}
+\bibliographystyle{plain}
+
 \end{document}
