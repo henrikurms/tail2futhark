@@ -216,6 +216,15 @@ convertBinOp op = case op of
   "ltei" -> Just F.LessEq
   "lted" -> Just F.LessEq
   "eqi"  -> Just F.Eq
+  "eqd"  -> Just F.Eq
+  "gti"  -> Just F.Greater
+  "gtd"  -> Just F.Greater
+  "gtei" -> Just F.GreaterEq
+  "gted" -> Just F.GreaterEq
+  "andb" -> Just F.LogicAnd
+  "orb"  -> Just F.LogicOr
+  -- "xorb" -> Just F.LogicXor
+  -- "notb" -> Just F.LogicNot
   _      -> Nothing
 
 -- AUX shape --
