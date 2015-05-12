@@ -38,7 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,negd,absi,absd,mini,signd]
+builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,ori]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -110,6 +110,27 @@ mini :: FunDecl
 mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
 
 signd = (F.IntT, "signd", [(F.RealT, "x")], signdExp (F.Var "x"))
+
+signi = (F.IntT, "signi", [(F.IntT, "x")], signiExp (F.Var "x"))
+
+maxi :: FunDecl
+maxi = (F.IntT, "maxi", [(F.IntT, "x"), (F.IntT, "y")], maxExp (F.Var "x") (F.Var "y"))
+
+maxd :: FunDecl
+maxd = (F.RealT, "maxd", [(F.RealT, "x"), (F.RealT, "y")], maxExp (F.Var "x") (F.Var "y"))
+
+ori :: FunDecl
+ori = (F.BoolT, "ori", [(F.BoolT, "x"), (F.BoolT, "y")], oriExp (F.Var "x") (F.Var "y"))
+
+nandb :: FunDecl
+nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
+
+norb :: FunDecl
+norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
+
+
+--not :: FunDecl
+--not = (F.Bool, "not", [(F.BoolT, "x")], F.Not (F.Var "x"))
 
 -- AUX: brainfart (Henrik)
 reshapeArgs :: F.Type -> [F.Arg]
@@ -225,15 +246,14 @@ convertFun fun = case fun of
   "expd"   -> Just "exp"
   "mini"   -> Just "mini"
   "signd"  -> Just "signd"
-  -- not supported
+  "notb"   -> Just "!"
   "signi"  -> Just "signi"
-  "not"    -> Just "not"
-  "maxd"   -> Just "maxd"
   "maxi"   -> Just "maxi"
+  "maxd"   -> Just "maxd"
   "ori"    -> Just "ori"
-  "lti"    -> Just "lti"
+  "not"    -> Just "!"
+  -- not supported
   "nandb"  -> Just "nandb"
-  "notb"   -> Just "notb"
   "norb"   -> Just "norb"
   _     -> Nothing
 
@@ -259,6 +279,10 @@ convertBinOp op = case op of
   "divd" -> Just F.Div
   "powd" -> Just F.Pow
   "powi" -> Just F.Pow
+  "lti"  -> Just F.Less
+  "ltd"  -> Just F.Less
+  "andi" -> Just F.And
+  "andd" -> Just F.And
   -- "xorb" -> Just F.LogicXor
   -- "notb" -> Just F.LogicNot
   _      -> Nothing
@@ -284,6 +308,26 @@ minExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e1 e2
 
 signdExp e = IfThenElse Indent (BinApp Less (Constant (Real 0)) e) (Constant (Int 1)) elseBranch
   where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Real 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
+
+signiExp e = IfThenElse Indent (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
+  where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
+
+oriExp e1 e2 = IfThenElse Indent e1 (Constant (Bool True)) elseBranch
+  where elseBranch = IfThenElse Indent e2 (Constant (Bool True)) (Constant (Bool False))
+
+nandExp e1 e2 = IfThenElse Indent ande1e2 true false  
+  where ande1e2 = BinApp F.And e1T e2T
+        e1T = BinApp Eq e1 true
+        e2T = BinApp Eq e2 true
+        false = Constant (Bool False)
+        true = Constant (Bool True)
+
+norExp e1 e2 = IfThenElse Indent ande1e2 true false
+  where ande1e2 = BinApp F.And e1F e2F
+        e1F = BinApp Eq e1 false
+        e2F = BinApp Eq e2 false
+        false = Constant (Bool False)
+        true = Constant (Bool True)
 
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileSnocV (Just([tp],[r])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]
