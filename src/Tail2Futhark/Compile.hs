@@ -38,7 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi]
+builtins = [boolToInt,negi,negd,absi,absd,mini,signd]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -97,6 +97,20 @@ boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "
 negi :: FunDecl
 negi = (F.IntT, "negi", [(F.IntT,"x")], F.Neg (F.Var "x"))
 
+negd :: FunDecl
+negd = (F.RealT, "negd", [(F.RealT,"x")], F.Neg (F.Var "x"))
+
+absi :: FunDecl
+absi = (F.IntT, "absi", [(F.IntT,"x")], absExp (F.Var "x"))
+
+absd :: FunDecl
+absd = (F.RealT, "absd", [(F.RealT,"x")], absFloatExp (F.Var "x"))
+
+mini :: FunDecl
+mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
+
+signd = (F.IntT, "signd", [(F.RealT, "x")], signdExp (F.Var "x"))
+
 -- AUX: brainfart (Henrik)
 reshapeArgs :: F.Type -> [F.Arg]
 reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
@@ -149,7 +163,7 @@ dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody tp)) btype
 
 -- Expressions --
 compileExp :: T.Exp -> F.Exp
-compileExp (T.Var ident) = F.Var ("t_" ++ ident)
+compileExp (T.Var ident) | ident == "pi" = Constant(Real 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
 compileExp (I int) = Constant (Int int)
 compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -- isn't this supporsed to be real??????????
 compileExp (C char)   = Constant (Char char)
@@ -189,6 +203,7 @@ compileOpExp ident instDecl args = case ident of
   "snocV" -> compileSnocV instDecl args
   "cons" -> compileCons instDecl args
   "consV" -> compileConsV instDecl args
+  "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) | otherwise -> error "only bool literals supported in b2iV"
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -203,6 +218,23 @@ convertFun fun = case fun of
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
   "negi"   -> Just "negi"
+  "negd"   -> Just "negd"
+  "ln"     -> Just "log"
+  "absi"   -> Just "absi"
+  "absd"   -> Just "absd"
+  "expd"   -> Just "exp"
+  "mini"   -> Just "mini"
+  "signd"  -> Just "signd"
+  -- not supported
+  "signi"  -> Just "signi"
+  "not"    -> Just "not"
+  "maxd"   -> Just "maxd"
+  "maxi"   -> Just "maxi"
+  "ori"    -> Just "ori"
+  "lti"    -> Just "lti"
+  "nandb"  -> Just "nandb"
+  "notb"   -> Just "notb"
+  "norb"   -> Just "norb"
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
@@ -223,6 +255,10 @@ convertBinOp op = case op of
   "gted" -> Just F.GreaterEq
   "andb" -> Just F.LogicAnd
   "orb"  -> Just F.LogicOr
+  "divi" -> Just F.Div
+  "divd" -> Just F.Div
+  "powd" -> Just F.Pow
+  "powi" -> Just F.Pow
   -- "xorb" -> Just F.LogicXor
   -- "notb" -> Just F.LogicNot
   _      -> Nothing
@@ -235,27 +271,19 @@ makeShape rank args
 multExp :: [F.Exp] -> F.Exp
 multExp = foldr (BinApp Mult) (Constant (Int 1))
 
+absFloatExp :: F.Exp -> F.Exp
+absFloatExp e = IfThenElse Inline (BinApp LessEq e (Constant (Real 0))) (F.Neg e) e
+
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
 maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
+minExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e1 e2
 
--- compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
--- compileSnocV (Just([tp],[r])) [a,e] = makeSnoc tp 1 (compileExp a) (compileExp e)
--- compileSnocV Nothing _ = error "snoc needs instance declaration"
--- compileSnocV _ _ = error "snoc take two aguments"
--- 
--- compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
--- compileSnoc (Just([tp],[r])) [a,e] = makeSnoc tp r (compileExp a) (compileExp e)
--- compileSnoc Nothing _ = error "snoc needs instance declaration"
--- compileSnoc _ _ = error "snoc take two aguments"
-
--- makeSnoc tp 1 a e = F.FunCall "concat" [a, F.Array [e]]
--- makeSnoc tp r a e = Map (F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1), "x"), (mkType (tp,r-1), "y")] recursiveCall) arr 
---   where arr = F.FunCall "zip" [a, e]
---         recursiveCall = makeSnoc tp (r-1) (F.Var "x") (F.Var "y")
+signdExp e = IfThenElse Indent (BinApp Less (Constant (Real 0)) e) (Constant (Int 1)) elseBranch
+  where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Real 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileSnocV (Just([tp],[r])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]

@@ -65,7 +65,8 @@ ppOp op = text $ case op of
   Less -> "<"
   GreaterEq -> ">="
   LogicAnd -> "&&"
-  LogicOr -> "||" 
+  LogicOr -> "||"
+  Pow -> "pow"
 
 ppConstant (Int int) = integer int
 ppConstant (Real f) = double f
