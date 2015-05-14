@@ -43,6 +43,7 @@ data Exp
   | I Integer
   | D Double
   | C Char
+  | B Bool
   | Inf
   | Neg Exp
   | Let Ident Type Exp Exp

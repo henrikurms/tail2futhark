@@ -31,7 +31,7 @@ tailDef = Token.LanguageDef {
               , Token.opStart          = oneOf ""
               , Token.opLetter         = oneOf ""
               , Token.reservedOpNames  = []
-              , Token.reservedNames    = [ "let", "in", "int", "double", "fn", "inf" ]
+              , Token.reservedNames    = [ "let", "in", "int", "double", "fn", "inf" , "tt", "ff"]
               , Token.caseSensitive    = True
   }
 
@@ -86,8 +86,9 @@ valueExpr :: Parser Exp
 valueExpr = try (liftM D $ lexeme float)
          <|> liftM I (lexeme decimal)
          <|> try (reserved "inf" >> return Inf)
-         <|> (char '~' >> liftM Neg valueExpr)
-         <|> liftM C charlit 
+         <|> (char '-' >> liftM Neg valueExpr)
+         <|> liftM C charlit
+         <|> liftM B ((reserved "tt" >> return True) <|> (reserved "ff" >> return False))
          <|> liftM Var identifier
          <?> "number or identifier"
 
