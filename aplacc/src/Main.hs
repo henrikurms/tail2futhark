@@ -3,7 +3,7 @@ module Main where
 import System.IO (IOMode(ReadMode), withFile, stdin)
 import System.Environment
 import APLAcc.TAIL.Parser (parseFile)
-import APLAcc.Conversion (convertProgram)
+--import APLAcc.Conversion (convertProgram)
 import APLAcc.SimpleAcc.ToHaskell (toHs, OutputOpts(..), defaultOpts)
 
 main :: IO ()
