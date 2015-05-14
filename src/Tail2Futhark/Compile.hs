@@ -38,7 +38,13 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
+<<<<<<< HEAD
 builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xorb,nandb,norb,neqi,neqd]
+||||||| deff047... more tests
+builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,ori]
+=======
+builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,eqb,xorb]
+>>>>>>> parent of deff047... more tests
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -120,15 +126,17 @@ maxi = (F.IntT, "maxi", [(F.IntT, "x"), (F.IntT, "y")], maxExp (F.Var "x") (F.Va
 maxd :: FunDecl
 maxd = (F.RealT, "maxd", [(F.RealT, "x"), (F.RealT, "y")], maxExp (F.Var "x") (F.Var "y"))
 
-ori :: FunDecl
-ori = (F.BoolT, "ori", [(F.BoolT, "x"), (F.BoolT, "y")], oriExp (F.Var "x") (F.Var "y"))
-
 nandb :: FunDecl
 nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
 
 norb :: FunDecl
 norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], norExp (F.Var "x") (F.Var "y"))
 
+eqb = (F.BoolT, "eqb", [(F.BoolT, "x"), (F.BoolT, "y")], boolEquals (F.Var "x") (F.Var "y"))
+  where boolEquals e1 e2 = BinApp F.LogicOr (norExp (F.Var "x") (F.Var "y")) (BinApp F.LogicAnd (F.Var "x") (F.Var "y"))
+
+xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (F.Var "y"))
+  where boolXor e1 e2 = BinApp F.LogicAnd (nandExp (F.Var "x")(F.Var "y")) (BinApp F.LogicOr (F.Var "x") (F.Var "y"))
 
 neqi = (F.IntT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
 neqd = (F.RealT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
@@ -193,6 +201,7 @@ compileExp (T.Var ident) | ident == "pi" = Constant(Real 3.14159265359) | otherw
 compileExp (I int) = Constant (Int int)
 compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -- isn't this supporsed to be real??????????
 compileExp (C char)   = Constant (Char char)
+compileExp (B bool)   = Constant (Bool bool)
 compileExp Inf = Constant (Real (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
 compileExp (T.Let id _ e1 e2) = F.Let Indent (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
@@ -229,7 +238,7 @@ compileOpExp ident instDecl args = case ident of
   "snocV" -> compileSnocV instDecl args
   "cons" -> compileCons instDecl args
   "consV" -> compileConsV instDecl args
-  "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) | otherwise -> error "only bool literals supported in b2iV"
+  "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) -- | otherwise -> error "only bool literals supported in b2iV"
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -271,8 +280,10 @@ convertFun fun = case fun of
   "signi"  -> Just "signi"
   "maxi"   -> Just "maxi"
   "maxd"   -> Just "maxd"
-  "ori"    -> Just "ori"
   "not"    -> Just "!"
+  "b2iV"   -> Just "boolToInt"
+  "eqb"    -> Just "eqb"
+  "xorb"   -> Just "xorb"
   -- not supported
   "nandb"  -> Just "nandb" -- does not work
   "norb"   -> Just "norb" -- does not work
@@ -304,9 +315,9 @@ convertBinOp op = case op of
   "powi" -> Just F.Pow
   "lti"  -> Just F.Less
   "ltd"  -> Just F.Less
-  -- "andi" -> Just F.And F.And is a boolian operator and does not work as bitwise and
+  "andi" -> Just F.And
   "andd" -> Just F.And
-  "xorb" -> Just F.LogicXOr
+  "ori"  -> Just F.Or
   _      -> Nothing
 
 -- AUX shape --
@@ -334,22 +345,8 @@ signdExp e = IfThenElse Indent (BinApp Less (Constant (Real 0)) e) (Constant (In
 signiExp e = IfThenElse Indent (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
   where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
-oriExp e1 e2 = IfThenElse Indent e1 (Constant (Bool True)) elseBranch
-  where elseBranch = IfThenElse Indent e2 (Constant (Bool True)) (Constant (Bool False))
-
-nandExp e1 e2 = IfThenElse Indent ande1e2 true false  
-  where ande1e2 = BinApp F.And e1T e2T
-        e1T = BinApp Eq e1 true
-        e2T = BinApp Eq e2 true
-        false = Constant (Bool False)
-        true = Constant (Bool True)
-
-norExp e1 e2 = IfThenElse Indent ande1e2 true false
-  where ande1e2 = BinApp F.And e1F e2F
-        e1F = BinApp Eq e1 false
-        e2F = BinApp Eq e2 false
-        false = Constant (Bool False)
-        true = Constant (Bool True)
+nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2] 
+norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
 
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileSnocV (Just([tp],[r])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]
