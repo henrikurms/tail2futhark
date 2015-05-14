@@ -38,7 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,eqb,xorb]
+builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xorb,nandb,norb,neqi,neqd]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -108,6 +108,7 @@ absd = (F.RealT, "absd", [(F.RealT,"x")], absFloatExp (F.Var "x"))
 
 mini :: FunDecl
 mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
+mind = (F.RealT, "mind", [(F.RealT, "x"), (F.RealT, "y")], minExp (F.Var "x") (F.Var "y"))
 
 signd = (F.IntT, "signd", [(F.RealT, "x")], signdExp (F.Var "x"))
 
@@ -130,6 +131,10 @@ eqb = (F.BoolT, "eqb", [(F.BoolT, "x"), (F.BoolT, "y")], boolEquals (F.Var "x") 
 
 xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (F.Var "y"))
   where boolXor e1 e2 = BinApp F.LogicAnd (nandExp (F.Var "x")(F.Var "y")) (BinApp F.LogicOr (F.Var "x") (F.Var "y"))
+
+neqi = (F.IntT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
+neqd = (F.RealT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
+notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 --not :: FunDecl
 --not = (F.Bool, "not", [(F.BoolT, "x")], F.Not (F.Var "x"))
@@ -234,32 +239,37 @@ compileOpExp ident instDecl args = case ident of
     -> F.BinApp op (compileExp e1) (compileExp e2)
     | Just fun <- convertFun ident
     -> F.FunCall fun $ map compileExp args
+    | ident `elem` idFuns
+    -> F.FunCall ident $ map compileExp args
     | otherwise       -> error $ ident ++ " not supported"
 
 -- Operations that are 1:1 --
+
+idFuns = ["negi",
+          "negd",
+          "absi",
+          "absd",
+          "mini",
+          "mind",
+          "signd",
+          "signi",
+          "maxi",
+          "maxd",
+          "eqb",
+          "xorb",
+          "nandb", 
+          "norb",
+          "neqi",
+          "neqd"]
+
 convertFun fun = case fun of
   "i2d"    -> Just "toFloat"
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
-  "negi"   -> Just "negi"
-  "negd"   -> Just "negd"
-  "ln"     -> Just "log"
-  "absi"   -> Just "absi"
-  "absd"   -> Just "absd"
-  "expd"   -> Just "exp"
-  "mini"   -> Just "mini"
-  "signd"  -> Just "signd"
-  "notb"   -> Just "!"
-  "signi"  -> Just "signi"
-  "maxi"   -> Just "maxi"
-  "maxd"   -> Just "maxd"
-  "not"    -> Just "!"
   "b2iV"   -> Just "boolToInt"
-  "eqb"    -> Just "eqb"
-  "xorb"   -> Just "xorb"
-  -- not supported
-  "nandb"  -> Just "nandb" -- does not work
-  "norb"   -> Just "norb" -- does not work
+  "ln"     -> Just "log"
+  "expd"   -> Just "exp"
+  "notb"   -> Just "!"
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
