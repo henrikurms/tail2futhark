@@ -69,6 +69,8 @@ ppOp op = text $ case op of
   Pow -> "pow"
   Not -> "!"
   And -> "&"
+  LogicNot -> "!"
+  LogicXOr -> "^"
 
 ppConstant (Int int) = integer int
 ppConstant (Real f) = double f

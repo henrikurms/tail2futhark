@@ -253,8 +253,8 @@ convertFun fun = case fun of
   "ori"    -> Just "ori"
   "not"    -> Just "!"
   -- not supported
-  "nandb"  -> Just "nandb"
-  "norb"   -> Just "norb"
+  "nandb"  -> Just "nandb" -- does not work
+  "norb"   -> Just "norb" -- does not work
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
@@ -283,8 +283,8 @@ convertBinOp op = case op of
   "ltd"  -> Just F.Less
   "andi" -> Just F.And
   "andd" -> Just F.And
-  -- "xorb" -> Just F.LogicXor
-  -- "notb" -> Just F.LogicNot
+  "xorb" -> Just F.LogicXOr
+  "notb" -> Just F.LogicNot
   _      -> Nothing
 
 -- AUX shape --
