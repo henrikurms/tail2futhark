@@ -132,8 +132,8 @@ eqb = (F.BoolT, "eqb", [(F.BoolT, "x"), (F.BoolT, "y")], boolEquals (F.Var "x") 
 xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (F.Var "y"))
   where boolXor e1 e2 = BinApp F.LogicAnd (nandExp (F.Var "x")(F.Var "y")) (BinApp F.LogicOr (F.Var "x") (F.Var "y"))
 
-neqi = (F.IntT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
-neqd = (F.RealT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
+neqi = (F.BoolT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
+neqd = (F.BoolT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 --not :: FunDecl
@@ -228,6 +228,7 @@ compileOpExp ident instDecl args = case ident of
   "iotaV" -> compileIota instDecl args
   "vrotate" -> compileVRotate instDecl args
   "vrotateV" -> compileVRotateV instDecl args
+  "rotateV" -> compileVRotateV instDecl args
   "snoc" -> compileSnoc instDecl args
   "snocV" -> compileSnocV instDecl args
   "cons" -> compileCons instDecl args

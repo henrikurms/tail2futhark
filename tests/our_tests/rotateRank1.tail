@@ -1,2 +1,2 @@
-let v0:<int>4 = transp{[int],[1]}(vrotateV(2,transp{[int],[1]}([b2iV(tt),2,3,4]))) in
-i2d(first{[int],[1]}(v0))
+let v1:<int>4 = rotateV{[int],[4]}(2,[b2iV(tt),2,3,4]) in
+i2d(first{[int],[1]}(v1))
