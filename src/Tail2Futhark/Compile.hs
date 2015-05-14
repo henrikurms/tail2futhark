@@ -38,13 +38,7 @@ getFunCalls name exp = getFuns exp
 
 -- list of builtin fuctions (EXPERIMENT) 
 builtins :: [F.FunDecl]
-<<<<<<< HEAD
 builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xorb,nandb,norb,neqi,neqd]
-||||||| deff047... more tests
-builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,ori]
-=======
-builtins = [boolToInt,negi,negd,absi,absd,mini,signd,signi,maxi,maxd,eqb,xorb]
->>>>>>> parent of deff047... more tests
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -276,19 +270,6 @@ convertFun fun = case fun of
   "ln"     -> Just "log"
   "expd"   -> Just "exp"
   "notb"   -> Just "!"
-<<<<<<< HEAD
-  "signi"  -> Just "signi"
-  "maxi"   -> Just "maxi"
-  "maxd"   -> Just "maxd"
-  "not"    -> Just "!"
-  "b2iV"   -> Just "boolToInt"
-  "eqb"    -> Just "eqb"
-  "xorb"   -> Just "xorb"
-  -- not supported
-  "nandb"  -> Just "nandb" -- does not work
-  "norb"   -> Just "norb" -- does not work
-=======
->>>>>>> 21a5408a9d1d1233e1ba5ff6d9ed8be3b5fead41
   _     -> Nothing
 
 -- Convert string to Maybe futhark  binary operation --
