@@ -126,7 +126,7 @@ nandb :: FunDecl
 nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
 
 norb :: FunDecl
-norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
+norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], norExp (F.Var "x") (F.Var "y"))
 
 
 --not :: FunDecl
@@ -284,7 +284,6 @@ convertBinOp op = case op of
   "andi" -> Just F.And
   "andd" -> Just F.And
   "xorb" -> Just F.LogicXOr
-  "notb" -> Just F.LogicNot
   _      -> Nothing
 
 -- AUX shape --

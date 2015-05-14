@@ -1,1 +1,1 @@
-i2d(b2i(notb(andb(tt,tt))))
+i2d(b2i(notb(lti(1,3))))
