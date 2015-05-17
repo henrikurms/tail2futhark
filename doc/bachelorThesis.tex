@@ -81,22 +81,23 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The intermidiate language TAIL}
 
-TAIL is a typed array intermediate language and the target of an APL compiler.
+TAIL is a typed array intermediate language and the target of the apltail compiler which
+compiles a subset of APL into TAIL \cite{ElsmanDybdal:Array:2014}.
 APL is an older language created in the 1960's by Kenneth E. Iverson.
 APL is an array programming language, its main type is the multi-dimensional array 
 and most of the built-in functions in the language are array operators that work on this type. 
-All of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
-The APL language is dynamically typed. It supports first and second order functions and it supports polymorphism in 
+Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
+The APL language is dynamically typed. It supports first and second order functions and polymorphism in 
 both its first and second order functions and operators. 
-Even though it is not a new language it is still used in the financial world 
+Even though it is an old language it is still used in the financial world 
 where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
 
 
 
-TAIL was designed with the purpose of targeting parallel architectures, though no parallel backend for TAIL yet exists.
-Another backend to TAIL exists however which compile TAIL efficiently into a C-like language. TAIL does not support
- all APLs operators but only a subset of these \cite{ElsmanDybdal:Array:2014}. 
-The subset of APL operators that TAIL support result in the following TAIL build-in operators:
+TAIL was designed with the purpose of targeting parallel architectures such as GPUs and allows parallel programs to be
+expressed in a highly abstract manner.
+The TAIL compiler can also efficiently compile TAIL code into sequential code in a C-like language.
+The subset of APL operators that TAIL support can be seem below:
 
 \begin{lstlisting}[numbers=none,frame=none]
 op ::= addi | subi | multi | mini | maxi | addd | subd | 
@@ -113,25 +114,25 @@ The 'V' following some of the operators indicate they are a special version of t
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
-The central type in TAIL is, like in APL, the multi-dimensional array type. The array type consist of a base type and a rank. The rank are represented as a vector consisting of the dimentions of the array.
-The base type of an array is the type of the elements in the array and can currently be of the
-type: {\tt int}, {\tt double}, {\tt bool} {\tt char}. 
-Scalars are a special case of the array type and is represented as an array of rank 0.
-Vectors can be represented in two different ways in TAIL.
-Either as an array of rank 1 or as the special vector type.
-The special vector type is used for vector literals where the length of the vector is known at compile time \cite{ElsmanDybdal:Array:2014}. \\
+In TAIL the array type is a pair of a base type and a rank. The rank is a non-negative integer.
+The base type of an array is the type of the elements in the array and is one of the types
+: {\tt int}, {\tt double}, {\tt bool} {\tt char}. 
+Scalars are a special case of arrays and is considered an array of rank 0.
+Arrays of rank 1 are also called vectors and there is a separate type for vectors for which the size is known at compile time.
+This vector type is a pair of the base type and the length of the vector. The vector type is a subtype of arrays of rank 1 and
+the compiler may decide to replace the type for it's supertype when appropriate.
 
-Some of the operators take types as part of their constructor in form of an instance decleration. 
-The instance decleration consist of a basic type and a vector that either tells the ranks of 
-the resulting array or the length (number of elements) of the one dimentional array (vector).\\
+The TAIL compiler infers types for the values in the APL program and can annotate bindings with
+instance declarations. An instance declaration provides the base type and rank of the array. Or in
+the case of vectors the size of the vector.
 
-Most of the operators in TAIL are polymorphic in respect to array ranks and base types.
-Some of them only take some polymorphic arguments but also take specific type arguments.
-An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha$.\\
+Most of the operators in TAIL are very general i.e. they are polymorphic with respect to array ranks and base types.
+Although for some operations a specific type is needed.
+An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha^\gamma$.\\
 
  TAILs type system takes the parallelism of APL and transforms it to a more manageable form adding explicit type
  information to the constructs.
-Another benefit of the expressivity of TAILs type system is that it allows the (TAIL) compiler to express some operators which
+Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators which
 are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
 
 There are four parallel operators in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
@@ -141,7 +142,7 @@ If the rank of the array is greater than 1 the {\tt each} function work as a map
 that is, the function is applied on the inner most dimension of the array.
 The {\tt eachV} function is a special case of {\tt each} and is used on the special vector type.\\
 
-The function {\tt reduce} works similar to fold known in functional languages.
+The function {\tt reduce} works similar to fold known from functional languages.
 Their function takes as arguments a associative binary operator, a neutral element and array.
 The {\tt reduce} function the uses the binary operator 
 to reduce an array of rank $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension.
@@ -156,7 +157,7 @@ Like the other tree operators it works on the inner-most dimension of the array\
 A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
 list of expressions, a let expression or an operator.
 
-The aplacc parser for TAIL represents the TAIL expressions in the apstract syntax tree as variables, constants, infinity, the negative representation of 
+The aplacc parser for TAIL represents the TAIL expressions in the abstract syntax tree as variables, constants, infinity, the negative representation of 
 the expression, let expressions, operators and lambda expressions. 
 \begin{lstlisting}[numbers=none,frame=none]
 e ::= x | i | d | c | inf | -e | let x:$t$ = e$_1$ in e$_2$ |
@@ -195,14 +196,14 @@ NB!! we use both the word function and operator about the same thing. Should we 
 \section{The functional language Futhark}
 
 Futhark is a functional programming language inspired by Haskell and Standard ML.
-It was designed to be an attractive choice for expressing complex programs by having enough expressive power without
-losing the possibility to do aggressive optimization and creating parallelism even though the higher the expressive power of the
-language the more difficult optimization often become.
+It was designed to be an attractive choice for expressing complex parallel programs by having enough expressive power without
+losing the possibility to do aggressive optimization and managing parallelism.
+This is a challenge because higher the expressive power means optimizations become more difficult. 
 Due to the focus on optimization the Futhark language only supports regular arrays
-(arrays where all inner dimensions are of the same length)
-because of the complication to size analysis if the language had supported non-regular arrays would have create.
-However Futhark do support nested parallelism as this is a feature many programs 
-depend upon even though this feature does make optimization more difficult \cite{TroelsHenriksen}.
+(arrays where all inner dimensions are of the same length),
+this is because the support of non-regular arrays  complicates sizes analysis.
+However Futhark does support nested parallelism as this is a feature many programs 
+depend upon even though it does make optimization more difficult \cite{TroelsHenriksen}.
 Indentation has no syntactical importance in the Futhark language. \\
 
 %%something more about specific optimization????????????????\\
@@ -229,16 +230,14 @@ e ::= k | v | {e$_1$,...,e$_n$} | [e$_1$,...,e$_n$] | e$_1$ $\odot$ e$_2$ |
 \end{lstlisting}
 
 
-The Futhark language support anonymous functions, but it is not possible to curry functions in the Futhark language,
-so the anonymous function can only take one argument.
-If the function needs more than one argument it needs to be given as a tuple.
-Except for inline anonymous functions all functions are defined globally \cite{TroelsHenriksen}. \\
+The Futhark language supports the declaration of functions, but it is not possible to curry functions in the Futhark language,
+all functions applications have to be fully saturated. Furthermore it is only possible to declare monomorphic functions.
+All functions are defined globally \cite{TroelsHenriksen}. \\
 
 Futhark is mostly a first order language but supports bulk (parallel) operations on arrays
 using the built-in second-order array combinators (SOACs) of the language. 
 
-Some of the build-in fuctions in the Futhark language not explixitly mentioned in the definition above 
- is the second-order array combinators: 
+The second order array combinators have not been presented yet, they are:
 {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
 The operators have the expected functionality also found in Haskell and Standard ML,
 that is {\tt map} takes a function and an array and apply the function on the array.
@@ -247,9 +246,11 @@ The function {\tt reduce} takes as arguments a function, a neutral element and a
 Like the {\tt map} function, the {\tt reduce} function takes the function it is given in the arguments
 and apply it on the outer-most dimension of the array \cite{TroelsHenriksen}. 
 % soacs tager l(kernel) som kan defineres på forskellige måder og som kan curryes
-The build-in SOACs can take a function as an argument. This function or kernel can be defined in 
-different ways. One of them is a lambda that unlike the normal lamdas can be curried. It can also be either a function 
-referenced with an indentifyer (id) or another build-in operator (op).
+
+The SOACs take functions as arguments, any built-in or user defined function can be used. For use with
+SOACs it is also possible to use operators, partially applied functions and operators and lambda expressions.
+
+The different syntactical constructs can be seen below:
 
 \begin{lstlisting}[numbers=none,frame=none]
 l ::=  fn t (t$_1$ v$_1$,..., t$_n$ v$_n$) => e
@@ -258,7 +259,9 @@ l ::=  fn t (t$_1$ v$_1$,..., t$_n$ v$_n$) => e
 \end{lstlisting}
 
 
-Another function is the function {\tt size} that takes an array as an argument. It returns the array length i.e. the number of elements if the array given is one fimentional or the dimentions of the array if it is multidimentional. \\
+A built-in function that bears mentioning is {\tt size}.
+It takes an array as an argument and returns the array length i.e.
+the number of elements if the array given is one-dimensional or the dimensions of the array if it is multi-dimensional. \\
 
 % funktioner skla definere returtype og type på alle argumenter
 The general form of a Futhark function is the keyword fun followed by a return type all arguments 
@@ -270,16 +273,14 @@ fun ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = e
 
 The Futhark language supports multidimensional arrays in the form of nesting of array types,
 i.e. an int array array will contain int arrays and so on.
-The general type in the Futhark language consist of four base types: {\tt int}, {\tt floa}, {\tt real} and {\tt bool} and tupels \{t$_1$,...,t$_n$\}, arrays [t] and unique arrays *[t].\\
+The general type in the Futhark language consist of four base types: {\tt int}, {\tt float}, {\tt real} and {\tt bool} and tuples \{t$_1$,...,t$_n$\}, arrays [t] and unique arrays *[t].\\
 
 Futhark uses 0-indexing for indexing into arrays.\\ %In Futhark indexing are done with 0-indexing
 
 % indbyggede functioner som vi bruger og som faktisk er polymorfiske men de kan ikke types i futhark da futharks typesystem ikke kan udtrykke polymorphi.
-In general the Futhark language does not support polymorphism in functions,
-the only exception is the built-in second-order array combinators that work on arrays of any base type. 
-However this polymorphism can not be expressed in Futharks own type system. 
-
-
+%In general the Futhark language does not support polymorphism in functions,
+%the only exception is the built-in second-order array combinators that work on arrays of any base type. 
+%However this polymorphism can not be expressed in Futharks own type system.
 
 
 %The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays.
