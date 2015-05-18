@@ -1,0 +1,6 @@
+let v0:[int]2 = reshape{[int],[1,2]}([3,2],iotaV(5)) in
+let v1:[int]2 = transp{[int],[2]}(v0) in
+let v6:[int]3 = transp2{[int],[3]}([2,1,3],reshape{[int],[2,3]}([3,3,2],v0)) in
+let v12:[int]3 = transp2{[int],[3]}([1,3,2],reshape{[int],[2,3]}([3,2,3],v1)) in
+let v17:[int]2 = reduce{[int],[2]}(addi,0,zipWith{[int,int,int],[3]}(muli,v6,v12)) in
+i2d(reduce{[int],[0]}(muli,1,reduce{[int],[1]}(addi,0,v17)))
