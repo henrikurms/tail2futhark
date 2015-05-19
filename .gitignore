@@ -9,6 +9,10 @@ doc/*.blg
 tests/Test
 *.fout
 *.out
+benchmarks/*
+! benchmarks/*.apl
+! benchmarks/Makefile
+*.c
 
 *.pdf
 *.log
