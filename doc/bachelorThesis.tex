@@ -173,7 +173,7 @@ Most of the operators in TAIL are very general i.e. they are polymorphic with re
 Although for some operations a specific type is needed.
 An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha^\gamma$.\\
 
- TAILs type system takes the parallelism of APL and transforms it to a more manageable form adding explicit type
+ TAILs type system takes the dynamicly types of APL and transforms it to a more manageable form adding explicit type
  information to the constructs.
 Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators which
 are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
@@ -227,44 +227,49 @@ TAIL does not support curried functions but require functions to be fully applie
 
 \section{The functional language Futhark}
 
-Futhark is a functional programming language inspired by Haskell and Standard ML.
-It was designed to be an attractive choice for expressing complex parallel programs by having enough expressive power without
-losing the possibility to do aggressive optimization and managing parallelism.
-This is a challenge because higher the expressive power means optimizations become more difficult. 
-Due to the focus on optimization the Futhark language only supports regular arrays
-(arrays where all inner dimensions are of the same length),
-this is because the support of non-regular arrays  complicates sizes analysis.
-However Futhark does support nested parallelism as this is a feature many programs 
-depend upon even though it does make optimization more difficult \cite{TroelsHenriksen}.
-Indentation has no syntactical importance in the Futhark language. \\
-
-%%something more about specific optimization????????????????\\
-
-% funktioner bliver inlinet
-
-A Futhark program consist of a list of function declarations of the form:
+The syntax of Futhark type system can be seen below. The types are decided into types ($t$), constants ($k$) and patterns ($p$). The letter $n$ is used to denote an integer, the letter x is used to denote a decimal number, the letter $b$ is used to denote a boolean, the letter $c$ denotes a char, and the letter $v$ denotes a value that can be any of the before mentioned. A name pattern are represented with $id$. 
 \begin{lstlisting}[numbers=none,frame=none]
-fun return-type name(params...) = body
+$t$ ::= int | real | bool | {$t_1$,...,$t_n$} | [t] | *[t]
+$k$ ::= $n$ | $x$ | $b$ | $c$ | {$v_1$,...,$v_n$} | [v$_1$,...,$v_n$] 
+$p$ ::= $id$ | {$p_1$,...,$p_n$}
 \end{lstlisting}
-The body of the Futhark function then consist of an expression. 
+The general type in the Futhark language consist of four base types: integers, floating points, booleans, tuples ({\tt \{t$_1$,...,t$_n$\}}), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
+Tuple types are written as a comma seperated list of types or values surrounded by braces. For example \{int,bool\} are 
+an pair of integer and boolean value. 
+Arrays types are denotes by the elements (base) type enclosed by brackets. The layer of brackets indicates the dimention of the array type. For instance {\tt [int]} is a one-dimentional array of integers, and {\tt [[[bool]]]} is a tree-dimentional 
+array of booleans.  All arrays must be regular that is all wors of for instance a two-dimentional array must have the same numer of elements. \\
 
-The Futhark expressions can be found in the scheme below. They are among other constants, variables, binary- and other build-in operators and let expressions.
-
+The Futhark language is statuclally typed but does not support type interference. Also the type system of Futhark are not 
+able to express polymorphism. It is therefore not possible to make polymorphic functions in Futhark. The only polymorphism that exists in the language is the one implemented in the build-in operators. 
+The syntax of Futhark expressions are defined as follows:
 \begin{lstlisting}[numbers=none,frame=none]
-e ::= k | v | {e$_1$,...,e$_n$} | [e$_1$,...,e$_n$] | e$_1$ $\odot$ e$_2$ |
-      -e | not e | if e$_1$ then e$_2$ else e$_3$ | v[e$_1$,...,e$_n$] |
-      v($_1$,...,e$_n$) | let p = e$_1$ in e$_2$ | zip(e$_1$,...,e$_n$) | 
-      unzip(e) | iota(e) | replicate(e$_n$, e$_v$) | size(e) |
-      reshape((e$_1$,...,e$_n$),e) | transpose(e) | split(e$_1$,e$_2$) |
-      concat(e$_1$,e$_2$) | 
-      let v$_1$ = v$_2$ with [e$_1$,...,e$_n$] <- e$_v$ in e$_b$  |
-      loop (p = e$_1$) = for v < e$_2$ do e$_3$ in e$_4$
+$e$ ::= $k$ | $v$ | {$e_1,...,e_n$} | [$e_1,...,e_n$] | $e_1$ $\odot$ $e_2$ |
+      $-e$ | not $e$ | if $e_1$ then $e_2$ else $e_3$ | $v$[$e_1,...,e_n$] |
+      $v$($e_1,...,e_n$) | let $p$ = $e_1 in e_2$ | zip($e_1,...,e_n$) | 
+      unzip($e$) | iota($e$) | replicate($e_n, e_v$) | size($e$) |
+      reshape(($e_1,...,e_n$),e) | transpose($e$) | split($e_1,e_2$) |
+      concat($e_1,e_2$) | 
+      let $v_1$ = $v_2$ with [$e_1,...,e_n$] <- $e_v$ in $e_b$  |
+      loop ($p$ = $e_1$) = for $v$ < $e_2$ do $e_3$ in $e_4$ | map($l$, $e$) |
+      filter($l$, $e$) |  reduce($l$, $x$, $e$) | scan($l$, $x$, $e$)
 \end{lstlisting}
 
+\begin{lstlisting}[numbers=none,frame=none]
+$l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$
+    |  $id$ ($e_1,...,e_n$)
+    |  op $\odot$ ($e_1,..., e_n$)
+\end{lstlisting}
 
-The Futhark language supports the declaration of functions, but it is not possible to curry functions in the Futhark language,
-all functions applications have to be fully saturated. Furthermore it is only possible to declare monomorphic functions.
-All functions are defined globally \cite{TroelsHenriksen}. \\
+\begin{lstlisting}[numbers=none,frame=none]
+$fun$ ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = $e$
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none,frame=none]
+$prog$ ::= $\epsilon$ | $fun$ $prog$
+\end{lstlisting}
+
+The Futhark language supports the declaration of functions, but it is not possible to curry functions in the Futhark language, all functions applications have to be fully saturated. Furthermore it is only possible to declare monomorphic functions.
+All functions are defined globally \cite{TroelsHenriksen} except for inline anonymus functions (denoted with $l$ in the syntaxmdefinition). A Futhark program consist of a sequence of function definitions. \\
 
 Futhark is mostly a first order language but supports bulk (parallel) operations on arrays
 using the built-in second-order array combinators (SOACs) of the language. 
@@ -280,15 +285,30 @@ and apply it on the outer-most dimension of the array \cite{TroelsHenriksen}.
 % soacs tager l(kernel) som kan defineres på forskellige måder og som kan curryes
 
 The SOACs take functions as arguments, any built-in or user defined function can be used. For use with
-SOACs it is also possible to use operators, partially applied functions and operators and lambda expressions.
+SOACs it is also possible to use operators, partially applied functions and operators and lambda expressions.\\
 
-The different syntactical constructs can be seen below:
 
-\begin{lstlisting}[numbers=none,frame=none]
-l ::=  fn t (t$_1$ v$_1$,..., t$_n$ v$_n$) => e
-    |  id (e$_1$,...,e$_n$)
-    |  op $\odot$ (e$_1$,..., e$_n$)
-\end{lstlisting}
+Futhark is a functional programming language inspired by Haskell and Standard ML.
+It was designed to be an attractive choice for expressing complex parallel programs by having enough expressive power without
+losing the possibility to do aggressive optimization and managing parallelism.
+This is a challenge because higher the expressive power means optimizations become more difficult. 
+Due to the focus on optimization the Futhark language only supports regular arrays
+(arrays where all inner dimensions are of the same length),
+this is because the support of non-regular arrays  complicates sizes analysis.
+However Futhark does support nested parallelism as this is a feature many programs 
+depend upon even though it does make optimization more difficult \cite{TroelsHenriksen}.
+Indentation has no syntactical importance in the Futhark language. \\
+
+%%something more about specific optimization????????????????\\
+
+% funktioner bliver inlinet
+
+
+%The Futhark expressions can be found in the scheme below. They are among other constants, variables, binary- and other build-in operators and let expressions.
+
+
+
+
 
 
 A built-in function that bears mentioning is {\tt size}.
@@ -298,14 +318,12 @@ the number of elements if the array given is one-dimensional or the dimensions o
 % funktioner skla definere returtype og type på alle argumenter
 The general form of a Futhark function is the keyword fun followed by a return type all arguments 
 with their typed defined in a list in parentheses.
-\begin{lstlisting}[numbers=none,frame=none]
-fun ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = e
-\end{lstlisting}
+
 
 
 The Futhark language supports multidimensional arrays in the form of nesting of array types,
 i.e. an int array array will contain int arrays and so on.
-The general type in the Futhark language consist of four base types: {\tt int}, {\tt float}, {\tt real} and {\tt bool} and tuples \{t$_1$,...,t$_n$\}, arrays [t] and unique arrays *[t].\\
+
 
 Futhark uses 0-indexing for indexing into arrays.\\ %In Futhark indexing are done with 0-indexing
 
