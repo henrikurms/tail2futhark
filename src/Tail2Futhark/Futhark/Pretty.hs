@@ -69,6 +69,8 @@ ppOp op = text $ case op of
   Pow -> "pow"
   Or -> "|"
   And -> "&"
+  Shl -> ">>"
+  Shr -> "<<"
   --XOr -> "^"
 
 ppConstant (Int int) = integer int

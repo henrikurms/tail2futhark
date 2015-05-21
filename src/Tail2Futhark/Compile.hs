@@ -300,6 +300,8 @@ convertBinOp op = case op of
   "andi" -> Just F.And
   "andd" -> Just F.And
   "ori"  -> Just F.Or
+  "shli" -> Just F.Shl
+  "shri" -> Just F.Shr
   _      -> Nothing
 
 -- AUX shape --
