@@ -81,7 +81,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The intermidiate language TAIL}
 
-The semantics of the type system of TAIL can be seen below. The types are devided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables respectively.
+The syntax of the types in TAIL can be seen below. The types are devided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables respectively.
 \begin{lstlisting}[numbers=none,frame=none]
 $\kappa$ ::= int | double | bool | $\alpha$
 $\rho$ ::=  $i$ | $\gamma$ | $\rho$ $+$ $\rho$'
@@ -89,12 +89,14 @@ $\tau$ ::= $[\kappa]^{\rho}$ | $\langle \kappa \rangle^\rho$ | S$_{\kappa}$($\rh
 $\sigma$ ::= $\forall\overrightarrow{\alpha}\overrightarrow{\gamma}$.$\tau$
 \end{lstlisting}
 The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the shape of an array in its type.
-The integer scalar in the arrays shape denotes the rank of the array and must be a non-negative integer. 
-It also supports vector types ($\langle \kappa \rangle^\rho$), this type is used specificly for vectors of a specific length. For example {\tt <int>8} denotes a vector of ints of known length 8. If the vectors length is not staticly known it is instead expressed as an array of rank 1. 
-In addition the types system also supports singleton integers, doubles, and booleans (S$_{\kappa}$($\rho$)), single-element integer, double, and boolean vectors (SV$_{\kappa}$($\rho$) and funtion types ($\tau \rightarrow \tau$'). \\
+The integer scalar in the arrays shape denotes the rank of the array and must be a non-negative integer.
+The type system also supports vector types ($\langle \kappa \rangle^\rho$), this type is used specificly for vectors of a specific length. For example {\tt <int>8} denotes a vector of ints of known length 8. If the vectors length is not staticly known it can be instead expressed as an array of rank 1.
+Scalar values that are statically known have a seperate type (S$_{\kappa}$($\rho$)), i.e. integers, doubles, and booleans, their value is contained in the type.
+In addition there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$) for arrays where the element is statically known.
+Finally there exists function types ($\tau \rightarrow \tau$'). \\
 
 %The types schemes ($\sigma$) are expressed through substitution...
-The type system make use of substitution in order to express type schemes ($\sigma$). Type substitusion ($S_t$) that maps type variables to base types and shape substitusion ($S_s$) that maps shape variables to shape types. A general substitution ($S$) is a pair ($S_t$,$S_s$) of type substitution and shape substitution. Using the substitution $S$ on an object $B$ means apllying 
+The type system makes use of substitution in order to express type schemes ($\sigma$). Type substitusion ($S_t$) that maps type variables to base types and shape substitusion ($S_s$) that maps shape variables to shape types. A general substitution ($S$) is a pair ($S_t$,$S_s$) of type substitution and shape substitution. Using the substitution $S$ on an object $B$ means apllying 
 both $S_t$ and $S_s$ on objects in $B$. A type $\tau$' is an instance of a type scheme $\sigma$ = $\forall\overrightarrow{\alpha}\overrightarrow{\gamma}$.$\tau$ (written $\sigma$= $\tau$') if a substitustion $S$ exists such that $S(\tau)$ = $\tau$'. \\
 
 The syntax of operators and expressions is given bellow. The letter $v$ is used to denote values and the letter $x$ is used to dentote program variables. 
@@ -112,43 +114,43 @@ op ::= addi | subi | multi | mini | maxi | addd | subd |
 \begin{lstlisting}[numbers=none,frame=none]
 e ::= $v$ | $x$ | $[\overrightarrow{e}]$ | $e$ $e'$ | let $x$ = $e_1$ in $e_2$ | $op(\overrightarrow{e})$
 \end{lstlisting}
-A TAIL programs always consist of a single expression. An expression can then be a value, variable, 
-list of expressions, a let expression or an operator. Each TAIL operator have a unique type scheme. \\
+A TAIL program always consists of a single expression. An expression can then be a value, variable, 
+list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme. \\
 
-One of the operators with a simple type scheme is the binary operator maxi that take two arguments $a$ and $b$ resturns the argument with the highest value. Its type scheme are as follows:
+One of the operators with a simple type scheme is the binary operator maxi that take two arguments $a$ and $b$ evaluates to the argument with the highest value. Its type scheme are as follows:
 \begin{lstlisting}[numbers=none,frame=none]
 maxi : int $\rightarrow$ int $\rightarrow$ int
 \end{lstlisting}
 
-Other operators have more complex type schemes. Examples of thouse are the parallel operators. 
+Other operators have more complex type schemes. Examples of those are the parallel operators. 
 There are four parallel operators in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
 The functions {\tt each} and {\tt eachV} are known in many languages as map.
 The type scheme for the function {\tt each} is:
 \begin{lstlisting}[numbers=none,frame=none]
 each : $\forall\alpha\beta\gamma.(\alpha \rightarrow \beta)\rightarrow [\alpha]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-The function takes two arguments: a function $f$ and an array $a$ and returns an array where $f$ is applied to each element of $a$ i.e. $[f(a_1),..,f(a_n)]$.
-If the rank of the array is greater than 1 the {\tt each} function work as a map on the fattened representation of the array,
-that is, the function is applied on the inner most dimension of the array.
+Given a function $f$ and an array $a$ {\tt each f a } evaluates to an array where $f$ is applied to each element of $a$ i.e. $[f(a_1),..,f(a_n)]$.
+If the rank of the array is greater than 1 the {\tt each} function works as a map on the fattened representation of the array,
+that is, the function is applied on the inner most dimension of the array, or seen in another way, on each basic value.
 
-The {\tt eachV} function is a special case of {\tt each} and is used on the special vector type.\\
+The {\tt eachV} function is a special case of {\tt each} and is used on vector types.\\
 
 The function {\tt reduce} works similar to fold known from functional languages. The type scheme for {\tt reduce} is:
 \begin{lstlisting}[numbers=none,frame=none]
 reduce : $\forall\alpha\gamma.(\alpha \rightarrow \alpha \rightarrow \alpha)\rightarrow \alpha \rightarrow [\alpha]^{1 +\gamma} \rightarrow [\alpha]^{\gamma}$
 \end{lstlisting}
-The function takes as arguments a associative binary operator $op$ for instance $+$, a neutral element $n$, for instance 0 and array $a$.
-It returns a value made from applying $+$  to first the netral element and the first element in $a$ and then to the result of the previus calculation and the next element in the array e.g. 0 $+$ $a_1$ $+$ ... $+$ $a_n$.
-The {\tt reduce} function reduce an array of rank $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension.
-The difference to {\tt fold} is that the operator has to be associative and the start element has to be neutral
-because the execution is parallel.\\
+The function takes as arguments a associative binary operator $op$ (for instance $+$), a neutral element $n$, (for instance 0) and array $a$.
+The function application evaluates to the combination of the elements by the operator.
+%It returns a value made from applying $+$  to first the netral element and the first element in $a$ and then to the result of the previus calculation and the next element in the array e.g. 0 $+$ $a_1$ $+$ ... $+$ $a_n$.
+An array of rank $\gamma+1$ is reduced to an array of rank $\gamma$ along the inner-most dimension.
+Unlike {\tt fold}, reduce makes no guarantees as to the order of application of the operator, therefore the operator has to be associative and the element has to be neutral, this is of course necessary for parrallel execution.\\
 
 The {\tt zipWith} function's type scheme is given as follows: 
 \begin{lstlisting}[numbers=none,frame=none]
 zipWith  : $\forall\alpha_{1}\alpha_{2}\beta\gamma.(\alpha_1 \rightarrow \alpha_2 \rightarrow \beta)\rightarrow [\alpha_1]^{\gamma} \rightarrow [\alpha_2]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-The functon takes as arguments a function $f$ that works on a pair $(x,y)$ and two arrays $a_1$ and $a_2$. It returns an array where the n'th element are $f$ applied to the pair $({a_{1}}_n,{a_{2}}_n)$ 
-Like the other tree operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
+Given a function $f$ that works on a pair $(x,y)$ and two arrays $a_1$ and $a_2$, {\tt zipWith f a\_1 a\_2}  evaluates to an array where the n'th element is $f$ applied to the pair $({a_{1}}_n,{a_{2}}_n)$ 
+Like the other three operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
 
 The background for designing TAIL was to create a typed intermediate language for the array programming language APL. TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into TAIL \cite{ElsmanDybdal:Array:2014}.
 APL is an older language created in the 1960's by Kenneth E. Iverson.
@@ -181,7 +183,7 @@ are primitive in APL using simpler operators, one such operator is that of the i
 The aplacc parser for TAIL represents the TAIL expressions in the abstract syntax tree as variables, constants, infinity, the negative representation of 
 the expression, let expressions, operators and lambda expressions. 
 
-TAIL does not support curried functions but require functions to be fully applied.FORKERT?!?!?!?!\\
+TAIL does not support curried functions but require functions to be fully applied.
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
