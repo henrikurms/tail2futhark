@@ -112,7 +112,12 @@ op ::= addi | subi | multi | mini | maxi | addd | subd |
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
-e ::= $v$ | $x$ | $[\overrightarrow{e}]$ | $e$ $e'$ | let $x$ = $e_1$ in $e_2$ | $op(\overrightarrow{e})$
+e ::= $v$ 
+    | $x$ 
+    | $[\overrightarrow{e}]$ 
+    | $e$ $e'$ 
+    | let $x$ = $e_1$ in $e_2$ 
+    | $op(\overrightarrow{e})$
 \end{lstlisting}
 A TAIL program always consists of a single expression. An expression can then be a value, variable, 
 list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme. \\
@@ -346,7 +351,7 @@ There main contribution with this paper is the compilation scheme presented in t
 The compilation scheme is implementation independent and done in a form of mathematical notation. 
 In this section both the compilation scheme and the notation is described. \\
 
-On the left hand side of the scheme is the TAIL functions, the right hand side contains the Futhark expression they are translated to. An expression wraped in double brackets i.e. $\evals{x}$ signifies the compilation of the TAIL expression $x$  \\
+On the left hand side of the scheme is the TAIL functions, the right hand side contains the Futhark expression they are translated to. An expression wraped in double brackets e.g. $\evals{x}$ signifies the compilation of the TAIL expression $x$.  \\
 
 %%% Table
 \begin{tabular}{l c l}% to \linewidth {l c X}
