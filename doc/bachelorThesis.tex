@@ -227,7 +227,7 @@ TAIL does not support curried functions but require functions to be fully applie
 
 \section{The functional language Futhark}
 
-The syntax of Futhark type system can be seen below. The types are decided into types ($t$), constants ($k$) and patterns ($p$). The letter $n$ is used to denote an integer, the letter x is used to denote a decimal number, the letter $b$ is used to denote a boolean, the letter $c$ denotes a char, and the letter $v$ denotes a value that can be any of the before mentioned. A name pattern are represented with $id$. 
+The syntax of Futhark type system can be seen below. The types are devided into types ($t$), constants ($k$) and patterns ($p$). The letter $n$ is used to denote an integer, the letter x is used to denote a decimal number, the letter $b$  denotes a boolean, the letter $c$ denotes a char, and the letter $v$ denotes a value that can be any of the before mentioned. A name pattern are represented with $id$. 
 \begin{lstlisting}[numbers=none,frame=none]
 $t$ ::= int | real | bool | {$t_1$,...,$t_n$} | [t] | *[t]
 $k$ ::= $n$ | $x$ | $b$ | $c$ | {$v_1$,...,$v_n$} | [v$_1$,...,$v_n$] 
@@ -237,7 +237,7 @@ The general type in the Futhark language consist of four base types: integers, f
 Tuple types are written as a comma seperated list of types or values surrounded by braces. For example \{int,bool\} are 
 an pair of integer and boolean value. 
 Arrays types are denotes by the elements (base) type enclosed by brackets. The layer of brackets indicates the dimention of the array type. For instance {\tt [int]} is a one-dimentional array of integers, and {\tt [[[bool]]]} is a tree-dimentional 
-array of booleans.  All arrays must be regular that is all wors of for instance a two-dimentional array must have the same numer of elements. \\
+array of booleans.  All arrays must be regular that is all rows of for instance a two-dimentional array must have the same numer of elements. \\
 
 The Futhark language is statuclally typed but does not support type interference. Also the type system of Futhark are not 
 able to express polymorphism. It is therefore not possible to make polymorphic functions in Futhark. The only polymorphism that exists in the language is the one implemented in the build-in operators. 
@@ -256,8 +256,8 @@ $e$ ::= $k$ | $v$ | {$e_1,...,e_n$} | [$e_1,...,e_n$] | $e_1$ $\odot$ $e_2$ |
 
 \begin{lstlisting}[numbers=none,frame=none]
 $l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$
-    |  $id$ ($e_1,...,e_n$)
-    |  op $\odot$ ($e_1,..., e_n$)
+    | $id$ ($e_1,...,e_n$)
+    | op $\odot$ ($e_1,..., e_n$)
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
@@ -268,28 +268,46 @@ $fun$ ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = $e$
 $prog$ ::= $\epsilon$ | $fun$ $prog$
 \end{lstlisting}
 
-The Futhark language supports the declaration of functions, but it is not possible to curry functions in the Futhark language, all functions applications have to be fully saturated. Furthermore it is only possible to declare monomorphic functions.
-All functions are defined globally \cite{TroelsHenriksen} except for inline anonymus functions (denoted with $l$ in the syntaxmdefinition). A Futhark program consist of a sequence of function definitions. \\
+The Futhark language supports the declaration of functions, but it is not possible to curry functions in the Futhark language, all functions applications have to be fully saturated. Furthermore it is only possible to declare monomorphic functions. A Futhark program consist of a sequence of function definitions. \\
+All functions are defined globally \cite{TroelsHenriksen} except for inline anonymus functions (denoted with $fn$ in the syntax definition). These inline anonymus functions only occur in the second-order array combinators (SOACs) of the
+ language.
 
-Futhark is mostly a first order language but supports bulk (parallel) operations on arrays
-using the built-in second-order array combinators (SOACs) of the language. 
+Futhark is a functional programming language inspired by Haskell and Standard ML, it is mostly a first order language but supports bulk (parallel) operations on arrays
+using the built-in SOACs that are: {\tt map}, {\tt reduce}, {\tt filter}, and {\tt scan}.\\
 
-The second order array combinators have not been presented yet, they are:
-{\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
-The operators have the expected functionality also found in Haskell and Standard ML,
-that is {\tt map} takes a function and an array and apply the function on the array.
-If the array is multi-dimensional the function is applied to the outer most dimension.
-The function {\tt reduce} takes as arguments a function, a neutral element and an array.
+The functionality of the SOACs are what can be found in other functional languages such as Haskell or ML. 
+The operator {\tt map} is defined as follows: 
+\begin{lstlisting}[numbers=none,frame=none]
+map : ($\alpha$ $\rightarrow$ $\beta$) $\rightarrow$ $[\alpha]$ $\rightarrow$ $[\beta]$
+\end{lstlisting}
+The type of the operator {\tt map($l$,$a$)} takes a function $l$ and an array $a$ and returns the array consisting of $l$ applied to each element of $a$.
+If the array is multi-dimensional the function is applied to the outer most dimension. Meaning that if the function $l$ is 
+maped into a two dimentionsl array the function would be aplied to an array not the elements of the array. For instance 
+Note that the type of map is not expressed using Futharks own type system as there are no way of expressing polymophism with the laguages type system. \\
+
+The type of the operator {\tt reduce} is defined as follows: 
+\begin{lstlisting}[numbers=none,frame=none]
+reduce : ($\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ $\alpha$) $\rightarrow$ $\alpha$ $\rightarrow$ $[\alpha]$ $\rightarrow$ $\alpha$
+\end{lstlisting}
+The operator takes as arguments a function $l$, a neutral element $x$ and an array $a$.
+It returns the result of aplying the function $l$ for instance *, on the result of the previus calculation and the next element of the array starting with the result sat to be the neutral element i.e. $x*a[0]*...*a[n]$
 Like the {\tt map} function, the {\tt reduce} function takes the function it is given in the arguments
-and apply it on the outer-most dimension of the array \cite{TroelsHenriksen}. 
+and apply it on the outer-most dimension of the array. \cite{TroelsHenriksen}. 
 % soacs tager l(kernel) som kan defineres på forskellige måder og som kan curryes
+The functions {\tt filter} and {\tt scan} also work on the outermost dimention on the array. The {\tt filter} operator
+takes a function $l$ that returns a bolean value and an array $a$ and returns an array containing the elements of $a$
+where $l(a)=true$. 
+The operator {\tt scan} takes 
+ 
 
 The SOACs take functions as arguments, any built-in or user defined function can be used. For use with
 SOACs it is also possible to use operators, partially applied functions and operators and lambda expressions.\\
 
+There are other build-in operators in Futhark besides the SOACs. The Futhark language support a number arithmetic 
+binary operators ($e_1$ $\odot$ $e_2$) for instance +, -, integer division, and integer modulo. The language also 
+support operators that work on arrays, for instance {\tt size} that takes an expression $e$ that can be eather one dimentional array (vector) or a multi-dimentional array and returns a comma seperated list containing the lenth of each dimention of $e$. If $e$ is a one-dimentional, the resurning list contains one element that is the length of the vector i.e. the number of elements. \\
 
-Futhark is a functional programming language inspired by Haskell and Standard ML.
-It was designed to be an attractive choice for expressing complex parallel programs by having enough expressive power without
+The idea behind designing Futhark was to design a languge to be an attractive choice for expressing complex parallel programs by having enough expressive power without
 losing the possibility to do aggressive optimization and managing parallelism.
 This is a challenge because higher the expressive power means optimizations become more difficult. 
 Due to the focus on optimization the Futhark language only supports regular arrays
@@ -299,27 +317,6 @@ However Futhark does support nested parallelism as this is a feature many progra
 depend upon even though it does make optimization more difficult \cite{TroelsHenriksen}.
 Indentation has no syntactical importance in the Futhark language. \\
 
-%%something more about specific optimization????????????????\\
-
-% funktioner bliver inlinet
-
-
-%The Futhark expressions can be found in the scheme below. They are among other constants, variables, binary- and other build-in operators and let expressions.
-
-
-
-
-
-
-A built-in function that bears mentioning is {\tt size}.
-It takes an array as an argument and returns the array length i.e.
-the number of elements if the array given is one-dimensional or the dimensions of the array if it is multi-dimensional. \\
-
-% funktioner skla definere returtype og type på alle argumenter
-The general form of a Futhark function is the keyword fun followed by a return type all arguments 
-with their typed defined in a list in parentheses.
-
-
 
 The Futhark language supports multidimensional arrays in the form of nesting of array types,
 i.e. an int array array will contain int arrays and so on.
@@ -327,17 +324,146 @@ i.e. an int array array will contain int arrays and so on.
 
 Futhark uses 0-indexing for indexing into arrays.\\ %In Futhark indexing are done with 0-indexing
 
+%%something more about specific optimization????????????????\\
+
+% funktioner bliver inlinet
+
+% funktioner skla definere returtype og type på alle argumenter
+
+
 % indbyggede functioner som vi bruger og som faktisk er polymorfiske men de kan ikke types i futhark da futharks typesystem ikke kan udtrykke polymorphi.
 %In general the Futhark language does not support polymorphism in functions,
 %the only exception is the built-in second-order array combinators that work on arrays of any base type. 
 %However this polymorphism can not be expressed in Futharks own type system.
 
-
-%The basic types in Futhark is {\tt int}, {\tt char}, {\tt bool}, {\tt real} and regular arrays.
-%The type system of Futhark does not support polymorphism,
-%however the build-in SOACs work on all regular arrays created of the basic types. 
-
 %Does not support polymorfism in types
+
+\section{The compilation scheme}
+
+There main contribution with this paper is the compilation scheme presented in this section. It shows a detailed compilation of a subset of TAIL's operators to Futhark code. 
+The compilation scheme is implementation independent and done in a form of mathematical notation. 
+In this section both the compilation scheme and the notation is described. \\
+
+On the left hand side of the scheme is the TAIL functions, the right hand side contains the Futhark expression they are translated to. An expression wraped in double brackets i.e. $\evals{x}$ signifies the compilation of the TAIL expression $x$  \\
+
+%%% Table
+\begin{tabular}{l c l}% to \linewidth {l c X}
+$\evals{x}$ & $=$ & $x$ \\
+$\evals{i}$ & $=$ & $i$ \\
+$\evals{d}$ & $=$ & $d$ \\
+$\evals{c}$ & $=$ & $c$ \\
+$\evals{-e}$ & $=$ & -$\evals{e}$ \\
+$\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} = \evals{e_1} \text{ in } \evals{e_2} $\\
+$\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
+$\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{op} \evals{[e_1,...,e_n]}$\\
+
+$\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$\\
+$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$\\
+
+$\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
+  \begin{cases}
+    $map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) & r=1\\
+    $map (fn $t_2^r \; (t_1^r \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
+  \end{cases}$\\
+
+$\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\         
+
+$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a)) \space\space , x = fresh\\
+$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$ \space\space , x = fresh\\
+$\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
+% \prod_{i=0}^{r_1} \text{size}(i,a_1)
+\text{osize}%(\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)
+, \text{reshape}(
+\text{isize}%\text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2)
+, \evals{a_2})))) $ \\
+&& \hspace{4ex} where osize = $\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)$ \\
+&& \hspace{4ex} \phantom{where} isize = $ \text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2) $ \\
+
+$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
+  \begin{cases}
+    \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
+    $map (fn $ t^{r-1} \; (t^r \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
+  \end{cases}$\\
+
+$\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
+  \multicolumn{3}{r}{ $\begin{cases}
+    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2})) & r=1 \\
+    $map(fn $t_3^{r-1} \; (t_1^{r-1} \; x, t_2^{r-1} \; y) $ {\tt =>} $
+      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
+  \end{cases}$ }\\
+
+$\evals{\text{cat}_{[t,r]}(a_1,a_2)}$ & $=$ & $
+  \begin{cases}
+    \text{concat}(\evals{a_1},\evals{a_2}) & r=1 \\
+    $map (fn $ \evals{t}^{r-1} \; (\evals{t} \; x, \evals{t} \; y)$ {\tt =>} $ \evals{\text{cat}_{[t,r-1]}(x,y)}, \text{zip}(\evals{a_1}, \evals{a_2}) & r>1\\
+  \end{cases}$\\
+
+$\evals{\text{first}_{[t,r]}(a)}$ & $=$ & let x = $\evals{a}$ in $x[\underbrace{0,...,0}_\text{r times}]$\\
+
+$\evals{\text{firstV}_{[t,r]}(a)}$ & $=$ & $\evals{\text{first}_{t,1}(a)}$\\
+
+$\evals{\text{take}(i,a)}$ & $=$ & reshape(oshape,\text{take1}$_{\evals{t}}$(osize,\text{reshape}(isize,$\evals{a})))$\\
+&& \hspace{4ex} where oshape = ($|i|, \text{size}(1,\evals{a}),\cdots,$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($i* \text{size}(1,\evals{a}) *\ldots*$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
+
+$\evals{\text{takeV}_t(d,a)}$ & $=$ & $\text{take1}_{\evals{t}}(\evals{d},\evals{a})$\\
+
+$\evals{\text{drop}(i,a)}$ & $=$ & \text{reshape}(\text{oshape}, $\text{drop1}_{\evals{t}}(\text{osize}, \text{reshape}(\text{isize},\evals{a}))$\\
+&& \hspace{4ex} where oshape = (max(0,size(0,$\evals{a}$)-$|i|$),size(1,$\evals{a}$)$,\ldots,$size(r,$\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} osize = ($i *$size(1,$\evals{a}$)$ * \ldots*$size(r, $\evals{a}$))\\
+&& \hspace{4ex} \phantom{where} isize = \text{size}(0,$\evals{a}$)$*\ldots*$\text{size}(r,$\evals{a}$)\\
+
+$\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
+
+$\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
+
+$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let $x$ = $\evals{a_1}$ in rearrange(($x[0]$-$1,\ldots,x[r$-$1]$-$1$),$\evals{a_2})$\\
+
+%$\evals{\text{cons}_[t,r](e,a)}$ & $=$ &  
+%  $\begin{cases}
+%    \text{concat}([\evals{e}],\evals{a}) & r= 1\\
+%    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{cons}_{[t,r]}(x,y)}, \text{ zip}(\evals{e},\evals{a}))$$ & r > 1
+%  \end{cases}$\\
+
+$\evals{\text{cons}_[t,r](e,a)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(exp,arr)})$\\
+&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
+  
+$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(arr,exp)})$\\
+&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
+  
+%$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ & 
+%  $\begin{cases}
+%    \text{concat}([\evals{a}],\evals{e}) & r= 1\\
+%    \text{map (fn }$$(x,y) $ {\tt =>} $ \evals{\text{snoc}_{[t,r]}(x,y)}, \text{ zip}(\evals{a},\evals{e}))$$ & r > 1
+%  \end{cases}$\\
+
+$\evals{\text{iota}(a)}$ & $=$ & map$(+ \; (1), \text{iota}(\evals{a})$\\
+
+$\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
+
+$\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
+
+$\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
+gi
+\\
+%\end{tabular}\\
+%
+%The compilation of fn are descirbed in a table of its own\\
+%
+%\begin{tabular}{l c l}
+$\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
+$\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
+\end{tabular}\\
+
+The gereral compilation of operators:\\
+
+\begin{tabular}{l c l}
+$\evals{addi}_{op}$ & $=$ & $+$\\
+$\evals{i2d}_{fun}$ & $=$ & toReal\\ 
+\end{tabular}\\
 
 \section{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
