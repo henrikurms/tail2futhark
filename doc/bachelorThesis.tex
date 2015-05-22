@@ -533,21 +533,23 @@ $\evals{i2d}_{fun}$ & $=$ & toReal\\
 
 Some TAIL expressions have type information as part of their declaration. This type information can be seen in the
 compilation scheme as subscript to the function. The type information can be either just a type $t$ or a combination of both type and rank $r$. The type consist of a type that are one of the TAIL
-types described in section 2. The rank is the number of dimentions.  \\
+types described in Section 2. The rank is the number of dimentions.  \\
 
 Type information can also be represented by $\tau$, but only in the special case of anonymus functions (fn) where it 
 indicate the return type of the anonymus function. This types is not an apparent part of the anonymus function in TAIL
-but the type information exist as part of the function that calls the internal function. Therefore the return type is simply 
-pased through to the internal anonymus function. \\
+but the type information exist as part of the function that calls the internal function. For instance if the TAIL operator {\tt each(f,a)} is given a kernel (fn) expression as it function f the return type of the kernel can be made from the returntype of the {\tt each} operator that we know at compile time. The return type of the operator that calls the kernel is therefore pased to the kernel for it to create its return type. \\
+
+In the compilation scheme the compilation declarations can be one of three different types. The three types can be destingused by the subtext following the declaration.  Expressions have no subtext, operators are indicated with the subtext $_{op}$ or $_{fun}$ depending on the number of arguments, and kernels are specified with the subtext $_{fn}$. The reason for the distinction is that a TAIL operator can be expressed as either a Futhark binary operator if the expression only takes two arguments and are one of the known operators such as +, -, *, / ect. or a Futhark function. \\
 
 The letters $x$, $i$, $d$, and $c$ dentoes variables, integers, doubles, and chars respectively. BOOLEANS MANGLER!!!!!!
 
+\section{Implementation}
 
-\section{Testing}
+\subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
 framework, the other is to test the efficiency of the generated test in form of benchmarks. 
 
-\subsection{Automated testframework}
+\subsubsection{Automated testframework}
 In order to test the correctness of the the generated code we have set up a test using the Cabal framework to make automatet tests that take the TAIL code though the tail2futhark compiler and the Futhark compiler and compair the result from the Futhark compiler with a premade result file containing the correct result. The automated test made it possible to run all tests whenever we did an alteration to the compiler. 
 Running the tests every time we made an alteration enabled us to check if the new alteration had created a problem with the work we had allredy done. \\
 
@@ -568,12 +570,14 @@ We have not testet for or taken into account the possibility of TAIL code that a
 
 Because of the importance of the multidimentional arrays for the language we have testet each function on input of 1 dimention and input of at least 2 dimentions. 
 
-\subsection{Benchmarks}
+\section{Benchmarks}
 We have used benchmarks to mesure preformance of the generated Futhark code by comparing it with the TAIL code.
 Because no parallel backend are finished for either TAIL or Futhark we use a sequential backend for both languages. \\
 
-We have used the 
+The benchmarks used to test the compiled code is all origianaly written in APL. They are then compiled using the {\tt apltail} compiler to TAIL source code and also using the same compiler to an executable file. The TAIL source code was also compiled using the Tail2Futhark compiler to Futhark source code and then using the Futhark compiler to an executable file. This was done automatically by running a make file on the directory containing all the benchmarks.
+Then the efficiency of the generated code was tested using {\tt time} on the executable TAIL and Futhark version of the files and the results compaird. In order to have data big enough to level out any initial overhead we ....\\
 
+\subsection{Matrix multiplication}
 
 One of the benchmarks we used was matrix multiplication. The code in TAIL can be seen below. 
 
@@ -591,7 +595,15 @@ let v22:[int]0 = reduce{[int],[0]}(muli,1,
 i2d(v22)
 \end{lstlisting}
 
-It becomes the following Futhark code when run through the compiler.
+It becomes the following Futhark code when run through the compiler...
+.
+\begin{lstlisting}
+futhark code here
+\end{lstlisting}
+
+In order to have data big enough to messure the performance of the TAIL executable file and the Futhark executable file the program code was run on a matrix that was 10.000 x 10.000. 
+The result of that is...
+
 
 \bibliography{references}{} 
 \bibliographystyle{plain}
