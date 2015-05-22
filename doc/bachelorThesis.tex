@@ -311,7 +311,7 @@ $t$   $::=$   int          (Integers)
 The types in Futhark consist of four base types: integers, floating points, booleans, tuples ({\tt \{t$_1$,...,t$_n$\}}), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
 Tuple types are written as a comma seperated list of types or values surrounded by braces. For example {\tt\{int,bool\}} is 
 a pair of values of integer and boolean types.
-Unline TAIL, Futhark allows nesting of arrays and indeed nested arrays are how multi-dimensional arrays are expressed in Futhark.
+Unlike TAIL, Futhark allows nesting of arrays and indeed nested arrays are how multi-dimensional arrays are expressed in Futhark.
 Array types are denoted by the elements (base) type enclosed by brackets.
 The layer of brackets indicates the dimensionality of the array type.
 For instance {\tt [int]} is a one-dimentional array of integers, and {\tt [[[bool]]]} is a tree-dimentional array of booleans.
@@ -357,16 +357,16 @@ $prog$ ::= $\epsilon$ | $fun$ $prog$
 
 All function declarations have global scope.
 
-The functions {\tt map }, {\tt filter }, {\tt reduce } and {\tt scan } are second-order array combinators, or SOACs for short.
+The functions {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan} are second-order array combinators, or SOACs for short.
 The SOACs operate on arrays with first-order functions given as arguments.
-Functional arguments used can be function names of first-order functions (iether user-defind or built-in), 
+Functional arguments used can be function names of first-order functions (either user-defind or built-in), 
 binary operators, or lambda expressions.
 Futhermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
 the return type and argument types.
 
 We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and as such will not discuss them here.
-The SOACs can be used on arrays of any type even though it cannot be expressed by futhark types, for clarity we give the type for each SOAC that it would have had in a polymorphic language.
-Below we shortly discuss {\tt map } and {\tt reduce }.
+The SOACs can be used on arrays of any type even though it cannot be expressed by Futhark types, for clarity we give the type for each SOAC that it would have had in a polymorphic language.
+Below we shortly discuss {\tt map} and {\tt reduce}.
 %Nedenfor er udkommenteret indtil vi finder plads til det igen
 %Futhark is a functional programming language inspired by Haskell and Standard ML, it is mostly a first order language but supports bulk (parallel) operations on arrays
 %using the built-in SOACs that are: {\tt map}, {\tt reduce}, {\tt filter}, and {\tt scan}.\\
