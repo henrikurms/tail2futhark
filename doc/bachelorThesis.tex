@@ -463,10 +463,9 @@ $\evals{c}$ & $=$ & $c$ \\
 $\evals{-e}$ & $=$ & -$\evals{e}$ \\
 $\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} = \evals{e_1} \text{ in } \evals{e_2} $\\
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
-$\evals{\text{op } [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{op} \evals{[e_1,...,e_n]}$\\
 
-$\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$\\
-$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$\\
+$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$, $op \in binops$\\
+$\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$, $op \in funs$\\
 
 $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
   \begin{cases}
