@@ -319,26 +319,43 @@ Arrays must be regular, i.e. all arrays in an array must have the same numer of 
 
 The Futhark language is statically typed but does not use type interference. Also the type system of Futhark is not 
 able to express polymorphism, this means it is not possible to make polymorphic functions in Futhark.
-The only exception is that a lot of the built-in functions can be used on multiple types.
-The syntax of Futhark expressions are defined as follows:
+The only exception is that a lot of the built-in functions can be used on multiple types.\\
+
+The syntax of Futhark expressions is show below as follows:
 \begin{lstlisting}[numbers=none,frame=none]
 $k$ ::= $n$ | $x$ | $b$ | $c$ | {$v_1$,...,$v_n$} | [v$_1$,...,$v_n$] 
 \end{lstlisting}
-
 \begin{lstlisting}[numbers=none,frame=none]
 $p$ ::= $id$ | {$p_1$,...,$p_n$}
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
-$e$ ::= $k$ | $v$ | {$e_1,...,e_n$} | [$e_1,...,e_n$] | $e_1$ $\odot$ $e_2$ |
-      $-e$ | not $e$ | if $e_1$ then $e_2$ else $e_3$ | $v$[$e_1,...,e_n$] |
-      $v$($e_1,...,e_n$) | let $p$ = $e_1 in e_2$ | zip($e_1,...,e_n$) | 
-      unzip($e$) | iota($e$) | replicate($e_n, e_v$) | size($e$) |
-      reshape(($e_1,...,e_n$),e) | transpose($e$) | split($e_1,e_2$) |
-      concat($e_1,e_2$) | 
-      let $v_1$ = $v_2$ with [$e_1,...,e_n$] <- $e_v$ in $e_b$  |
-      loop ($p$ = $e_1$) = for $v$ < $e_2$ do $e_3$ in $e_4$ | map($l$, $e$) |
-      filter($l$, $e$) |  reduce($l$, $x$, $e$) | scan($l$, $x$, $e$)
+$e$ ::=  $k$
+    | $v$ 
+    | {$e_1,...,e_n$} 
+    | [$e_1,...,e_n$] 
+    | $e_1$ $\odot$ $e_2$ 
+    | $-e$ 
+    | !$e$ 
+    | if $e_1$ then $e_2$ else $e_3$ 
+    | $v$[$e_1,...,e_n$] 
+    | $v$($e_1,...,e_n$) 
+    | let $p$ = $e_1$ in $e_2$
+    | zip($e_1,...,e_n$) 
+    | unzip($e$)
+    | iota($e$) 
+    | replicate($e_n, e_v$) 
+    | size($i$,$e$) 
+    | reshape(($e_1,...,e_n$),e)
+    | transpose($e$)
+    | split($e_1,e_2$)
+    | concat($e_1,e_2$)
+    | let $v_1$ = $v_2$ with [$e_1,...,e_n$] <- $e_v$ in $e_b$
+    | loop ($p$ = $e_1$) = for $v$ < $e_2$ do $e_3$ in $e_4$
+    | map($l$, $e$)
+    | filter($l$, $e$)
+    | reduce($l$, $x$, $e$)
+    | scan($l$, $x$, $e$)
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
@@ -355,14 +372,14 @@ $fun$ ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = $e$
 $prog$ ::= $\epsilon$ | $fun$ $prog$
 \end{lstlisting}
 
-All function declarations have global scope.
+Note that the syntactical construct denoted by $l$ can only occur in {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
+The functions {\tt map }, {\tt filter }, {\tt reduce } and {\tt scan } are second-order array combinators, or SOACs for short.
 
-The functions {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan} are second-order array combinators, or SOACs for short.
 The SOACs operate on arrays with first-order functions given as arguments.
 Functional arguments used can be function names of first-order functions (either user-defind or built-in), 
 binary operators, or lambda expressions.
 Futhermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
-the return type and argument types.
+the return type and argument types, and argument bindings follow the normal shadowing rules.
 
 We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and as such will not discuss them here.
 The SOACs can be used on arrays of any type even though it cannot be expressed by Futhark types, for clarity we give the type for each SOAC that it would have had in a polymorphic language.
@@ -393,11 +410,21 @@ Given a binary operator/function $l$, the neutral element $e$ of $l$ and an arra
 $e \odot a[0] \odot \ldots \odot a[n]$ where $x \odot y = l (x,y)$
 \end{lstlisting}
 Like {\tt map}, {\tt reduce} applies the function on the outer-most dimension of the array. \cite{TroelsHenriksen}.\\ 
-% soacs tager l(kernel) som kan defineres på forskellige måder og som kan curryes
 
-%There are other built-in operators in Futhark besides the SOACs. The Futhark language support a number arithmetic 
-%binary operators ($e_1$ $\odot$ $e_2$) for instance +, -, integer division, and integer modulo. The language also 
-%support operators that work on arrays, for instance {\tt size} that takes an expression $e$ that can be eather one dimentional array (vector) or a multi-dimentional array and returns a comma seperated list containing the lenth of each dimention of $e$. If $e$ is a one-dimentional, the resurning list contains one element that is the length of the vector i.e. the number of elements. \\
+The first-order segment of futhark has many of the typical language features like constants, variables, many of the usual binary operators, branching, array indexing and some additional features like in-place updates and looping which we do not use.
+
+Futhark features array zipping with the built-in {\tt zip} which produces an array of pairs from a pair of arrays.
+The resulting arrays can then be mapped over with binary operators such as +.
+
+The ${\tt iota}$ function given an integer $n$ produces an array with integer values ranging from 0 to $n-1$.
+%replicate
+The ${\tt size}$ primitive will given a positive integer $i$ and an array $a$ return the i'th dimension, or put in another way
+the length of the arrays nested with depth $i$ in $a$. Rememeber that these arrays will all have the same length.
+%reshape
+%transpose
+%split
+%concat
+\\
 
 The aim of Futhark is to be an attractive choice for expressing complex parallel programs.
 This goal is pursued by featuring high expressive power without
@@ -618,7 +645,10 @@ futhark code here
 In order to have data big enough to messure the performance of the TAIL executable file and the Futhark executable file the program code was run on a matrix that was 10.000 x 10.000. 
 The result of that is...
 
+\section{Discussion}
 
+
+%%%%% references %%%%%
 \bibliography{references}{} 
 \bibliographystyle{plain}
 
