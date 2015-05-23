@@ -652,7 +652,29 @@ To do this in Futhark we use the zip function to convert two arrays to an array 
 \paragraph{The reshape operator} 
 %reshape gets as argument the return type.\\
 %It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
+The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
+array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
 
+Futhark has a reshape function that only works for arrays of the correct dimensions \cite{TroelsHenriksen}.
+
+Our general strategy for compiling reshape is to first ensure that the array is the correct size and then use the Futhark reshape
+function to do the final step. To adjust the size we operate on the flat representation of the array, this is easy to produce also
+using Futhark reshape. To adjust the array we first make sure it is long enough by extending it using the function replicate and then
+truncate it to the correct length with split.
+
+To keep the implementation simple we generate code that calls generated library functions written in Futhark which do most of the work.
+Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
+for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
+rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
+
+We have to decide where to put the library functions.
+We would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to
+be able to include the library in the output when we run the compiler.
+Furthermore since Futhark has no polymorphism we have to include versions of all types, but we would like to only maintain one version.
+Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
+extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
+
+We have used this approach throughout our compiler, e.g. the take operator is implemented similarly.
 \paragraph{The transp operator} 
 There exists a {\tt transpose(a)} function in Futhark and the reason for not using it to implement the TAIL {\tt transp} is that the Futherk {\tt transpose} have as default that it transposes 
 
