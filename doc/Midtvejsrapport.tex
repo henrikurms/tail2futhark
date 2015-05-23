@@ -567,7 +567,7 @@ The {\tt eachV } is just a special case of the {\tt each} operator that works on
 is known at compile time. We do not use this extra information so this special case is not important for us.
 
 \subsection{reduce}
-The type of the {\tt each} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
+The type of the {\tt reduce} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
 The {\tt reduce} function in TAIL uses an associative binary operator to reduce an array of rank
 $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension\cite{ElsmanDybdal:Array:2014}.
 The Futhark reduce on the other hand reduces each array in the outer array, i.e. it reduces along the outer-most dimension\cite{TroelsHenriksen}. 

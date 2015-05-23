@@ -220,6 +220,9 @@ zipWith  : $\forall\alpha_{1}\alpha_{2}\beta\gamma.(\alpha_1 \rightarrow \alpha_
 Given a function $f$ that works on a pair $(x,y)$ and two arrays $a_1$ and $a_2$, {\tt zipWith f a\_1 a\_2}  evaluates to an array where the n'th element is $f$ applied to the pair $({a_{1}}_n,{a_{2}}_n)$ 
 Like the other three operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
 
+% MANGLER!!!!!!! se nedenfor
+Other interesting operators: reshape, take and drop !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
+
 The background for designing TAIL was to create a typed intermediate language for the array programming language APL. TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into TAIL \cite{ElsmanDybdal:Array:2014}.
 APL is an older language created in the 1960's by Kenneth E. Iverson.
 APL is an array programming language, its main type is the multi-dimensional array 
@@ -603,7 +606,10 @@ In the compilation scheme the compilation declarations can be one of three diffe
 
 The compilation of the TAIL operators that are not binary operators are explained in details below:\\
 
-\paragraph{Var, let-expressions} almost are equivalent to Futhark let-expressions. The only difference is that the type information that exists in TAIL are ignored in Futhark. 
+\paragraph{Var, let-expressions}
+
+ 
+   almost are equivalent to Futhark let-expressions. The only difference is that the type information that exists in TAIL are ignored in Futhark. 
 % var, literals/constants, let, array litterals, neg
 
 The letters $x$, $i$, $d$, and $c$ dentoes variables, integers, doubles, and chars respectively. They are all translated to a Futhark equivalent. BOOLEANS MANGLER!!!!!!\\
