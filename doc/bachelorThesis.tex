@@ -453,7 +453,7 @@ There main contribution with this paper is the compilation scheme presented in t
 The compilation scheme is implementation independent and done in a form of mathematical notation. 
 In this section both the compilation scheme and the notation is described. \\
 
-On the left hand side of the scheme is the TAIL functions, the right hand side contains the Futhark expression they are translated to. An expression wraped in double brackets e.g. $\evals{x}$ signifies the compilation of the TAIL expression $x$.  \\
+On the left hand side of the scheme is the TAIL functions, the right hand side contains the Futhark expression they are translated to, except of the expression is wraped in double brackets. An expression wraped in double brackets e.g. $\evals{x}$ signifies the compilation of the TAIL expression $x$. \\
 
 \begin{tabular}{l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -464,8 +464,8 @@ $\evals{-e}$ & $=$ & -$\evals{e}$ \\
 $\evals{ \text{let } x:t = e_1 \text{ in } e_2} $ & $=$ & let $\evals{x} = \evals{e_1} \text{ in } \evals{e_2} $\\
 $\evals{[e_1,...,e_n]}$ & $=$ & $ [ \evals{e_1},...,\evals{e_n}]$\\
 
-$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$, $op \in binops$\\
-$\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$, $op \in funs$\\
+$\evals{\text{op} [e_1,e_2]}$ & $=$ & $\evals{e_1} \; \evals{\text{op}}_{op} \; \evals{e_2}$, $$op $ \in binops$\\
+$\evals{\text{op} [e_1,...,e_n]}$ & $=$ & $\evals{\text{op}}_{fun} \; (\evals{e_1},...,\evals{e_n})$, $$op $ \in funs$\\
 
 $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
   \begin{cases}
@@ -473,10 +473,25 @@ $\evals{\text{each}_{[t_1,t_2,r]}(f,a)}$ & $=$ & $
     $map (fn $t_2^r \; (t_1^r \; x)$ {\tt =>} $ \evals{\text{each}_{[t,r-1]}(f,x)},\evals{a}) & r > 1  \\
   \end{cases}$\\
 
-$\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\         
+$\evals{\text{eachV}_{[t_1,t_2,r]}(f,a)}$ & $=$ & map$(\evals{f}_{fn}^{\evals{t_2}},\evals{a}) $  \\      
 
+$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
+  \begin{cases}
+    \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
+    $map (fn $ t^{r-1} \; (t^r \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
+  \end{cases}$\\   
+
+$\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
+  \multicolumn{3}{r}{ $\begin{cases}
+    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2})) & r=1 \\
+    $map(fn $t_3^{r-1} \; (t_1^{r-1} \; x, t_2^{r-1} \; y) $ {\tt =>} $
+      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
+  \end{cases}$ }\\
+  
 $\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a)) \space\space , x = fresh\\
+
 $\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$ \space\space , x = fresh\\
+
 $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
 % \prod_{i=0}^{r_1} \text{size}(i,a_1)
 \text{osize}%(\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)
@@ -485,19 +500,6 @@ $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\tex
 , \evals{a_2})))) $ \\
 && \hspace{4ex} where osize = $\text{size}(0,a_1)*\ldots*\text{size}(r_1,a_1)$ \\
 && \hspace{4ex} \phantom{where} isize = $ \text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2) $ \\
-
-$\evals{\text{reduce}_{[t,r]}(f,n,a)}$ & $=$ & $
-  \begin{cases}
-    \text{reduce}(\evals{f}_{fn}^{\evals{t}},\evals{n},\evals{a}) & r=1 \\
-    $map (fn $ t^{r-1} \; (t^r \; x)$ {\tt =>} $ \evals{\text{reduce}_{[t,r-1]}(f,n,x)},\evals{a}) & r>1\\
-  \end{cases}$\\
-
-$\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
-  \multicolumn{3}{r}{ $\begin{cases}
-    $map$(\evals{f}_{fn}^{\evals{t_3}},$zip($\evals{a_1},\evals{a_2})) & r=1 \\
-    $map(fn $t_3^{r-1} \; (t_1^{r-1} \; x, t_2^{r-1} \; y) $ {\tt =>} $
-      \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
-  \end{cases}$ }\\
 
 $\evals{\text{cat}_{[t,r]}(a_1,a_2)}$ & $=$ & $
   \begin{cases}
@@ -562,28 +564,80 @@ $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 %\begin{tabular}{l c l}
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
+\\
 \end{tabular}\\
 
-The gereral compilation of operators:\\
+\begin{tabu} to \linewidth { l X}
+$binops$ =& addi, subi, muli, ...\\
+$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
+nandb, norb, neqi, neqd
+\end{tabu}
+
+The binary scalar first-order operators are mapped to their natural Futhark counterparts, we include the mappings
+here for completeness.
+
+mappings of operators here!
 
 \begin{tabular}{l c l}
 $\evals{addi}_{op}$ & $=$ & $+$\\
+\end{tabular}\\
+
+To keep our compilation scheme simple we have implmemented a small library of Furhark functions which is inlined
+in each compiled program. Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in
+SOAC applications.\\
+
+mappings of functions here!! (and list identitiy mappings)\\
+\begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
 \end{tabular}\\
 
 Some TAIL expressions have type information as part of their declaration. This type information can be seen in the
 compilation scheme as subscript to the function. The type information can be either just a type $t$ or a combination of both type and rank $r$. The type consist of a type that are one of the TAIL
-types described in Section 2. The rank is the number of dimentions.  \\
+types described in Section 2. The rank is the number of dimensions.  \\
 
 Type information can also be represented by $\tau$, but only in the special case of anonymus functions (fn) where it 
 indicate the return type of the anonymus function. This types is not an apparent part of the anonymus function in TAIL
 but the type information exist as part of the function that calls the internal function. For instance if the TAIL operator {\tt each(f,a)} is given a kernel (fn) expression as it function f the return type of the kernel can be made from the returntype of the {\tt each} operator that we know at compile time. The return type of the operator that calls the kernel is therefore pased to the kernel for it to create its return type. \\
 
-In the compilation scheme the compilation declarations can be one of three different types. The three types can be destingused by the subtext following the declaration.  Expressions have no subtext, operators are indicated with the subtext $_{op}$ or $_{fun}$ depending on the number of arguments, and kernels are specified with the subtext $_{fn}$. The reason for the distinction is that a TAIL operator can be expressed as either a Futhark binary operator if the expression only takes two arguments and are one of the known operators such as +, -, *, / ect. or a Futhark function. \\
+In the compilation scheme the compilation declarations can be one of three different types. The three types can be destingused by the subtext following the declaration.  Expressions have no subtext, operators are indicated with the subtext $_{op}$ or $_{fun}$ depending on the number of arguments, and kernels are specified with the subtext $_{fn}$. The reason for the distinction is that a TAIL operator can be expressed as either a Futhark binary operator if the expression only takes two arguments and are one of the known operators that can be found seen in the ??? or a Futhark function. \\
 
-The letters $x$, $i$, $d$, and $c$ dentoes variables, integers, doubles, and chars respectively. BOOLEANS MANGLER!!!!!!
+The compilation of the TAIL operators that are not binary operators are explained in details below:\\
+
+\paragraph{Var, let-expressions} almost are equivalent to Futhark let-expressions. The only difference is that the type information that exists in TAIL are ignored in Futhark. 
+% var, literals/constants, let, array litterals, neg
+
+The letters $x$, $i$, $d$, and $c$ dentoes variables, integers, doubles, and chars respectively. They are all translated to a Futhark equivalent. BOOLEANS MANGLER!!!!!!\\
+
+\paragraph{The each operator} 
+
+\paragraph{The reduce operator} 
+
+\paragraph{The zipWith operator}
+
+
+\paragraph{The reshape operator} 
+%reshape gets as argument the return type.\\
+%It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
+
+\paragraph{The transp operator} 
+There exists a {\tt transpose(a)} function in Futhark and the reason for not using it to implement the TAIL {\tt transp} is that the Futherk {\tt transpose} have as default that it transposes 
+
+\paragraph{The cat operator} 
+% why the hell don't we use transpose/rearrange to compile cat?!?! does anyone remember the reason
+
+\paragraph{The take/drop operator} 
+The {\tt take} and {\tt drop} operators in TAIL 
+
+\paragraph{The iota operator} 
+Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
+
+\paragraph{Lambda expressions} 
+% There is more.... than one lambda compilation/translation
 
 \section{Implementation}
+
+\subsection{The parser}
+%How we adapted the parser
 
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
@@ -645,6 +699,8 @@ In order to have data big enough to messure the performance of the TAIL executab
 The result of that is...
 
 \section{Discussion}
+
+\section{Conclusion}
 
 
 %%%%% references %%%%%
