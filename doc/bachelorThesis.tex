@@ -659,8 +659,18 @@ There exists a {\tt transpose(a)} function in Futhark and the reason for not usi
 \paragraph{The cat operator} 
 % why the hell don't we use transpose/rearrange to compile cat?!?! does anyone remember the reason
 
-\paragraph{The take/drop operator} 
-The {\tt take} and {\tt drop} operators in TAIL 
+\paragraph{The take and drop operators} 
+The {\tt take} operator in TAIL has very unique semantics, for a positive argument that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array.
+For a negative argument {\tt take} returns the last n elements of the array.
+If there are not enough elements in the array, {\tt take} pads with zeros.
+
+In a similar fashion to the TAIL {\tt reshape} function we have used library functions do most of the work.
+We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
+This approach has all the benefits mentioned earlier.
+
+\paragraph{The cons and snoc operators} takes an array of rank $\gamma$ and an array of rank $\gamma+1$ and concatinates the elements of the 
+array of rank $\gamma$ in the front of the elements of the array of rank $\gamma +1$. This result in an array of rank $\gamma+1$. 
+The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array. However the Futhark transpose function differs slightly from the wished functionality in that. ...\\
 
 \paragraph{The iota operator} 
 Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
@@ -668,10 +678,23 @@ Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Fu
 \paragraph{Lambda expressions} 
 % There is more.... than one lambda compilation/translation
 
+\paragraph{Libary functions}
+
+\section{Limitations of the compilation}
+% it does not work on all tail programs. 
+% 
+
 \section{Implementation}
+In this section a Haskell implementation of the compilation scheme is presented. This compiler is devided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
 
 \subsection{The parser}
 %How we adapted the parser
+%The parser that we make use of was created in a precious project \cite{APLACC}.
+The parser used in this project was made previusly in another project \cite{APLACC} and therefore not a main part of this project. Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. \\
+
+Bellow can be found a walk-through of the updates done in this project to the parser: \\
+
+\subsection{The Tail2Futhark compiler}
 
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
