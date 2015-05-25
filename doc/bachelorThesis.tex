@@ -220,8 +220,19 @@ zipWith  : $\forall\alpha_{1}\alpha_{2}\beta\gamma.(\alpha_1 \rightarrow \alpha_
 Given a function $f$ that works on a pair $(x,y)$ and two arrays $a_1$ and $a_2$, {\tt zipWith f a\_1 a\_2}  evaluates to an array where the n'th element is $f$ applied to the pair $({a_{1}}_n,{a_{2}}_n)$ 
 Like the other three operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
 
-% MANGLER!!!!!!! se nedenfor
-Other interesting operators: reshape, take and drop !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
+There are other interesting operators besides the parallel ones. One of them is the operator {\tt reshape($a_1$,$a_2$)}.
+Given two arrays it reshapes the flattened representation of the second array $a_2$ to the dimentions given by the first array so 
+if we have $reshape([2,3],[1,2,3,4,5,6])$ it evaluates to $[[1,2,3],[4,5,6]]$. If $a_2$ is to long the elements not needed are droped i.e. $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example. If $a_2$ is sorter than needed the elements of $a_2$ are repeted, for instance $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.\\
+
+Other interesting operators are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}. They return the an array containing the 1st to $i$'th element of $a$, and the array containing the $i$'th to n'th element of $a$ respectivly. If the array is multi-dimentional the operator works on the outermost dimention of the array i.e. $take(2,[[1,2],[3,4][5,6]])$ evaluates to $[[1,2],[3,4]]$. If the array contains to few elements {\tt take} pads the array with zeros, whereas {\tt drop} returns the empty array in case one tries to drop more elements than there are in $a$. \\
+
+The operator {\tt snoc(a,e)} takes two arrays $a$ and $e$ and return an array where the i'th element of $e$ is appended onto the end of the i'th row of $a$. If there is too few elements in $e$ you get an error, except if there is only one element in $e$ then the operater evaluates to an array where the one elemenent from $e$ is appended onto each row of $a$.\\
+
+The operator {\tt cons(e,a)} has very similar semantics as the {\tt snoc} operator. The ownly difference is that it appends the contents of $e$ not on the end but at the beginning of each row.\\
+
+The operator {\tt cat($a_1$,$a_2$)} takes two arrays that have to have the same outer dimention and returns an array where the i'th element (for instance row if the array is two-dimentional) of $a_2$ is appened onto the end of the i'th element of $a_1$.\\
+
+The {\tt transp} operator takes an array and return the transposed array i.e $transp([[1,2,3],[4,5,6]])$ would return $[[1,4],[2,5],[3,6]]$. If the array is multi-dimentional for instance a three-dimentional array with the shape $2x3x4$ the function woul return an array with the shape $4x3x2$.\\
 
 The background for designing TAIL was to create a typed intermediate language for the array programming language APL. TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into TAIL \cite{ElsmanDybdal:Array:2014}.
 APL is an older language created in the 1960's by Kenneth E. Iverson.
@@ -417,17 +428,20 @@ Like {\tt map}, {\tt reduce} applies the function on the outer-most dimension of
 The first-order segment of futhark has many of the typical language features like constants, variables, many of the usual binary operators, branching, array indexing and some additional features like in-place updates and looping which we do not use.
 
 Futhark features array zipping with the built-in {\tt zip} which produces an array of pairs from a pair of arrays.
-The resulting arrays can then be mapped over with binary operators such as +.
+The resulting arrays can then be mapped over with binary operators such as +.\\
 
-The ${\tt iota}$ function given an integer $n$ produces an array with integer values ranging from 0 to $n-1$.
-%replicate
-The ${\tt size}$ primitive will given a positive integer $i$ and an array $a$ return the i'th dimension, or put in another way
+The {\tt iota} function given an integer $n$ produces an array with integer values ranging from 0 to $n-1$.
+The {\tt replicate} function given an integer $n$ and an array $a$ returns an array consistung of $n$ copies of $a$.
+The {\tt size} primitive will given a positive integer $i$ and an array $a$ return the i'th dimension, or put in another way
 the length of the arrays nested with depth $i$ in $a$. Rememeber that these arrays will all have the same length.
-%reshape
-%transpose
-%split
-%concat
-\\
+The {\tt reshape} function takes a number of dimentions $(dim_1,..., dim_n)$ and an array $a$ and returns an array where the elements of $a$ is reshaped into the shape specified by the list of dimentions. The number of elements in $a$ must be equal to the product of the dimentions i.e. $elements$ $of$ $a$ $=$ $dim_1 * ... * dim_n$.\\
+
+The function {\tt transpose} take an array $a$ and return the transposed $a$. If {\tt transpose} is used on an array of more than two dimentions it transposes the array a little different than one might expect. For instance the reult of transposing an three-dimentional array with dimentions $2 x 3 x 4$ is not as one might expect an array with dimentions $4 x 3x 2$ but instead an array with dimentions $3x4x2$.\\
+
+The function {\tt split} given an integer $n$ and an array $a$ partitions $a$ into two arrays $a[0,..,n]$ and $a[n+1,...]$ and returns them as a tuple. 
+The function {\tt concat} takes two arrays and concatinates them by concatinating the row/elements of one array with another. The shape of the two arrays have to be the same except in the first dimention. 
+
+The undocumented {\tt reshape} function takes as arguments a comma seperated list of dimentions (surrounded in parentheses) and and array. It then rearanges the shape of the array to the by the list specified. \\
 
 The aim of Futhark is to be an attractive choice for expressing complex parallel programs.
 This goal is pursued by featuring high expressive power without
@@ -631,6 +645,8 @@ For example an each operation on an array of rank 2 will look like:
 \begin{lstlisting}[numbers=none,frame=none]
 each(f,a)       =>      map(fn x => map (f,x), a)
 \end{lstlisting}
+
+
 \paragraph{The reduce operator} 
 The type of the {\tt reduce} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
 The {\tt reduce} function in TAIL uses an associative binary operator to reduce an array of rank
@@ -644,11 +660,15 @@ For example reducing an array of rank 2 emits the following code:
 \begin{lstlisting}[numbers=none,frame=none]
 reduce(+,a)     =>      map(fn x => _reduce_(+,x), a)
 \end{lstlisting}
+
+
 \paragraph{The zipWith operator}
 The zipWith operator applies a scalar binary operator on pairs of elements from two arrays of the same shape two
 produce a third array of the same shape as the input arrays \cite{ElsmanDybdal:Array:2014}.
  
 To do this in Futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples \cite{TroelsHenriksen}.
+
+
 \paragraph{The reshape operator} 
 %reshape gets as argument the return type.\\
 %It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
@@ -675,8 +695,10 @@ Finally since Funthark is eventually expected to feature polymorphism and a modu
 extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
 
 We have used this approach throughout our compiler, e.g. the take operator is implemented similarly.
+
 \paragraph{The transp operator} 
-There exists a {\tt transpose(a)} function in Futhark and the reason for not using it to implement the TAIL {\tt transp} is that the Futherk {\tt transpose} have as default that it transposes 
+There exists a {\tt transpose(a)} function in Futhark and the reason for not using it to implement the TAIL {\tt transp} is that the Futherk {\tt transpose} have as default that it transposes ?????????????????????????
+transp2: only takes literals in transpose dimentions because that is all futhark exepts in rearrange but transp2 in tail cork in other things however we do not support that so one should be aware of this limitation.
 
 \paragraph{The cat operator} 
 % why the hell don't we use transpose/rearrange to compile cat?!?! does anyone remember the reason
