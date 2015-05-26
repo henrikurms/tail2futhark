@@ -142,7 +142,52 @@ TAIL: https://github.com/melsman/apltail
 
 Futhark: https://github.com/HIPERFIT/futhark
 
+% \section{Outline}
+%The compilation scheme presented later in this section is written in a form of short hand notation to be able to have the entire compilation written in a short and very detailed was that is implem
+
+\subsection{Methods and tools}
+In this paper a compilation scheme done in a form of mathematical shorthand notation is presented. 
+The reason for using this shorthand notation is to be able to express the compilation of the different componants of the compilation seperately and in a very detailed presice manner. 
+The notation should also helpget an overview of entire compilation scheme as well as creating a way of talking about a specific component seperatly. The notation is inspired by smiiar notation used in other projects \cite{TorbenMogensen}\cite{MartinElsmanNotation} to describe compilation schemes but is not build on a spefic standard. \\
+
+The scheme gives a conceptual understanding of the compilation that are not muddled up by specific implementation details. The scheme simply illustrates the consepts of the compilation in a very detailed manner while being implementation independent. It therefore a posibility to use the compilation between TAIL and Futhark that is presented in the compilation scheme to create a different implementation than the one presented in this paper.
+It also enables us to get an idea of the correctness of the compilation simply by looking at the scheme.????????????????????????????\\
+
+Having the compilation scheme has also made the implementation easier because the functionality and overall idea behind the implementation is done and works as an API. Therefore deviding the implementation between more than one prorammer is fairly easy. \\
+
+To keep the implementation scheme simple we have made a small libery of functions ...\\ % explain why this is smart
+
+The implementation done in this project is written in the functional programming language Haskell. The language constructs in Hasell is very smiliar to the notation and functional languages lend themselves to compilers in general because of the easy case constructs and other constructs... REFERENCE!! % hvad ved haskell fik os til at vælge det????
+
+
+\subsection{Limitations of the compilation}
+% it does not work on all tail programs. 
+% 
+
+
+
+\subsection{Report outline}
+The follwing sections of the report is structured as follows. Section \ref{sec:tail} and Section \ref{sec:futhark} introduce the source and the target language. Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the implementation.
+
+
+% into about the skemaet
+% Hvorfor valgte vi at lave skemaet
+%% det er impl uafhængigt
+%% det giver mulighed for at snakke om hver konstruktion enkeltvis
+%% giver mulighed for at vise oversættelsen af hver konstruktion enkeltvis
+%% giver mulighed for at .. korrektheden af oversættelsen uden at behøve at teste - håndkøre
+%% hvad fik vi ud af at lave skemaet. 
+
+% For at holde vores compilation scheme clean har vi valgt at implementere nogle biblioteksfunktioner
+
+% Implementationen er lavet i Haskell da Haskells semantic/syntax er tæt på notationen
+
+% Korektheden af implementationen er testet med et autmated test sweep som kører alle test i en mappe igennem og sammenligner outputtet fra compilationen med outputtet i en specifik output fil der indeholder det forventede resultat.
+
+% Benchmarks...
+
 \section{The intermidiate language TAIL}
+\label{sec:tail}
 
 The syntax of the types in TAIL can be seen below. The types are divided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables respectively.
 \begin{lstlisting}[numbers=none,frame=none]
@@ -294,6 +339,7 @@ TAIL does not support curried functions but require functions to be fully applie
 \newpage
 
 \section{The functional language Futhark}
+\label{sec:futhark}
 
 In this section we give a short introduction to the Futhark language, we will only cover the parts that are necessary to understand
 the reasoning behind our compilation approach. For the full language reference please refer to (ref).
@@ -439,9 +485,26 @@ depend upon even though it does make optimization more difficult \cite{TroelsHen
 
 %Does not support polymorfism in types
 
-\section{The compilation scheme}
-There main contribution with this paper is the compilation scheme presented in this section. It shows in details a possible  compilation of a subset of TAIL's operators to Futhark source code. The compilation scheme is done in a short hand notation to enable easy redability while still contaning a very high level of detail. The general strategy behind the compilation is explained in this section and a walk through of the compilation of some of the more interesting operators or expressions of TAIL is described in detail. \\
+\section{The compilation strategy}
+The general stragegy for compiling TAIIL expressions was to use as many of the built-in functions in Futhark to express them as possible and then rely on Futharks havy optimization on its built-in functions to remove any overhead that the compilation from TAIL to Futhark could have created as focusing on optimizing the code was not part of this project. \\
+ %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
+In the cases where it was not posible to use built-in Futhark functions libery functions was created instead. 
+There are several reasons for making libary functions. One was to keep our compilation scheme simple. By haveing a  small library of Furhark functions which is inlined in each compiled program we... % ja hvad får vi egentlig ud af det??? :)
+
+Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.\\
+
+% Er der flere fordele ved biblioteksfunktionerne??
+% Hvad er det negative ved biblioteksfuntionerne
+% Hvad var alternativet 
+
+\section{Libery functions}
+
+% definition of each of the libery functions
+
+\section{The compilation scheme}
+\label{sec:scheme}
+There main contribution with this paper is the compilation scheme presented in this section. It shows in details a possible  compilation of a subset of TAIL's operators to Futhark source code. The compilation scheme is done in a short hand notation to enable easy redability while still contaning a very high level of detail. The general strategy behind the compilation is explained in this section and a walk through of the compilation of some of the more interesting operators or expressions of TAIL is described in detail. \\
 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
@@ -457,8 +520,6 @@ There main contribution with this paper is the compilation scheme presented in t
 %% inlined libery functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose liberyfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-
-
 
 \begin{tabular}{l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -562,11 +623,6 @@ nandb, norb, neqi, neqd
 \end{tabu}
 
 \subsection{The notation}
-The scheme is expressed in a type of notation that uses a lot of short hand in order to be able to express the compilation of the different TAIL expressions in a consise manner. This short hand notation should help the reader of the scheme to be able to easily get an overview of the compilation while still keeping a high level of detail in the compilation scheme. 
-The scheme also present a way to present the idea behind the compilation that is implementation independent.\\
-
-The notation is inspired by smiiar notation used in other projects \cite{TorbenMogensen}\cite{MartinElsmanNotation} to describe compilation schemes but is not build on a spefic standard. \\
-
 To denote the compilation of an TAIL expression is a pair of double brackets $\evals{ \; }$. 
 In the compilation scheme all the expressions written on the left hand side of the scheme (to the left of the equel sign) is the TAIL expressions to be compiled, the right hand side contains the Futhark functions or expressions they are translated to. An exception to this is expressions that is wrapped in double brackets.
 An expression wrapped in double brackets e.g. $\evals{x}$ signifies the compilation of the TAIL expression $x$ no matter what side of the equal sign it is on.\\
@@ -581,15 +637,7 @@ but the type information exist as part of the function that calls the internal f
 
 In the compilation scheme the compilation declarations can be one of three different types. The three types can be destingused by the subtext following the declaration.  Expressions have no subtext, operators are indicated with the subtext $_{op}$ or $_{fun}$ depending on the number of arguments, and kernels are specified with the subtext $_{fn}$. The reason for the distinction is that a TAIL operator can be expressed as either a Futhark binary operator if the expression only takes two arguments and are one of the known operators that can be found in the $binops$ set or a Futhark function. \\
 
-\subsection{The compilation strategy}
-The general stragegy for compiling TAIIL expressions was to use as many of the built-in functions in Futhark to express them as possible and then rely on Futharks havy optimization to remove %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
-In the cases where it was imposible to use built-in Futhark 
-
-\paragraph{Libary functions}
-To keep our compilation scheme simple we have implmemented a small library of Furhark functions which is inlined
-in each compiled program. Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in
-SOAC applications.\\
 
 mappings of functions here!! (and list identitiy mappings)\\
 \begin{tabular}{l c l}
@@ -745,12 +793,8 @@ Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Fu
 \paragraph{Lambda expressions} 
 % There is more.... than one lambda compilation/translation
 
-
-\section{Limitations of the compilation}
-% it does not work on all tail programs. 
-% 
-
 \section{Implementation}
+\label{sec:impl}
 In this section a Haskell implementation of the compilation scheme is presented. This compiler is devided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
 
 \subsection{The parser}
@@ -788,6 +832,7 @@ We have not testet for or taken into account the possibility of TAIL code that a
 Because of the importance of the multidimentional arrays for the language we have testet each function on input of 1 dimention and input of at least 2 dimentions. 
 
 \section{Benchmarks}
+\label{sec:benchmarks}
 We have used benchmarks to mesure preformance of the generated Futhark code by comparing it with the TAIL code.
 Because no parallel backend are finished for either TAIL or Futhark we use a sequential backend for both languages. \\
 
@@ -828,6 +873,10 @@ The result of that is...
 % Polymorphism could have been nice
 % How could we have tested more throughly
 % ...
+
+\subsection{Polymophism}
+\subsection{Methods}
+\subsection{Limitations}
 
 \section{Conclusion}
 
