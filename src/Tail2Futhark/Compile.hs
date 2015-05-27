@@ -7,6 +7,14 @@ import Data.Maybe
 import Data.Char
 import Options (Options(..))
 
+--------------------------
+-- THE MAIN FUNCTION --
+--------------------------
+
+compile :: Options -> T.Program -> F.Program
+compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
+  where includes = (if includeLibs opts then builtins else [])
+
 ----------------------------------------
 -- AUX FUNCTIONS OF LIBRARY FUNCTIONS --
 ----------------------------------------
@@ -266,14 +274,6 @@ takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp)))
 -- create a list of drop functions for all basic types that work on one dim. arrays --
 dropFuns :: [F.FunDecl]
 dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody tp)) btypes
-
---------------------------
--- THE MAIN FUNCTION --
---------------------------
-
-compile :: Options -> T.Program -> F.Program
-compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
-  where includes = (if includeLibs opts then builtins else [])
 
 -----------------
 -- EXPRESSIONS --

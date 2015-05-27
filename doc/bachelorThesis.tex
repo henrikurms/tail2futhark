@@ -117,14 +117,14 @@ However as the functionality of these functions are not completely
 identical the work lies in creating a mapping that retains the parallelism in the original code in the target language.\\
 This can be seen in the example below which illustrate this difference. The reduce function in the
 TAIL language is mapped to a nested reduce function in the Futhark language.
-As some function names exists in both languages the Futhark version of such occurrences are \underline{underlined}.
+As some function names exists in both languages the Futhark version is \underline{underlined}.
 
 \begin{lstlisting}[numbers=none,frame=none]
-reduce(+, [[1,2,3,4],[5,6,7,8]]))
+$\text{reduce}$(+, [[1,2,3,4],[5,6,7,8]]))
 
   =>
 
-_reduce_(fn x => map(+,x),[[1,2,3,4],[5,6,7,8,]])
+$\underline{\text{reduce}}$(fn x => map(+,x),[[1,2,3,4],[5,6,7,8,]])
 
 \end{lstlisting}
 
