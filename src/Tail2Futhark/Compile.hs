@@ -2,15 +2,14 @@ module Tail2Futhark.Compile (compile) where
 
 import APLAcc.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
---import GHC.Float (double2Float)
 import Data.List
 import Data.Maybe
 import Data.Char
 import Options (Options(..))
 
----------------------------------------
--- AUX FUNCTIONS OF LIBERY FUNCTIONS --
----------------------------------------
+----------------------------------------
+-- AUX FUNCTIONS OF LIBRARY FUNCTIONS --
+----------------------------------------
 
 absFloatExp :: F.Exp -> F.Exp
 absFloatExp e = IfThenElse Inline (BinApp LessEq e (Constant (Real 0))) (F.Neg e) e
@@ -204,10 +203,6 @@ builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xo
         ++ takeFuns
         ++ dropFuns
 
--------------------------------
--- IMPL OF LIBRARY FUNCTIONS --
--------------------------------
-
 boolToInt :: FunDecl
 boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0)))
 
@@ -280,6 +275,10 @@ compile :: Options -> T.Program -> F.Program
 compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
   where includes = (if includeLibs opts then builtins else [])
 
+-----------------
+-- EXPRESSIONS --
+-----------------
+
 -- general expressions --
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) | ident == "pi" = Constant(Real 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
@@ -294,7 +293,7 @@ compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
 
--- Op expressions --
+-- operators --
 compileOpExp :: [Char] -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
@@ -334,72 +333,6 @@ compileOpExp ident instDecl args = case ident of
     | ident `elem` idFuns
     -> F.FunCall ident $ map compileExp args
     | otherwise       -> error $ ident ++ " not supported"
-
--- Op's that are 1:1  --
-idFuns = ["negi",
-          "negd",
-          "absi",
-          "absd",
-          "mini",
-          "mind",
-          "signd",
-          "signi",
-          "maxi",
-          "maxd",
-          "eqb",
-          "xorb",
-          "nandb", 
-          "norb",
-          "neqi",
-          "neqd"]
-
--- Op's that are
-convertFun fun = case fun of
-  "i2d"    -> Just "toFloat"
-  "catV"   -> Just "concat"
-  "b2i"    -> Just "boolToInt"
-  "b2iV"   -> Just "boolToInt"
-  "ln"     -> Just "log"
-  "expd"   -> Just "exp"
-  "notb"   -> Just "!"
-  _     -> Nothing
-
-
--- Binary op's --
-convertBinOp op = case op of
-  "addi" -> Just F.Plus
-  "addd" -> Just F.Plus
-  "subi" -> Just F.Minus
-  "subd" -> Just F.Minus
-  "muli" -> Just F.Mult
-  "muld" -> Just F.Mult
-  "ltei" -> Just F.LessEq
-  "lted" -> Just F.LessEq
-  "eqi"  -> Just F.Eq
-  "eqd"  -> Just F.Eq
-  "gti"  -> Just F.Greater
-  "gtd"  -> Just F.Greater
-  "gtei" -> Just F.GreaterEq
-  "gted" -> Just F.GreaterEq
-  "andb" -> Just F.LogicAnd
-  "orb"  -> Just F.LogicOr
-  "divi" -> Just F.Div
-  "divd" -> Just F.Div
-  "powd" -> Just F.Pow
-  "powi" -> Just F.Pow
-  "lti"  -> Just F.Less
-  "ltd"  -> Just F.Less
-  "andi" -> Just F.And
-  "andd" -> Just F.And
-  "ori"  -> Just F.Or
-  "shli" -> Just F.Shl
-  "shri" -> Just F.Shr
-  _      -> Nothing
-
-
---------------------------------
--- IMPL OF BUILT-IN FUNCTIONS --
---------------------------------
 
 -- snocV --
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -541,6 +474,7 @@ compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
+-- each --
 compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEach (Just ([intp,outtp],[rank])) [kernel,array] = makeEach intp outtp rank kernel (compileExp array) 
   where makeEach tp1 tp2 r kernel array
@@ -548,7 +482,6 @@ compileEach (Just ([intp,outtp],[rank])) [kernel,array] = makeEach intp outtp ra
           | otherwise = Map (F.Fn (mkType (tp2,r-1)) [(mkType (tp1,r-1),"x")] (makeEach tp1 tp2 (r-1) kernel (F.Var "x"))) array
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
-
 
 -- zipWith --
 compileZipWith :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -573,5 +506,69 @@ compileReduce (Just ([tp],[rank]))[kernel,id,array] = makeReduce tp rank kernelE
     | rank == 0 = Reduce kernel idExp arrayExp
     | otherwise = Map (F.Fn (mkType(tp,rank-1)) [(mkType(tp,rank),"x")] (makeReduce tp (rank-1) kernel idExp (F.Var "x"))) arrayExp
 compileReduce _ _ = error "reduce needs 3 arguments"
+
+
+-- operators that are 1:1  --
+-- (library functions) --
+idFuns = ["negi",
+          "negd",
+          "absi",
+          "absd",
+          "mini",
+          "mind",
+          "signd",
+          "signi",
+          "maxi",
+          "maxd",
+          "eqb",
+          "xorb",
+          "nandb", 
+          "norb",
+          "neqi",
+          "neqd"]
+
+-- operators that are 1:1 with Futhark functions -- 
+convertFun fun = case fun of
+  "i2d"    -> Just "toFloat"
+  "catV"   -> Just "concat"
+  "b2i"    -> Just "boolToInt"
+  "b2iV"   -> Just "boolToInt"
+  "ln"     -> Just "log"
+  "expd"   -> Just "exp"
+  "notb"   -> Just "!"
+  _     -> Nothing
+
+
+-- binary operators --
+convertBinOp op = case op of
+  "addi" -> Just F.Plus
+  "addd" -> Just F.Plus
+  "subi" -> Just F.Minus
+  "subd" -> Just F.Minus
+  "muli" -> Just F.Mult
+  "muld" -> Just F.Mult
+  "ltei" -> Just F.LessEq
+  "lted" -> Just F.LessEq
+  "eqi"  -> Just F.Eq
+  "eqd"  -> Just F.Eq
+  "gti"  -> Just F.Greater
+  "gtd"  -> Just F.Greater
+  "gtei" -> Just F.GreaterEq
+  "gted" -> Just F.GreaterEq
+  "andb" -> Just F.LogicAnd
+  "orb"  -> Just F.LogicOr
+  "divi" -> Just F.Div
+  "divd" -> Just F.Div
+  "powd" -> Just F.Pow
+  "powi" -> Just F.Pow
+  "lti"  -> Just F.Less
+  "ltd"  -> Just F.Less
+  "andi" -> Just F.And
+  "andd" -> Just F.And
+  "ori"  -> Just F.Or
+  "shli" -> Just F.Shl
+  "shri" -> Just F.Shr
+  _      -> Nothing
+
 
 
