@@ -12,7 +12,13 @@
 
 \lstset{
   mathescape,
-  moredelim=[is][\underbar]{_}{_}
+  %moredelim=[is][\underbar]{_}{_}
+}
+
+\lstdefinelanguage{Futhark}{
+  keywords={fun,int,if,then,else,let,in},
+  keywordstyle=\color{blue!40!black}\bfseries,
+  identifierstyle=\color{green!40!black},
 }
 
 \definecolor{Background}{rgb}{0.98,0.98,0.98}
@@ -155,7 +161,15 @@ It also enables us to get an idea of the correctness of the compilation simply b
 
 Having the compilation scheme has also made the implementation easier because the functionality and overall idea behind the implementation is done and works as an API. Therefore deviding the implementation between more than one prorammer is fairly easy. \\
 
-To keep the implementation scheme simple we have made a small libery of functions ...\\ % explain why this is smart
+To keep the implementation scheme simple we have made a small library of functions ...\\ % explain why this is smart
+There is a choice to be made about how to generate and include the library.
+We would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to
+be able to include the library in the output when we run the compiler.
+Furthermore since Futhark has no polymorphism we would like to be able to
+generate functions with the same implementations but different types from a template.
+That way we can be sure the different versions have the same implementation.
+Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
+extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
 
 The implementation done in this project is written in the functional programming language Haskell. The language constructs in Hasell is very smiliar to the notation and functional languages lend themselves to compilers in general because of the easy case constructs and other constructs... REFERENCE!! % hvad ved haskell fik os til at vælge det????
 
@@ -482,38 +496,68 @@ depend upon even though it does make optimization more difficult \cite{TroelsHen
 %Does not support polymorfism in types
 
 \section{The compilation strategy}
-The general stragegy for compiling TAIIL expressions was to use as many of the built-in functions in Futhark to express them as possible and then rely on Futharks havy optimization on its built-in functions to remove any overhead that the compilation from TAIL to Futhark could have created as focusing on optimizing the code was not part of this project. \\
+Where possible, TAIL privimitives have mapped directly to their corresponding versions in the Futhark language.
+Where direct translation is not possible the approach has been to ?? and generate code to bridge the gap.
+
+%map -> map
+% use map
+% don't use loops
+% no optimizations (rely of futhark optmizations)
+% library functions to simplify compilation
+
+%The first case is for example seen in the compilation of let-expressions and many of the basic scalar operators (e.g. plus).
+%The second case is seen in for example the compilation of the iota operator.
+
+The general strategy for compiling TAIL expressions
+was to use as many of the built-in functions in Futhark to express them as possible
+and then rely on Futharks havy optimization on its built-in functions to remove any overhead that the compilation from TAIL to Futhark could have created
+as focusing on optimizing the code was not part of this project. \\
  %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
-In the cases where it was not posible to use built-in Futhark functions libery functions was created instead. 
-There are several reasons for making libary functions. One was to keep our compilation scheme simple. By haveing a  small library of Furhark functions which is inlined in each compiled program we... % ja hvad får vi egentlig ud af det??? :)
+In the cases where it was not posible to use built-in Futhark functions library functions was created instead. 
+%There are several reasons for making libary functions. One was to keep our compilation scheme simple.
+%By having a small library of Furhark functions which is inlined in each compiled program we... % ja hvad får vi egentlig ud af det??? :)
 
 Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.\\
-
-To keep the implementation simple we generate code that calls generated library functions written in Futhark which do most of the work.
-Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
-for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
-rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
-
-We have to decide where to put the library functions.
-We would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to
-be able to include the library in the output when we run the compiler.
-Furthermore since Futhark has no polymorphism we have to include versions of all types, but we would like to only maintain one version.
-Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
-extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
 
 % Er der flere fordele ved biblioteksfunktionerne??
 % Hvad er det negative ved biblioteksfuntionerne
 % Hvad var alternativet 
 
-\section{Libery functions}
-In this section we go over some of the libery functions we have defined and discuss their usefulness.\\
+\section{Library functions}
+In this section we go over some of the library functions we have defined and discuss their usefulness.\\
 
 \paragraph{The take functions}
+
+We have defined four take functions (one of each base type) that are generated from a template. Below
+is the int version
+\begin{lstlisting}[language=Futhark]
+fun [int] take1_int(int l,[int] x) =
+  if (0 <= l)
+  then if (l <= size(0,x))
+       then let {v1,_} = split((l),x) in v1
+       else concat(x,replicate((l - size(0,x)),0))
+  else if (0 <= (l + size(0,x)))
+       then let {_,v2} = split(((l + size(0,x))),x) in v2
+       else concat(replicate((l - size(0,x)),0),x)
+\end{lstlisting}
 
 \paragraph{The drop functions}
 
 \paragraph{The reshape functions}
+
+We have defined four reshape functions (one for each base type) that are generated from a template.
+These functions inplement the the TAIL operator reshape in the 1-dimensional case and we will se later
+that they can be used to implement the multi-dimensional case.
+This is advantageous as we would otherwise need a separate library function for each
+rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
+
+To adjust the array we first make sure it is long enough by extending it using the function replicate and then
+truncate it to the correct length with split.
+
+%Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
+%for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
+%rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 
 \paragraph{Bool equality}
 
@@ -523,7 +567,7 @@ There are more than the above mentioned but these are implemented very straight 
 
 Liste af resten af biblioteksfunktionerne
 
-% definition of each of the libery functions
+% definition of each of the library functions
 
 \section{The compilation scheme}
 \label{sec:scheme}
@@ -540,8 +584,8 @@ There main contribution with this paper is the compilation scheme presented in t
 %% how is the types represented og hvad betydning har de
 % Explain the general idea behind the compilation
 %% try to use futhark functions whenever posible.
-%% inlined libery functions to deal with cases where no futhark function existed or polymorphism was required
-%%% explain WHY we chose liberyfunctions and what the alternative was. 
+%% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
+%%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
 
 \begin{tabular}{l c l}% to \linewidth {l c X}
@@ -768,15 +812,15 @@ To do this in Futhark we use the zip function to convert two arrays to an array 
 %It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
 The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
 array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
-
 Futhark has a reshape function that only works for arrays of the correct dimensions \cite{TroelsHenriksen}.
 
-Our general strategy for compiling reshape is to first ensure that the array is the correct size and then use the Futhark reshape
-function to do the final step. To adjust the size we operate on the flat representation of the array, this is easy to produce also
-using Futhark reshape. To adjust the array we first make sure it is long enough by extending it using the function replicate and then
-truncate it to the correct length with split.
+To actually change the rank of the array we first ensure that the array is the correct size and then use the Futhark reshape
+function to do the final step.
 
+To adjust the size we operate on the flat representation of the array, this is easy to produce using Futhark reshape.
 
+To adjust the size of the array we use the previously defined library function {\tt reshap1}. Actually we use the variant with
+the correct type, this type is conveniently available in the instance list.
 
 We have used this approach throughout our compiler, e.g. the take operator is implemented similarly.
 
@@ -881,8 +925,8 @@ The result of that is...
 
 \section{Discussion}
 % Methods used
-% Libery functions
-%% behrænsning kunne have været hvis vi havde valgt at implementere faste liberyfunctions en for hver rank og type. 
+% Library functions
+%% behrænsning kunne have været hvis vi havde valgt at implementere faste libraryfunctions en for hver rank og type. 
 % Polymorphism could have been nice
 % How could we have tested more throughly
 % ...
