@@ -12,8 +12,17 @@ import Options (Options(..))
 --------------------------
 
 compile :: Options -> T.Program -> F.Program
-compile opts e = includes ++ [(RealT, "main", [], (compileExp e))]
+compile opts e = includes ++ [(RealT, "main", signature, compileExp rootExp)]
   where includes = (if includeLibs opts then builtins else [])
+        (signature, rootExp) = compileReads e
+
+-------------------------
+-- HELPER FUNCTIONS --
+-------------------------
+
+compileReads (T.Let id  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ id):sig,e')
+  where (sig,e') = compileReads e2
+compileReads e = ([],e)
 
 ----------------------------------------
 -- AUX FUNCTIONS OF LIBRARY FUNCTIONS --
@@ -64,8 +73,9 @@ extendBody = F.FunCall2 "reshape" [BinApp Mult size length] (F.FunCall "replicat
 -- reshape1 --
 -- create split part of reshape1 function -- 
 mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
-takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
-reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
+--takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
+--reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
+reshape1Body tp = mkSplit "v1" "_" (F.Var "l") (F.FunCall extend [F.Var "l",F.Var "x"]) (F.Var "v1")
   where name = "takeLess_" ++ showTp tp
         extend = "extend_" ++ showTp tp
 
@@ -95,7 +105,7 @@ takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate" [(BinApp Minus len size), padElement]
-          posTake = IfThenElse Indent (len `less` size) takeLessBody padRight
+          posTake = IfThenElse Indent (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse Indent (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
 
 
@@ -277,7 +287,7 @@ resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Va
 -- create a list of reshape functions for all basic types that work on one dim. arrays --
 reshapeFuns :: [FunDecl]
 reshapeFuns = let
-  reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("takeLess", takeLessBody),("reshape1",reshape1Body tp),("extend",extendBody)]
+  reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("reshape1",reshape1Body tp),("extend",extendBody)]
   in concat $ map reshapeFuns btypes
 
 -- take1 --
