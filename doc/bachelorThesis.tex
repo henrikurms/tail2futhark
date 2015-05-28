@@ -531,14 +531,11 @@ Many of the monomorphic first-order functions of TAIL are mapped directly to a l
 \section{Library functions}
 In this section we go over some of the library functions we have defined and discuss their usefulness.\\
 
-The take1, drop1 and reshape1 functions implement the TAIL operators take, drop and reshape in the 1-dimensional case.
-We will see later that they can be used to implement the multi-dimensional cases,
-this is advantageous as we would otherwise need a separate library function for each
+The {\tt take1}, {\tt drop1} and {\tt reshape1} functions implement the TAIL operators {\tt take}, {\tt drop} and {\tt reshape} in the one-dimensional case. In Section \ref{sec:scheme}, we see how they can be used to implement the multi-dimensional cases. The reason it is advantageous to use a libery function for only the one-dimentional part is that we would otherwise need a separate library function for each 
 rank and basic type combination which we needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
-\paragraph{The take functions}
+There is a template for each of the functions that make four functions (one for each base type). This way we can be sure to have the same function for each type and it makes maintaning the functions easier. 
 
-We have defined four take functions (one of each base type) that are generated from a template.
-Below is the int version
+\paragraph{The take1 functions} is defined as follow. Note that this int version.
 \begin{lstlisting}[language=Futhark]
 fun [int] take1_int(int l,[int] x) =
   if (0 <= l)
@@ -555,7 +552,7 @@ part of the argument or pad the argument with zeros based on whether the take si
 
 %TODO what details are we missing?
 %TODO discuss how it knows what to pad with
-\paragraph{The drop functions}
+\paragraph{The drop1 functions}
 
 \begin{lstlisting}[language=Futhark]
 fun [int] drop1_int(int l,[int] x) =
@@ -566,9 +563,7 @@ fun [int] drop1_int(int l,[int] x) =
        else let {_,v2} = split((l),x) in v2
 \end{lstlisting}
 
-\paragraph{The reshape functions}
-
-We have defined four reshape functions (one for each base type) that are generated from a template.
+\paragraph{The reshape functions} int version can be seen below. 
 
 To adjust the array we first make sure it is long enough by extending it using the function replicate and then
 truncate it to the correct length with split.
