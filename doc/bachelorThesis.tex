@@ -175,12 +175,14 @@ The implementation done in this project is written in the functional programming
 
 Cabal is used for !!!!!!!!!!!!!!!!!!!!!!\\
 
+The parser we used for this project 
+
 
 \subsection{Limitations of the compilation}
 % it does not work on all tail programs. 
 % 
 
-\subsection{Report outline}
+\subsection{Report outline IKKE FAERDIGT!!!}
 The follwing sections of the report is structured as follows. Section \ref{sec:tail} and Section \ref{sec:futhark} introduce the source and the target language. Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the implementation.
 
 
@@ -873,22 +875,32 @@ The parser is located at the following path in the project:
 The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
-The compiler is as mentioned written in Haskell and is placed in \verb|{tail2Futhark/src/|
-\verb|Tail2Futhark/Compile.hs|. The implementation is very close to the conceptual compilation presented in Section \ref{sec:scheme}.
+The main part of the compiler is placed in {\tt tail2futhark/src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The Futhark AST is placed in {\tt tail2futhark/src/Tail2Futhark/Futhark/AST.hs}.
+
+The implementation of the compiler is very close to the compilation presented in the compilation scheme in Section  \ref{sec:scheme}. 
+
+% friske navne - impl detalje - 
+% indput fra fil / standard
+% 
 
 The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
 
+\subsection{Pretty print}
+The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
+Tail2Futhark/Futhark/Pretty.hs}. 
+The pretty printer takes a Futhark AST and transforms the abstract representation of the componants of the AST to correct Futhark source code. 
+
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
-framework, the other is to test the efficiency of the generated test in form of benchmarks. 
+framework that will be descussed here. The otheris is to test the efficiency of the generated code in form of benchmarks and will be descussed in Section \ref{sec:benchmarks}. \\
 
-\subsubsection{Automated testframework}
-We assume that the compiler producing TAIL code from APL programs returns the correct result. We have therefore used this result to compare our own test results to.\\
+
+We assume that the compiler producing TAIL code from APL programs returns the correct result. We therefore use the results from running the {\tt apltail} compiler on APL prigrams to compare our own test results to. All tests are originaly written in APL code. Then the {\tt apltail} compiler was used to generate TAIL programs. We did this to ensure that the programs we testet up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as
 
 The test framework is made using Cabal \cite{cabal} for manageing external libraries,  Tasty  \cite{tasty}, Tasty-Goldern \cite{tasty-golden}  .. \\
 
 For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to
-do in Haskell projects and should make it easy for anyone to build our code.
+do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
 We use the tasty package \cite{tasty} which provides a test framework that we use to implement our tests. Furthermore we have used the
 package tasty-golden \cite{tasty-golden} which is a plug-in for the tasty framework that allows to test against "golden" files.
 A lot of projects implement their own test frameworks and we could have done the same.
