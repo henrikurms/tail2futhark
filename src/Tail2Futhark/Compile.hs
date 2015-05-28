@@ -40,13 +40,26 @@ nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2]
 
 norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
 
+resiExp :: F.Exp -> F.Exp -> F.Exp
+resiExp y x = F.IfThenElse F.Indent (y `eq` zero) x $ F.IfThenElse F.Indent cond (x % y) (x % y `plus` y)
+  where cond = ((x % y) `eq` zero) `or` ((x `gr` zero) `and` (y `gr` zero)) `or` ((x `less` zero) `and` (y `less` zero))
+        infix 1 %; (%) = F.BinApp F.Mod
+        zero = Constant (Int 0)
+        plus = F.BinApp F.Plus
+        gr = F.BinApp F.Greater
+        less = F.BinApp F.Less
+        eq = F.BinApp F.Eq
+        or = F.BinApp F.LogicOr
+        and = F.BinApp F.LogicAnd
+
 -- reshape1 --
 -- create extend part of reshape1 function --
 extendBody = F.FunCall2 "reshape" [BinApp Mult size length] (F.FunCall "replicate" [length,F.Var "x"])
-  where length = (F.Var "l" `fdiv` size) `fplus` Constant (Int 1)
+  where length = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
         size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
         fdiv = BinApp Div
         fplus = BinApp Plus
+        fminus = BinApp Minus
 
 -- reshape1 --
 -- create split part of reshape1 function -- 
@@ -206,7 +219,7 @@ compileTp (S bt _) = makeBTp bt
 
 -- list containing ompl of all library functions -- 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xorb,nandb,norb,neqi,neqd]
+builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xorb,nandb,norb,neqi,neqd,resi]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -257,6 +270,8 @@ neqi = (F.BoolT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Va
 neqd = (F.BoolT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
 
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
+
+resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Var "y"))
 
 -- reshape1 --
 -- create a list of reshape functions for all basic types that work on one dim. arrays --
@@ -525,7 +540,9 @@ idFuns = ["negi",
           "nandb", 
           "norb",
           "neqi",
-          "neqd"]
+          "neqd",
+          "resi",
+          "readIntVecFile"]
 
 -- operators that are 1:1 with Futhark functions -- 
 convertFun fun = case fun of
@@ -536,7 +553,8 @@ convertFun fun = case fun of
   "ln"     -> Just "log"
   "expd"   -> Just "exp"
   "notb"   -> Just "!"
-  _     -> Nothing
+  _         | fun `elem` idFuns -> Just fun
+            | otherwise -> Nothing
 
 
 -- binary operators --
