@@ -171,7 +171,9 @@ That way we can be sure the different versions have the same implementation.
 Finally since Funthark is eventually expected to feature polymorphism and a module system we would like the solution to not be too
 extensive\cite{TroelsHenriksen}. Therefore we have coded the functions in the compiler itself.
 
-The implementation done in this project is written in the functional programming language Haskell. The language constructs in Hasell is very smiliar to the notation and functional languages lend themselves to compilers in general because of the easy case constructs and other constructs... REFERENCE!! % hvad ved haskell fik os til at vælge det????
+The implementation done in this project is written in the functional programming language Haskell. The language constructs in Hasell is very smiliar to the notation and functional languages lend themselves to compilers in general because of the easy case constructs and other constructs... REFERENCE!! \\% hvad ved haskell fik os til at vælge det????
+
+Cabal is used for !!!!!!!!!!!!!!!!!!!!!!\\
 
 
 \subsection{Limitations of the compilation}
@@ -859,34 +861,68 @@ In this section a Haskell implementation of the compilation scheme is presented.
 %The parser that we make use of was created in a precious project \cite{APLACC}.
 The parser used in this project was made previusly in another project \cite{APLACC} and therefore not a main part of this project. Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. \\
 
-Bellow can be found a walk-through of the updates done in this project to the parser: \\
+We had to extend the abstarct syntax three to include bools and chars. 
+We changes type constructors from previusly ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank
+to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank. 
+This meant updating the parser to read angles ([]).
 
-\subsection{The Tail2Futhark compiler}
+The parser is located at the following path in the project: 
+
+/tail2futhark/aplacc
+
+The updated code for the compiler can be found in Appendix \ref{app:parser}.
+
+\subsection{The compiler}
+The compiler is as mentioned written in Haskell and is placed in \verb|{tail2Futhark/src/|
+\verb|Tail2Futhark/Compile.hs|. The implementation is very close to the conceptual compilation presented in Section \ref{sec:scheme}.
+
+The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
 
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
 framework, the other is to test the efficiency of the generated test in form of benchmarks. 
 
 \subsubsection{Automated testframework}
-In order to test the correctness of the the generated code we have set up a test using the Cabal framework to make automatet tests that take the TAIL code though the tail2futhark compiler and the Futhark compiler and compair the result from the Futhark compiler with a premade result file containing the correct result. The automated test made it possible to run all tests whenever we did an alteration to the compiler. 
-Running the tests every time we made an alteration enabled us to check if the new alteration had created a problem with the work we had allredy done. \\
+We assume that the compiler producing TAIL code from APL programs returns the correct result. We have therefore used this result to compare our own test results to.\\
 
-We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2futhark} project. \\
+The test framework is made using Cabal \cite{cabal} for manageing external libraries,  Tasty  \cite{tasty}, Tasty-Goldern \cite{tasty-golden}  .. \\
 
-%We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
-To test that our implementation of the TAIL functions work correctly we have created test to see if the function:
+For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to
+do in Haskell projects and should make it easy for anyone to build our code.
+We use the tasty package \cite{tasty} which provides a test framework that we use to implement our tests. Furthermore we have used the
+package tasty-golden \cite{tasty-golden} which is a plug-in for the tasty framework that allows to test against "golden" files.
+A lot of projects implement their own test frameworks and we could have done the same.
+We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
+test framework which could prove time consuming.
+
+The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. \\
+Whenever a function was implemented during the development process test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
+We also added a number of more throrough tests at the end of the project in order to see if the function:
+
 \begin{itemize}
-\item works on different data types
+\item works on different data types (both base types and rank)
 \item work on edgecases
 \item works on positive and negative input
 \item function correct in all branches in if-then-else expressions
 \end{itemize}
 In order to thoroughly test the compiler all functions should be have specific test that test one of each of the above things
-that meaningfully apply to the function. \\
+that meaningfully apply to the function however due to time restrains we have chosen to focus on a smaler subset. \\
+
+Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
+
 
 We have not testet for or taken into account the possibility of TAIL code that are incorrect as it is generated by a compiler and only used as an intermidiate language. 
 
+Based on the results of the test we assume our implementation works as expected on the subset of TAIL we have implemented. 
 Because of the importance of the multidimentional arrays for the language we have testet each function on input of 1 dimention and input of at least 2 dimentions. 
+
+%In order to test the correctness of the the generated code we have set up a test using the Cabal framework to make automatet tests that take the TAIL code though the tail2futhark compiler and the Futhark compiler and compair the result from the Futhark compiler with a premade result file containing the correct result. The automated test made it possible to run all tests whenever we did an alteration to the compiler. 
+%Running the tests every time we made an alteration enabled us to check if the new alteration had created a problem with the work we had allredy done. \\
+
+We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2futhark} project. \\
+
+%We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
+
 
 \section{Benchmarks}
 \label{sec:benchmarks}
@@ -937,9 +973,17 @@ The result of that is...
 
 \section{Conclusion}
 
-
 %%%%% references %%%%%
 \bibliography{references}{} 
 \bibliographystyle{plain}
 
+\appendix
+\section{Parser source code}
+\label{app:parser}
+
+\section{Compiler source code}
+\label{app:compiler}
+
+\section{Pretty printer source code}
+\label{app:pretty}
 \end{document}
