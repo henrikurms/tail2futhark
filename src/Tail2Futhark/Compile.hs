@@ -62,22 +62,21 @@ resiExp y x = F.IfThenElse F.Indent (y `eq` zero) x $ F.IfThenElse F.Indent cond
         and = F.BinApp F.LogicAnd
 
 -- reshape1 --
--- create extend part of reshape1 function --
-extendBody = F.FunCall2 "reshape" [BinApp Mult size length] (F.FunCall "replicate" [length,F.Var "x"])
-  where length = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
+-- create split part of reshape1 function -- 
+mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
+makeLets ((id,exp) : rest) e = F.Let Indent (Ident id) exp (makeLets rest e)
+makeLets [] e = e
+
+reshape1Body :: F.Type -> F.Exp
+reshape1Body tp = makeLets (zip ["roundUp","extend"] [length,reshapeCall]) split 
+  where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
+        length = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
+        reshapeCall = F.FunCall2 "reshape" [BinApp Mult size len] (F.FunCall "replicate" [len,F.Var "x"])
         size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
+        len = F.Var "roundUp"
         fdiv = BinApp Div
         fplus = BinApp Plus
         fminus = BinApp Minus
-
--- reshape1 --
--- create split part of reshape1 function -- 
-mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
---takeLessBody = mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")
---reshape1Body tp = F.FunCall name $ F.Var "l" : F.FunCall extend [F.Var "l",F.Var "x"] : []
-reshape1Body tp = mkSplit "v1" "_" (F.Var "l") (F.FunCall extend [F.Var "l",F.Var "x"]) (F.Var "v1")
-  where name = "takeLess_" ++ showTp tp
-        extend = "extend_" ++ showTp tp
 
 -- drop --
 -- make body for drop1 function --
@@ -167,10 +166,6 @@ getType s
 -- make list of Futhark basic types --
 btypes = map readBType ["int","real","bool","char"]
 
--- AUX: make FunDecl by combining signature and body (aux function that create function body)
-makeFun :: [F.Arg] -> F.Type -> (F.Ident,F.Exp) -> FunDecl
-makeFun args tp (name,body) = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
-
 -- return zero expression of basic type --
 zero :: F.Type -> F.Exp
 zero F.IntT = Constant (Int 0)
@@ -178,14 +173,6 @@ zero F.RealT = Constant (Real 0)
 zero F.BoolT = Constant (Bool False)
 zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
-
--- ??
-reshapeArgs :: F.Type -> [F.Arg]
-reshapeArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
-
--- ??
-isExp :: F.Exp -> F.Exp
-isExp = id
 
 -- ?????
 makeKernel ident
@@ -283,22 +270,21 @@ notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Var "y"))
 
--- reshape1 --
--- create a list of reshape functions for all basic types that work on one dim. arrays --
-reshapeFuns :: [FunDecl]
-reshapeFuns = let
-  reshapeFuns tp = map (makeFun (reshapeArgs tp) tp) [("reshape1",reshape1Body tp),("extend",extendBody)]
-  in concat $ map reshapeFuns btypes
+-- AUX: make FunDecl by combining signature and body (aux function that create function body)
+makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
+makeFun args name body tp = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
+stdArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 
--- take1 --
--- create a list of take functions for all basic types that work on one dim. arrays --
-takeFuns :: [F.FunDecl]
-takeFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("take1",takeBody (zero tp))) btypes
+reshapeFun :: F.Type -> FunDecl
+reshapeFun tp = makeFun (stdArgs tp) "reshape1" (reshape1Body tp) tp
+takeFun :: F.Type -> F.FunDecl
+takeFun tp = makeFun (stdArgs tp) "take1" (takeBody (zero tp)) tp
+dropFun :: F.Type -> F.FunDecl
+dropFun tp = makeFun (stdArgs tp) "drop1" (dropBody tp) tp
 
--- drop1 --
--- create a list of drop functions for all basic types that work on one dim. arrays --
-dropFuns :: [F.FunDecl]
-dropFuns = map (\tp -> makeFun (reshapeArgs tp) tp ("drop1", dropBody tp)) btypes
+reshapeFuns = map reshapeFun btypes
+takeFuns = map takeFun btypes
+dropFuns = map dropFun btypes
 
 -----------------
 -- EXPRESSIONS --
@@ -551,8 +537,7 @@ idFuns = ["negi",
           "norb",
           "neqi",
           "neqd",
-          "resi",
-          "readIntVecFile"]
+          "resi"]
 
 -- operators that are 1:1 with Futhark functions -- 
 convertFun fun = case fun of
