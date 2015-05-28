@@ -1,12 +1,14 @@
+
+linspace ← { ((⍳⍵)-1) ÷ (⍵-1) }
+
 ⍝ Compute pi
-n ← 10000000
-pi ← 4×(+/1>+/(?n 2⍴0)*2)÷n
-err ← | pi - ○ 1
-
-⎕ ← 'Computed pi:'
-⎕ ← pi
-
-⎕ ← 'Error:'
-⎕ ← err
-
-0.001 > err
+m ← 40000
+n ← m×m
+d ← linspace m
+a ← { ⍵ × ⍵ } d
+b ← m m ⍴ a
+y ← +/+/ (1> (b + (⍉ b)))
+pi ← 4×y÷n
+⍝ ⎕ ← pi
+pi
+⍝ 0.1 > | pi - ○ 1

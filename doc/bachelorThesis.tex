@@ -35,7 +35,7 @@
     frame=l,
     tabsize=4,
     % Basic
-    basicstyle=\ttfamily\small\setstretch{1},
+    basicstyle=\ttfamily\footnotesize\setstretch{1},
     backgroundcolor=\color{Background}
 }
 
@@ -531,10 +531,14 @@ Many of the monomorphic first-order functions of TAIL are mapped directly to a l
 \section{Library functions}
 In this section we go over some of the library functions we have defined and discuss their usefulness.\\
 
+The take1, drop1 and reshape1 functions implement the TAIL operators take, drop and reshape in the 1-dimensional case.
+We will see later that they can be used to implement the multi-dimensional cases,
+this is advantageous as we would otherwise need a separate library function for each
+rank and basic type combination which we needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 \paragraph{The take functions}
 
-We have defined four take functions (one of each base type) that are generated from a template. Below
-is the int version
+We have defined four take functions (one of each base type) that are generated from a template.
+Below is the int version
 \begin{lstlisting}[language=Futhark]
 fun [int] take1_int(int l,[int] x) =
   if (0 <= l)
@@ -546,18 +550,40 @@ fun [int] take1_int(int l,[int] x) =
        else concat(replicate((l - size(0,x)),0),x)
 \end{lstlisting}
 
+The function first checks if it should perform a positive of negative take and then checks whether it should split so it can return
+part of the argument or pad the argument with zeros based on whether the take size was smaller or bigger than the array.
+
+%TODO what details are we missing?
+%TODO discuss how it knows what to pad with
 \paragraph{The drop functions}
+
+\begin{lstlisting}[language=Futhark]
+fun [int] drop1_int(int l,[int] x) =
+  if (size(0,x) <= if (l <= 0) then -l else l)
+  then empty(int)
+  else if (l <= 0)
+       then let {v1,_} = split(((l + size(0,x))),x) in v1
+       else let {_,v2} = split((l),x) in v2
+\end{lstlisting}
 
 \paragraph{The reshape functions}
 
 We have defined four reshape functions (one for each base type) that are generated from a template.
-These functions inplement the the TAIL operator reshape in the 1-dimensional case and we will se later
-that they can be used to implement the multi-dimensional case.
-This is advantageous as we would otherwise need a separate library function for each
-rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 
 To adjust the array we first make sure it is long enough by extending it using the function replicate and then
 truncate it to the correct length with split.
+
+\begin{lstlisting}[language=Futhark]
+fun [int] reshape1_int(int l,[int] x) =
+  let roundUp = ((l + (size(0,x) - 1)) / size(0,x)) in
+  let extend = reshape(((size(0,x) * roundUp)),replicate(roundUp,x)) in
+  let {v1,_} = split((l),extend) in v1
+\end{lstlisting}
+
+When we replicate an array in Futhark the rank of the array increases by one so we have to reshape the array back to rank 1 before
+we split it. To number of times we should replicate the array is the target size divided by the array size rounded up.
+This is computed in the variable roundUp, we add denominator plus one to the enumerator to round up as normal integer division
+round down.
 
 %Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
 %for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
@@ -565,7 +591,23 @@ truncate it to the correct length with split.
 
 \paragraph{Bool equality}
 
-\paragraph{Xor}
+Futhark has no bool equality so we implemented our own:
+
+\begin{lstlisting}[language=Futhark]
+fun bool eqb(bool x,bool y) =
+  (!((x || y)) || (x && y))
+\end{lstlisting}
+
+Two booleans are equal if they both are true or none of them are true.
+\paragraph{Xor} Likewise there is no logical xor operation so we included it in the library:
+
+\begin{lstlisting}[language=Futhark]
+fun bool xorb(bool x,bool y) =
+  (!((x && y)) && (x || y))
+\end{lstlisting}
+
+The Xor of two booleans is true if one but not both of them are true.
+\\
 
 There are more than the above mentioned but these are implemented very straight forward and are therefore only mentioned here: \\
 
@@ -591,8 +633,8 @@ There main contribution with this paper is the compilation scheme presented in t
 %% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-
-\begin{tabular}{l c l}% to \linewidth {l c X}
+\begin{flushleft}
+\begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
 $\evals{d}$ & $=$ & $d$ \\
@@ -684,14 +726,14 @@ $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
-\\
-\end{tabular}\\
 
+\end{tabular}
 \begin{tabu} to \linewidth { l X}
 $binops$ =& addi, subi, muli, ...\\
 $funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
 nandb, norb, neqi, neqd
 \end{tabu}
+\end{flushleft}
 
 \subsection{The notation}
 To denote the compilation of an TAIL expression is a pair of double brackets $\evals{ \; }$. 
