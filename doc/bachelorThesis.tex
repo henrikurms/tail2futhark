@@ -333,8 +333,8 @@ Most of the operators in TAIL are very general i.e. they are polymorphic with re
 Although for some operations a specific type is needed.
 An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha^\gamma$.\\
 
- TAILs type system takes the dynamically types of APL and transforms it to a more manageable form adding explicit type
- information to the constructs.
+TAILs type system takes the dynamically types of APL and transforms it to a more manageable form adding explicit type
+information to the constructs.
 Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators which
 are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
 
@@ -347,7 +347,7 @@ the expression, let expressions, operators and lambda expressions.
 %      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
 %\end{lstlisting}
 
-TAIL does not support curried functions but require functions to be fully applied.
+Lambda expressions in TAIL can be curried so they can take multiple arguments.
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
@@ -922,17 +922,17 @@ Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Fu
 
 The higher order operators {\tt each, eachV, reduce, zipWith} all take functions as arguments and these functions are handled by the
 conversion rules marked with the $fn$ subscript. 
-In Futhark lambda expressions need type annotations both for the argument and the return type. This return type is provided by
-the context in which the lambda is used. Namely the type informations is present in the instance lists of the 
-enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}. Arguments are already annotatated with types in TAIL so
-those are simply compiled to Futhark types and passed to the resulting lambda.
-Althougn the syntax of TAIL permits lambda expressions anywhere a regular expression could be used (as long as the type is correct),
-the TAIL compiler will inline all functions bound to variables when compiling form APL. This means that lambda expressions can only occur
-inside of the aforementioned operator call and as such this is the only case we support.
+In Futhark lambda expressions need type annotations both for the argument and the return type.
+This return type is provided by the context in which the lambda is used.
+Namely the type informations is present in the instance lists of the enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}.
+Arguments are already annotatated with types in TAIL so those are simply compiled to Futhark types and passed to the resulting lambda. Althougn the syntax of TAIL permits lambda expressions anywhere a  expression could be used (as long as the type is correct),
+when compiled from APL, lambda expressions will only be present in higher-order operator calls after the compilation, due to inlining.
 
-The only exception to the rule mentioned above is function currying.
+This means that lambda expressions can only occur directly inside of the aforementioned operator call or another lambda.
+
 In TAIL currying is used if lambda expressions are to take more than one argument while Futhark does not support currying but
-spports mulit-argument lambdas instead. Since the highest number of arguments that can be used is two (in {\tt zipWith}) we have
+supports multi-argument lambdas instead.
+Since the highest number of arguments that can be used is two (in {\tt zipWith}) we have
 restricted the compiler to this special case which simplfies the compilation.
 The actual body of the function is compiled using the expression rule.
 If the function argument is an identifier we use the $op$ and $fun$ rules to compile them.
