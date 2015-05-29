@@ -892,14 +892,14 @@ Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Fu
 \paragraph{Lambda expressions} 
 % There is more.... than one lambda compilation/translation
 
-The higher order operators {\tt each, eachV, reduce, zipWith} take functions as arguments and these functions are handled by the
-entries marken with the $fn$ subscript. Lambda expressions with one argument are mapped to the same in Futhark.
+The higher order operators {\tt each, eachV, reduce, zipWith} all take functions as arguments and these functions are handled by the
+conversion rules marked with the $fn$ subscript. 
 In Futhark lambda expressions need type annotations both for the argument and the return type. This return type is provided by
-the context in which the lambda is used. Namely the the type informations is present in the instance lists of the 
+the context in which the lambda is used. Namely the type informations is present in the instance lists of the 
 enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}. Arguments are already annotatated with types in TAIL so
 those are simply compiled to Futhark types and passed to the resulting lambda.
 Althougn the syntax of TAIL permits lambda expressions anywhere a regular expression could be used (as long as the type is correct),
-the TAIL compiler will inline all functions bound to variables when compiling form APL. This means that functions can only occur
+the TAIL compiler will inline all functions bound to variables when compiling form APL. This means that lambda expressions can only occur
 inside of the aforementioned operator call and as such this is the only case we support.
 
 The only exception to the rule mentioned above is function currying.
@@ -908,6 +908,7 @@ spports mulit-argument lambdas instead. Since the highest number of arguments th
 restricted the compiler to this special case which simplfies the compilation.
 The actual body of the function is compiled using the expression rule.
 If the function argument is an identifier we use the $op$ and $fun$ rules to compile them.
+Lambda expressions with one argument are mapped to the same in Futhark.
 %They need return type
 %Curried lambdas are mapped to multi-argument lambdas 
 %We only need two arguments at most
