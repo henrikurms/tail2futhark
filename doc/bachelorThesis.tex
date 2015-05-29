@@ -347,7 +347,7 @@ the expression, let expressions, operators and lambda expressions.
 %      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
 %\end{lstlisting}
 
-TAIL does not support curried functions but require functions to be fully applied.
+TAIL does not support curried functions but require functions to be fully applied. 
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
@@ -729,17 +729,28 @@ $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
 \begin{tabu} to \linewidth { l X}
-$binops$ =& addi, subi, muli, ...\\
+$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
+lti, ltd, andi, andd, ori, shli, shri\\
 $funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
 nandb, norb, neqi, neqd
 \end{tabu}
 \end{flushleft}
 \restoregeometry
 
+The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
+$\evals{catV}_{fun}$ & $=$ & concat\\ 
+$\evals{b2i}_{fun}$ & $=$ & boolToInt\\ 
+$\evals{b2iV}_{fun}$ & $=$ & boolToInt\\ 
+$\evals{ln}_{fun}$ & $=$ & log\\ 
+$\evals{expd}_{fun}$ & $=$ & exp\\ 
+$\evals{notb}_{fun}$ & $=$ & !\\ 
 \end{tabular}\\
 
+idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
+  
+The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
 $\evals{$addd$}_{op}$ & $=$  & $+$   \\ 
