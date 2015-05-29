@@ -17,7 +17,7 @@
 }
 
 \lstdefinelanguage{Futhark}{
-  keywords={fun,int,if,then,else,let,in},
+  keywords={fun,int,bool,char,if,then,else,let,in},
   keywordstyle=\color{blue!40!black}\bfseries,
   identifierstyle=\color{green!40!black},
 }
@@ -513,10 +513,11 @@ Where direct translation is not possible the approach has been to ?? and generat
 %The first case is for example seen in the compilation of let-expressions and many of the basic scalar operators (e.g. plus).
 %The second case is seen in for example the compilation of the iota operator.
 
-The general strategy for compiling TAIL expressions
-was to use as many of the built-in functions in Futhark to express them as possible
-and then rely on Futharks havy optimization on its built-in functions to remove any overhead that the compilation from TAIL to Futhark could have created
-as focusing on optimizing the code was not part of this project. \\
+The general strategy for compiling TAIL expressions was to aim for the simplest conversion and use as much as possible 
+the built-in functions of Futhark to make it easy for the Futhark compiler to optimize away the overhead that the compilation
+from TAIL to Futhark may have created.
+This means we have not directly focused on optimization in the compilation as it was futhermore not in the scope of this project.
+Still we have tried as much as possible to not introduce any unecessary inefficiencies.\\
  %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
 In the cases where it was not posible to use built-in Futhark functions library functions was created instead. 
@@ -613,7 +614,9 @@ Liste af resten af biblioteksfunktionerne
 
 \section{The compilation scheme}
 \label{sec:scheme}
-There main contribution with this paper is the compilation scheme presented in this section. It shows in details a possible  compilation of a subset of TAIL's operators to Futhark source code. The compilation scheme is done in a short hand notation to enable easy redability while still contaning a very high level of detail. The general strategy behind the compilation is explained in this section and a walk through of the compilation of some of the more interesting operators or expressions of TAIL is described in detail. \\
+There main contribution with this paper is the compilation scheme presented in this section.
+It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
+The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen on the next page.\\
 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
@@ -700,11 +703,12 @@ $\evals{\text{drop}(i,a)}$ & $=$ & \text{reshape}(\text{oshape}, $\text{drop1}_{
 
 $\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
 
-$\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,...,0),\evals{a})$\\
+$\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,\cdots,0),\evals{a})$\\
 
-$\evals{\text{transp2}_{t,r}(a_1,a_2)}$ & $=$ & let $x$ = $\evals{a_1}$ in rearrange(($x[0]$-$1,\ldots,x[r$-$1]$-$1$),$\evals{a_2})$\\
+$\evals{\text{transp2}_{t,r}([a_1,\cdots,a_n],b)}$ & $=$ & rearrange(($\evals{a_1 $-$ 1},\cdots,\evals{a_n $-$ 1}$),$\evals{a_2}), 
+a_1,\ldots,a_n$ literals\\
 
-$\evals{\text{cons}_[t,r](e,a)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(exp,arr)})$\\
+$\evals{\text{cons}_[t,r](e,a)}$ & $=$ & rearrange$((r,\cdots,0), \text{concat(exp,arr)})$\\
 && \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
 && \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
   
@@ -731,29 +735,76 @@ nandb, norb, neqi, neqd
 \end{tabu}
 \end{flushleft}
 \restoregeometry
-\subsection{The notation}
-To denote the compilation of an TAIL expression is a pair of double brackets $\evals{ \; }$. 
-In the compilation scheme all the expressions written on the left hand side of the scheme (to the left of the equel sign) is the TAIL expressions to be compiled, the right hand side contains the Futhark functions or expressions they are translated to. An exception to this is expressions that is wrapped in double brackets.
-An expression wrapped in double brackets e.g. $\evals{x}$ signifies the compilation of the TAIL expression $x$ no matter what side of the equal sign it is on.\\
 
-Some TAIL expressions have type information as part of their declaration. This type information can be seen in the
-compilation scheme as subscript to the function. The type information can be either just a type $t$ or a combination of both type and rank $r$. The type consist of a type that are one of the TAIL
-types described in Section 2. The rank is the number of dimensions.  \\
-
-Type information can also be represented by $\tau$, but only in the special case of anonymus functions (fn) where it 
-indicate the return type of the anonymus function. This types is not an apparent part of the anonymus function in TAIL
-but the type information exist as part of the function that calls the internal function. For instance if the TAIL operator {\tt each(f,a)} is given a kernel (fn) expression as it function f the return type of the kernel can be made from the returntype of the {\tt each} operator that we know at compile time. The return type of the operator that calls the kernel is therefore pased to the kernel for it to create its return type. \\
-
-In the compilation scheme the compilation declarations can be one of three different types. The three types can be destingused by the subtext following the declaration.  Expressions have no subtext, operators are indicated with the subtext $_{op}$ or $_{fun}$ depending on the number of arguments, and kernels are specified with the subtext $_{fn}$. The reason for the distinction is that a TAIL operator can be expressed as either a Futhark binary operator if the expression only takes two arguments and are one of the known operators that can be found in the $binops$ set or a Futhark function. \\
-
-
-
-mappings of functions here!! (and list identitiy mappings)\\
 \begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
 \end{tabular}\\
 
-\subsection{Walk through of the compilation}
+\begin{tabular}{l c l}
+$\evals{$addi$}_{op}$ & $=$  & $+$   \\
+$\evals{$addd$}_{op}$ & $=$  & $+$   \\ 
+$\evals{$subi$}_{op}$ & $=$  & $-$   \\
+$\evals{$subd$}_{op}$ & $=$  & $-$   \\
+$\evals{$multi$}_{op}$ & $=$ & $*$   \\
+$\evals{$multd$}_{op}$ & $=$ & $*$   \\
+$\evals{$ltei$}_{op}$ & $=$  & $\leq$\\
+$\evals{$lted$}_{op}$ & $=$  & $\leq$\\
+$\evals{$eqi$}_{op}$ & $=$   & $==$  \\
+$\evals{$eqd$}_{op}$ & $=$   & $==$  \\
+$\evals{$gti$}_{op}$ & $=$   & $>$   \\
+$\evals{$gtd$}_{op}$ & $=$   & $>$   \\
+$\evals{$gtei$}_{op}$ & $=$  & $\geq$\\
+$\evals{$gted$}_{op}$ & $=$  & $\geq$\\
+$\evals{$andb$}_{op}$ & $=$  & $\&\&$\\
+$\evals{$orb$}_{op}$ & $=$   & $||$  \\
+$\evals{$divi$}_{op}$ & $=$  & $/$   \\
+$\evals{$divd$}_{op}$ & $=$  & $/$   \\
+$\evals{$powi$}_{op}$ & $=$  & $pow$ \\
+$\evals{$powd$}_{op}$ & $=$  & $pow$ \\
+$\evals{$lti$}_{op}$ & $=$   & $<$   \\
+$\evals{$ltd$}_{op}$ & $=$   & $<$   \\
+$\evals{$andi$}_{op}$ & $=$  & $\&$  \\
+$\evals{$andd$}_{op}$ & $=$  & $\&$  \\
+$\evals{$ori$}_{op}$ & $=$   & $|$   \\
+$\evals{$shli$}_{op}$ & $=$  & $<<$  \\
+$\evals{$shri$}_{op}$ & $=$  & $>>$  \\
+
+\end{tabular}\\
+
+\subsection{The notation}
+Each line in the scheme consists of a TAIL expression in double brackets $\evals{\;}$ on the left, followed by a
+equals sign in the middle and a Futhark expression on the right side. This means that the TAIL expression on the left
+side should be compiled to the Futhark expression on the right side. We call such a line a rule. Some rules have side
+conditions after a comma which means some conditions must be met before that rule can be executed, otherwise another
+rule must be chosen. This can be thought of as similiar to pattern matching in functional languages where side conditions
+are guards. The rules are exhaustive and non-overlapping.
+In practice the compilation can be easily implemented using pattern matching by choosing the right ordering of patterns
+and it is indeed how our compiler is implemented.
+We have tried to use such an ordering of rules in our presentation.
+An expression wrapped in double brackets can also occur on the right side of the equal sign at means that this expression
+should be compiled recursively as part the compilation of the parent expression.\\
+
+Some TAIL expressions have type information as part of their declaration in their instance lists.
+This type information is expressed in the compilation scheme as subscript to the expression.
+The type information can be either just a type $t$ or a combination of both type and rank $r$.
+The type consist of a type that are one of the TAIL types described in Section 2. The rank is the number of dimensions.  \\
+
+Some of the rules are subscripted with either $op$, $fun$ of $fn$.
+These are seperate sets of rules which are invoked on the right hand side of regular rules.
+We also call such a set a rule.
+From context it will be clear what we mean when we say rule, for example when talking about the set of rules subscripted by
+$fn$ we will just say: the $\evals{\;}_{fn}$ rule. The $\evals{\;}$ rule is also called the default rule.
+
+Apart from the $\evals{\;}$ rule, there are also the $\evals{\;}_{op}$, $\evals{\;}_{fun}$,  and $\evals{\;}_{fn}^{\tau}$ rules.
+The first two are simple lookup rules that map to Futhark operators and functions respectively.
+The third is used to compile lambda expressions.
+Unlike the other rules $\evals{fn}$ is parametrized by a Futhark type variable $\tau$ which we denote with a superscript
+so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
+The parameter $\tau$ represents the return type of the lambda the rule compiles,
+and must be passed by the caller when the rule is used.
+
+\subsection{?????????}
+Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
 
 % MÅSKE LYDER DET HER BEDRE?
 %
@@ -761,46 +812,8 @@ $\evals{i2d}_{fun}$ & $=$ & toReal\\
 %having a special focus on the more interesting cases.
 %We will also explain our reasoning behind the chosen compilation and what alternatives there are.
 
-Several of the TAIL operators and expressions have details in their compilation that is woth looking into to understand the compilation in more details. That means the parallel operators {\tt each} and {\tt reduce} but also let-expressions and lambda expressions to mention a few. For completeness some of the operators that have more obvius compilations are also described. 
+%Several of the TAIL operators and expressions have details in their compilation that is woth looking into to understand the compilation in more details. That means the parallel operators {\tt each} and {\tt reduce} but also let-expressions and lambda expressions to mention a few. For completeness some of the operators that have more obvius compilations are also described. 
 
-\paragraph{Binaryscalar first-order  operators} are mapped to their natural Futhark counterparts, we include the mappings
-here for completeness.
-
-mappings of operators here!
-
-\begin{tabular}{l c l}
-$\evals{$addi$}_{op}$ & $=$ & $+$\\
-$\evals{$addd$}_{op}$ & $=$ & $+$\\
-$\evals{$subi$}_{op}$ & $=$ & $-$\\
-$\evals{$subd$}_{op}$ & $=$ & $-$\\
-$\evals{$multi$}_{op}$ & $=$ & $*$\\
-$\evals{$multd$}_{op}$ & $=$ & $*$\\
-$\evals{$ltei$}_{op}$ & $=$ & $\leq$\\
-$\evals{$lted$}_{op}$ & $=$ & $\leq$\\
-$\evals{$eqi$}_{op}$ & $=$ & $==$\\
-$\evals{$eqd$}_{op}$ & $=$ & $==$\\
-$\evals{$gti$}_{op}$ & $=$ & $>$\\
-$\evals{$gtd$}_{op}$ & $=$ & $>$\\
-$\evals{$gtei$}_{op}$ & $=$ & $\geq$\\
-$\evals{$gted$}_{op}$ & $=$ & $\geq$\\
-$\evals{$andb$}_{op}$ & $=$ & $\&\&$\\
-$\evals{$orb$}_{op}$ & $=$ & $||$\\
-$\evals{$divi$}_{op}$ & $=$ & $/$\\
-$\evals{$divd$}_{op}$ & $=$ & $/$\\
-$\evals{$powi$}_{op}$ & $=$ & $pow$\\
-$\evals{$powd$}_{op}$ & $=$ & $pow$\\
-$\evals{$lti$}_{op}$ & $=$ & $<$\\
-$\evals{$ltd$}_{op}$ & $=$ & $<$\\
-$\evals{$andi$}_{op}$ & $=$ & $\&$\\
-$\evals{$andd$}_{op}$ & $=$ & $\&$\\
-$\evals{$ori$}_{op}$ & $=$ & $|$\\
-$\evals{$shli$}_{op}$ & $=$ & $<<$\\
-$\evals{$shri$}_{op}$ & $=$ & $>>$\\
-
-\end{tabular}\\
-  
-
-The compilation of the TAIL operators that are not binary operators are explained in details below:\\
 
 \paragraph{Basic structural constructs} are translated to their Futhark counterparts directly.
 In let-expresions the type annotations that exist in TAIL variable bindings are ignored in Futhark. 
@@ -809,12 +822,13 @@ In let-expresions the type annotations that exist in TAIL variable bindings are 
 The letters $x$, $i$, $d$, and $c$ denote variables, integers, doubles, booleans and chars respectively.
 They are all translated to their Futhark equivalents.\\
 
+This part of the language was straight-forward to compile and there was no reason to do it any other way.
+
 \paragraph{The each operator} 
- 
-The {\tt each} operato in TAIL applies a function to every element in the flat representation of the array.
-This is a completely parallel operation more commonly known as map.
-The {\tt map} combinator in Futhark has slightly different semantics\cite{ElsmanDybdal:Array:2014}.
-Since Futhark views a multidimensional array as nested simple arrays it applies the function to every array element.
+
+In TAIL applying the {\tt each} operator produces an array where the argument function is applied to each basic element in the
+argument array, regardless of the rank of the array.
+Since Futhark views a multidimensional array as nested simple arrays it applies the function to every array in the array.
 That is, it maps the function into the outer-most dimension of the array\cite{TroelsHenriksen}.
  
 To solve this problem we have nested {\tt map}s to the depth of the array with the required function,
@@ -826,10 +840,12 @@ For example an each operation on an array of rank 2 will look like:
 each(f,a)       =>      map(fn x => map (f,x), a)
 \end{lstlisting}
 
+The plan in this rule is to target the Futhark map SOAC as directly as possible. An alternative could have been to reshape the
+argument to a flat array before mapping and reshape it back to it's original shape afterwards, we have not explored this option.
 
-\paragraph{The reduce operator} 
-The type of the {\tt reduce} function is $reduce(f,id,a) :: \forall\alpha\gamma.(\alpha \to \alpha \to \alpha) \to \alpha \to [\alpha]^{\gamma+1} \to [\alpha]^\gamma$.
-The {\tt reduce} function in TAIL uses an associative binary operator to reduce an array of rank
+\paragraph{The reduce operator}
+
+in TAIL uses an associative binary operator to reduce an array of rank
 $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension\cite{ElsmanDybdal:Array:2014}.
 The Futhark reduce on the other hand reduces each array in the outer array, i.e. it reduces along the outer-most dimension\cite{TroelsHenriksen}.
  
@@ -841,19 +857,20 @@ For example reducing an array of rank 2 emits the following code:
 reduce(+,a)     =>      map(fn x => _reduce_(+,x), a)
 \end{lstlisting}
 
+Lifting the reduce operation with maps into the inner-most array was the simplest solution, it utilizes only parallel operations.
 
 \paragraph{The zipWith operator}
-The zipWith operator applies a scalar binary operator on pairs of elements from two arrays of the same shape two
+The {\tt zipWith} operator applies a scalar binary operator on pairs of elements from two arrays of the same shape to
 produce a third array of the same shape as the input arrays \cite{ElsmanDybdal:Array:2014}.
  
 To do this in Futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples \cite{TroelsHenriksen}.
 
+The rationale behind this rule was the same as in {\tt each}.
 
 \paragraph{The reshape operator} 
 %reshape gets as argument the return type.\\
 %It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
-The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the
-array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
+%The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
 Futhark has a reshape function that only works for arrays of the correct dimensions \cite{TroelsHenriksen}.
 
 To actually change the rank of the array we first ensure that the array is the correct size and then use the Futhark reshape
@@ -861,30 +878,41 @@ function to do the final step.
 
 To adjust the size we operate on the flat representation of the array, this is easy to produce using Futhark reshape.
 
-To adjust the size of the array we use the previously defined library function {\tt reshap1}. Actually we use the variant with
+To adjust the size of the array we use the previously defined library function {\tt reshape1}. Actually we use the variant with
 the correct type, this type is conveniently available in the instance list.
 
-We have used this approach throughout our compiler, e.g. the take operator is implemented similarly.
+In this rule we wanted to make use of the already existing reshape operation in Futhark because we assume this appoach has the best
+chance of optimization by the Futhark compiler.
 
 \paragraph{The transp operator} 
-There exists a {\tt transpose(a)} function in Futhark and the reason for not using it to implement the TAIL {\tt transp} is that the Futherk {\tt transpose} have as default that it transposes ?????????????????????????
-transp2: only takes literals in transpose dimentions because that is all futhark exepts in rearrange but transp2 in tail cork in other things however we do not support that so one should be aware of this limitation.
+There exists a {\tt transpose(a)} function in Futhark which does not have the same semantics as the {\tt transp} operator from TAIL.
+The Futhark transpose on a three dimensional array for example produces a (2,0,1) permutation of the dimensions, whereas we are
+looking for a (2,1,0) or more generally the reverse permutation of the dimensions. By inspection the Futhark IL generated from
+a call to transpose we discovered that internally a function called rearrange is bieng called with an explicit permutation parameter.
+This function is also available in the exeternal language and simply needed to be called with the correct parameters to match
+the behavior of the {\tt transp} operator.
+
+This conversion is as direct as we could hope.
+
+\paragraph{The transp2 operator} 
+We have also converted the operator {\tt transp2} to a rearrange application, the only thing we needed to change was to substract
+one from each number in the first argument since Futhark indexes dimensions from zero.
+A thing of note is that {\tt rearrange} only supports a list of integer literals in it's first argument while TAIL has no
+such restriction on {\tt transp2}. In practice the TAIL compiler will have inlined the arguments to {\tt transp2}.
+
+The operator {\tt transp2} has thus a very direct conversion.
 
 \paragraph{The cat operator} 
 % why the hell don't we use transpose/rearrange to compile cat?!?! does anyone remember the reason
 
 \paragraph{The take and drop operators} 
-The {\tt take} operator in TAIL has very unique semantics, for a positive argument that is less than the size of the array it behaves as one would suspect i.e. it returns the first n elements of the array.
-For a negative argument {\tt take} returns the last n elements of the array.
-If there are not enough elements in the array, {\tt take} pads with zeros.
 
 In a similar fashion to the TAIL {\tt reshape} function we have used library functions do most of the work.
 We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
 This approach has all the benefits mentioned earlier.
 
-\paragraph{The cons and snoc operators} takes an array of rank $\gamma$ and an array of rank $\gamma+1$ and concatinates the elements of the 
-array of rank $\gamma$ in the front of the elements of the array of rank $\gamma +1$. This result in an array of rank $\gamma+1$. 
-The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array. However the Futhark transpose function differs slightly from the wished functionality in that. ...\\
+\paragraph{The cons and snoc operators}
+The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array.\\
 
 \paragraph{The iota operator} 
 Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
@@ -913,6 +941,9 @@ If the function argument is an identifier we use the $op$ and $fun$ rules to com
 %We only need two arguments at most
 %We compile the bodies using the regular scheme
 %If the kernel is an identifier the fun or op translations are used.
+
+
+\paragraph{Binary scalar first-order operators} are mapped to their natural Futhark counterparts.
 
 \section{Implementation}
 \label{sec:impl}
