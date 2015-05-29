@@ -531,9 +531,9 @@ Many of the monomorphic first-order functions of TAIL are mapped directly to a l
 \section{Library functions}
 In this section we go over some of the library functions we have defined and discuss their usefulness.\\
 
-The {\tt take1}, {\tt drop1} and {\tt reshape1} functions implement the TAIL operators {\tt take}, {\tt drop} and {\tt reshape} in the one-dimensional case. In Section \ref{sec:scheme}, we see how they can be used to implement the multi-dimensional cases. The reason it is advantageous to use a libery function for only the one-dimentional part is that we would otherwise need a separate library function for each 
-rank and basic type combination which we needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
-There is a template for each of the functions that make four functions (one for each base type). This way we can be sure to have the same function for each type and it makes maintaning the functions easier. 
+The {\tt take1}, {\tt drop1} and {\tt reshape1} functions implement the TAIL operators {\tt take}, {\tt drop} and {\tt reshape} in the one-dimensional case. In Section \ref{sec:scheme}, we see how they can be used to implement the multi-dimensional cases. It is advantageous to use a library function for only the one-dimensional case as we would otherwise need a separate library function for each 
+rank and basic type combination which we then needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
+There is a template for each of the functions that make four functions (one for each base type). This way we can be sure to have the same function code for each type and it makes maintaning the functions easier. 
 
 \paragraph{The take1 functions} is defined as follow. Note that this int version.
 \begin{lstlisting}[language=Futhark]
