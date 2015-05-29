@@ -9,6 +9,7 @@
 \usepackage{fixltx2e}
 \usepackage{amsmath}
 \usepackage{tabu}
+\usepackage{geometry}
 
 \lstset{
   mathescape,
@@ -628,6 +629,7 @@ There main contribution with this paper is the compilation scheme presented in t
 %% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
+\newgeometry{top=15pt,left=30pt}
 \begin{flushleft}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -718,10 +720,9 @@ $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{siz
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 \\
-
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
-
+$\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
 \begin{tabu} to \linewidth { l X}
 $binops$ =& addi, subi, muli, ...\\
@@ -729,7 +730,7 @@ $funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mi
 nandb, norb, neqi, neqd
 \end{tabu}
 \end{flushleft}
-
+\restoregeometry
 \subsection{The notation}
 To denote the compilation of an TAIL expression is a pair of double brackets $\evals{ \; }$. 
 In the compilation scheme all the expressions written on the left hand side of the scheme (to the left of the equel sign) is the TAIL expressions to be compiled, the right hand side contains the Futhark functions or expressions they are translated to. An exception to this is expressions that is wrapped in double brackets.
@@ -891,6 +892,28 @@ Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Fu
 \paragraph{Lambda expressions} 
 % There is more.... than one lambda compilation/translation
 
+The higher order operators {\tt each, eachV, reduce, zipWith} take functions as arguments and these functions are handled by the
+entries marken with the $fn$ subscript. Lambda expressions with one argument are mapped to the same in Futhark.
+In Futhark lambda expressions need type annotations both for the argument and the return type. This return type is provided by
+the context in which the lambda is used. Namely the the type informations is present in the instance lists of the 
+enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}. Arguments are already annotatated with types in TAIL so
+those are simply compiled to Futhark types and passed to the resulting lambda.
+Althougn the syntax of TAIL permits lambda expressions anywhere a regular expression could be used (as long as the type is correct),
+the TAIL compiler will inline all functions bound to variables when compiling form APL. This means that functions can only occur
+inside of the aforementioned operator call and as such this is the only case we support.
+
+The only exception to the rule mentioned above is function currying.
+In TAIL currying is used if lambda expressions are to take more than one argument while Futhark does not support currying but
+spports mulit-argument lambdas instead. Since the highest number of arguments that can be used is two (in {\tt zipWith}) we have
+restricted the compiler to this special case which simplfies the compilation.
+The actual body of the function is compiled using the expression rule.
+If the function argument is an identifier we use the $op$ and $fun$ rules to compile them.
+%They need return type
+%Curried lambdas are mapped to multi-argument lambdas 
+%We only need two arguments at most
+%We compile the bodies using the regular scheme
+%If the kernel is an identifier the fun or op translations are used.
+
 \section{Implementation}
 \label{sec:impl}
 In this section a Haskell implementation of the compilation scheme is presented. This compiler is devided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
@@ -905,10 +928,7 @@ We changes type constructors from previusly ShT (shape type), SiT (singleton int
 to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank. 
 This meant updating the parser to read angles ([]).
 
-The parser is located at the following path in the project: 
-
-/tail2futhark/aplacc
-
+The parser is located in the {\tt aplacc } directory of the project: 
 The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
