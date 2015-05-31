@@ -176,7 +176,9 @@ The implementation done in this project is written in the functional programming
 
 Cabal is used for !!!!!!!!!!!!!!!!!!!!!!\\
 
-The parser we used for this project 
+The parser we used for this project ..hvorfor bruger vi den og ikke en vi selv har lavet (sparer tid og dumt at lave redundant arbejde)\\
+
+benchmarks, hvordan kører vi dem og hvorfor bruges denne opsætning (smart for så ved man hvordan man skal køre det takket være make filen)\\
 
 
 \subsection{Limitations of the compilation}
@@ -633,7 +635,7 @@ The notation is explained is explained and the compilation of some of the more i
 %% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-\newgeometry{top=15pt,left=30pt}
+\newgeometry{top=15pt,left=30pt,bottom=70pt}
 \begin{flushleft}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -725,9 +727,11 @@ $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{siz
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 \\
+
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
+
 \end{tabular}
 \begin{tabu} to \linewidth { l X}
 $binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
@@ -817,15 +821,6 @@ and must be passed by the caller when the rule is used.
 
 \subsection{?????????}
 Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
-
-% MÅSKE LYDER DET HER BEDRE?
-%
-%In this section we are going to introduce our compilation scheme and explain the problems in compiling the different functions
-%having a special focus on the more interesting cases.
-%We will also explain our reasoning behind the chosen compilation and what alternatives there are.
-
-%Several of the TAIL operators and expressions have details in their compilation that is woth looking into to understand the compilation in more details. That means the parallel operators {\tt each} and {\tt reduce} but also let-expressions and lambda expressions to mention a few. For completeness some of the operators that have more obvius compilations are also described. 
-
 
 \paragraph{Basic structural constructs} are translated to their Futhark counterparts directly.
 In let-expresions the type annotations that exist in TAIL variable bindings are ignored in Futhark. 
@@ -1039,6 +1034,9 @@ We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2fut
 
 \section{Benchmarks}
 \label{sec:benchmarks}
+
+vi er nødt til at læse matricerne ind for ellers optimere futhark det væk..
+
 We have used benchmarks to mesure preformance of the generated Futhark code by comparing it with the TAIL code.
 Because no parallel backend are finished for either TAIL or Futhark we use a sequential backend for both languages. \\
 
@@ -1046,21 +1044,21 @@ The benchmarks used to test the compiled code is all origianaly written in APL. 
 Then the efficiency of the generated code was tested using {\tt time} on the executable TAIL and Futhark version of the files and the results compaird. In order to have data big enough to level out any initial overhead we ....\\
 
 \subsection{Matrix multiplication}
+The matrix multiplication program takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimention).
+The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. 
 
-One of the benchmarks we used was matrix multiplication. The code in TAIL can be seen below. 
+The code in TAIL can be seen below. 
 
-\begin{lstlisting}
-let v0:[int]2 = reshape{[int],[1,2]}([3,2],iotaV(5)) in
-let v1:[int]2 = transp{[int],[2]}(v0) in
-let v6:[int]3 = transp2{[int],[3]}([2,1,3],
-                     reshape{[int],[2,3]}([3,3,2],v0)) in
-let v12:[int]3 = transp2{[int],[3]}([1,3,2],
-                     reshape{[int],[2,3]}([3,2,3],v1)) in
-let v17:[int]2 = reduce{[int],[2]}(addi,0,
-                zipWith{[int,int,int],[3]}(muli,v6,v12)) in
-let v22:[int]0 = reduce{[int],[0]}(muli,1,
-                 reduce{[int],[1]}(addi,0,v17)) in
-i2d(v22)
+\begin{lstlisting}[breaklines=true]
+let v1:[int]1 = readIntVecFile(['m','a','t','r','i','x']) in
+let v2:[int]1 = readIntVecFile(['s','i','z','e']) in
+let v3:[int]0 = first{[int],[1]}(v2) in
+let v5:[double]2 = reshape{[double],[1,2]}([v3,v3],each{[int,double],[1]}(fn v4:[int]0 => divd(1.0,i2d(v4)),v1)) in
+let v6:[double]2 = transp{[double],[2]}(v5) in
+let v13:[double]3 = transp2{[double],[3]}([2,1,3],reshape{[double],[2,3]}([v3,v3,v3],v5)) in
+let v19:[double]3 = transp2{[double],[3]}([1,3,2],reshape{[double],[2,3]}([v3,v3,v3],v6)) in
+let v24:[double]2 = reduce{[double],[2]}(addd,0.0,zipWith{[double,double,double],[3]}(muld,v13,v19)) in
+reduce{[double],[0]}(muld,1.0,reduce{[double],[1]}(addd,0.0,v24))
 \end{lstlisting}
 
 It becomes the following Futhark code when run through the compiler...
@@ -1069,8 +1067,16 @@ It becomes the following Futhark code when run through the compiler...
 futhark code here
 \end{lstlisting}
 
+Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. 
+
 In order to have data big enough to messure the performance of the TAIL executable file and the Futhark executable file the program code was run on a matrix that was 10.000 x 10.000. 
 The result of that is...
+
+\begin{lstlisting}
+futhark code here
+\end{lstlisting}
+
+\subsection{Pi}
 
 \section{Discussion}
 % Methods used
