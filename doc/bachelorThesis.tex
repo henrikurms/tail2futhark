@@ -106,6 +106,17 @@ as an intermediate language for more feature-rich languages. By compiling APL to
 Futhark compiler can be used to generate parallel code from APL once a parallel backend for 
 Futhark is completed.\\
 
+The background for designing TAIL was to create a typed intermediate language for the array programming language APL.
+TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into
+TAIL \cite{ElsmanDybdal:Array:2014}.
+APL is an older language created in the 1960's by Kenneth E. Iverson.
+APL is an array programming language, its main type is the multi-dimensional array 
+and most of the built-in functions in the language are array operators that work on this type. 
+Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
+The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type. 
+Even though it is an old language it is still used in the financial world 
+where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
+
 There are traditionally five stages of a compiler if you compile a high level language to machine code: 
 lexical analysis, syntax analysis, type checking, intermediate code generation, register allocation, machine 
 code generation and assembly and linking \cite{TorbenMogensen}. However, in this project we are compiling from 
@@ -208,25 +219,25 @@ The follwing sections of the report is structured as follows. Section \ref{sec:t
 \section{The intermidiate language TAIL}
 \label{sec:tail}
 
-The syntax of the types in TAIL can be seen below. The types are divided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables respectively.
+The syntax of types in TAIL can be seen below. Types are divided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables, respectively.
 \begin{lstlisting}[numbers=none,frame=none]
 $\kappa$ ::= int | double | bool | $\alpha$
-$\rho$ ::=  $i$ | $\gamma$ | $\rho$ $+$ $\rho$'
-$\tau$ ::= $[\kappa]^{\rho}$ | $\langle \kappa \rangle^\rho$ | S$_{\kappa}$($\rho$) | SV$_{\kappa}$($\rho$) | $\tau \rightarrow \tau$'
-$\sigma$ ::= $\forall\overrightarrow{\alpha}\overrightarrow{\gamma}$.$\tau$
+$\rho$ ::=  $i$ | $\gamma$ | $\rho$ $+$ $\rho'$
+$\tau$ ::= $[\kappa]^{\rho}$ | $\langle \kappa \rangle^\rho$ | S$_{\kappa}$($\rho$) | SV$_{\kappa}$($\rho$) | $\tau \rightarrow \tau'$
+$\sigma$ ::= $\forall\vec{\alpha}\vec{\gamma}$.$\tau$
 \end{lstlisting}
-The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the shape of an array in its type.
-The integer scalar in the arrays shape denotes the rank of the array and must be a non-negative integer.
-The type system also supports vector types ($\langle \kappa \rangle^\rho$), this type is used specifically for vectors of a specific length. For example {\tt <int>8} denotes a vector of ints of known length 8. If the vectors length is not staticallly known it can be instead expressed as an array of rank 1.
-Scalar values that are statically known have a separate type (S$_{\kappa}$($\rho$)), i.e. integers, doubles, and booleans, their value is contained in the type.
-In addition there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$) for arrays where the element is statically known.
+The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the rank of the array in its type.
+The integer scalar in the array's shape type denotes the rank of the array and must be a non-negative integer.
+The type system also supports vector types ($\langle \kappa \rangle^\rho$), which we used specifically to denote vectors of a specific length. For example, {\tt <int>8} denotes a vector of ints of known length 8. If a vector's length is not staticallly known, it can instead be expressed as an array of rank 1.
+Scalar values that are statically known have a separate type (S$_{\kappa}$($\rho$)), that is integers, and booleans, their value is contained in the type.
+In addition there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$) for singleton vectors where the element is statically known.
 Finally there exists function types ($\tau \rightarrow \tau$'). \\
 
 %The types schemes ($\sigma$) are expressed through substitution...
-The type system makes use of substitution in order to express type schemes ($\sigma$). Type substitution ($S_t$) that maps type variables to base types and shape substitution ($S_s$) that maps shape variables to shape types. A general substitution ($S$) is a pair ($S_t$,$S_s$) of type substitution and shape substitution. Using the substitution $S$ on an object $B$ means applying 
-both $S_t$ and $S_s$ on objects in $B$. A type $\tau$' is an instance of a type scheme $\sigma$ = $\forall\overrightarrow{\alpha}\overrightarrow{\gamma}$.$\tau$ (written $\sigma$= $\tau$') if a substitution $S$ exists such that $S(\tau)$ = $\tau$'. \\
+The type system makes use of substitution in order to express instances of type schemes ($\sigma$). Type substitution ($S_t$) that maps type variables to base types and shape substitution ($S_s$) that maps shape variables to shape types. A general substitution ($S$) is a pair ($S_t$,$S_s$) of a type substitution and a shape substitution. Using the substitution $S$ on an object $B$ means applying 
+both $S_t$ and $S_s$ on objects in $B$. A type $\tau'$ is an instance of a type scheme $\sigma$ = $\forall\vec{\alpha}\vec{\gamma}$.$\tau$ (written $\sigma$ $\geq$ $\tau'$) if a substitution $S$ exists such that $S(\tau)$ = $\tau'$. \\
 
-The syntax of operators and expressions is given bellow. The letter $v$ is used to denote values and the letter $x$ is used to denote program variables. 
+The syntax of operators and expressions is given below. The letter $v$ is used to denote values and the letter $x$ is used to denote program variables. 
 \begin{lstlisting}[numbers=none,frame=none]
 op ::= addi | subi | multi | mini | maxi | addd | subd | 
        muld | mind | maxd | andb | orb | xorb |  nanb | 
@@ -241,65 +252,63 @@ op ::= addi | subi | multi | mini | maxi | addd | subd |
 \begin{lstlisting}[numbers=none,frame=none]
 e ::= $v$ 
     | $x$ 
-    | $[\overrightarrow{e}]$ 
+    | $[\vec{e}]$ 
     | $e$ $e'$ 
     | let $x$ = $e_1$ in $e_2$ 
-    | $op(\overrightarrow{e})$
+    | $op(\vec{e})$
 \end{lstlisting}
-A TAIL program always consists of a single expression. An expression can then be a value, variable, 
-list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme. \\
+A TAIL program always consists of a single expression. An expression can then be a value, a variable, 
+a list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme. \\
 
-One of the operators with a simple type scheme is the binary operator maxi that take two arguments $a$ and $b$ evaluates to the argument with the highest value. Its type scheme are as follows:
+One of the operators with a simple type scheme is the binary operator maxi that takes two arguments $a$ and $b$ and evaluates to the argument with the highest value. Its type scheme is as follows:
 \begin{lstlisting}[numbers=none,frame=none]
 maxi : int $\rightarrow$ int $\rightarrow$ int
 \end{lstlisting}
 
 Other operators have more complex type schemes. Examples of those are the parallel operators. 
-There are four parallel operators in TAIL, {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
+There are four parallel operators in the subset of TAIL that we consider, namely {\tt each}, {\tt eachV}, {\tt reduce} and {\tt zipWith}.
 The functions {\tt each} and {\tt eachV} are known in many languages as map.
 The type scheme for the function {\tt each} is:
 \begin{lstlisting}[numbers=none,frame=none]
 each : $\forall\alpha\beta\gamma.(\alpha \rightarrow \beta)\rightarrow [\alpha]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-Given a function $f$ and an array $a$ {\tt each f a } evaluates to an array where $f$ is applied to each element of $a$ i.e. $[f(a_1),..,f(a_n)]$.
+Given a function $f$ and an array $a$ {\tt each(f,a)} evaluates to an array where $f$ is applied to each element of $a$ given the value $[f(a_1),..,f(a_n)]$.
 If the rank of the array is greater than 1 the {\tt each} function works as a map on the fattened representation of the array,
 that is, the function is applied on the inner most dimension of the array, or seen in another way, on each basic value.
 
 The {\tt eachV} function is a special case of {\tt each} and is used on vector types.\\
 
-The function {\tt reduce} works similar to fold known from functional languages. The type scheme for {\tt reduce} is:
+The function {\tt reduce} works similaly to fold known from functional languages. The type scheme for {\tt reduce} is:
 \begin{lstlisting}[numbers=none,frame=none]
 reduce : $\forall\alpha\gamma.(\alpha \rightarrow \alpha \rightarrow \alpha)\rightarrow \alpha \rightarrow [\alpha]^{1 +\gamma} \rightarrow [\alpha]^{\gamma}$
 \end{lstlisting}
-The function takes as arguments a associative binary operator $op$ (for instance $+$), a neutral element $n$, (for instance 0) and array $a$.
-The function application evaluates to the combination of the elements by the operator.
+The function takes as arguments an associative binary operator $op$ (for instance $+$), a neutral element $n$, (for instance 0) and an array $a$.
+The function application evaluates to the reduction of the elements using the operator.
 An array of rank $\gamma+1$ is reduced to an array of rank $\gamma$ along the inner-most dimension.
-Unlike {\tt fold}, reduce makes no guarantees as to the order of application of the operator, therefore the operator has to be associative and the element has to be neutral, this is of course necessary for parallel execution.\\
+Unlike fold, reduce makes no guarantees as to the order of application of the operator, therefore the operator has to be associative and the element has to be neutral, this is of course necessary for parallel execution.\\
 
 The {\tt zipWith} function's type scheme is given as follows: 
 \begin{lstlisting}[numbers=none,frame=none]
 zipWith  : $\forall\alpha_{1}\alpha_{2}\beta\gamma.(\alpha_1 \rightarrow \alpha_2 \rightarrow \beta)\rightarrow [\alpha_1]^{\gamma} \rightarrow [\alpha_2]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-Given a function $f$ that works on a pair $(x,y)$ and two arrays $a_1$ and $a_2$, {\tt zipWith f a\_1 a\_2}  evaluates to an array where the n'th element is $f$ applied to the pair $({a_{1}}_n,{a_{2}}_n)$ 
-Like the other three operators it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
+Given a function $f$ that works on a pair $(x,y)$ and two arrays $a$ and $b$, {\tt zipWith(f,a,b)}  evaluates to an array where the i'th element is $f$ applied to the pair $(a_i,b_i)$ 
+Like the other three operators, it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
 
 There are other interesting operators besides the parallel ones. One of them is the operator {\tt reshape($a_1$,$a_2$)}.
-Given two arrays it reshapes the flattened representation of the second array $a_2$ to the dimensions given by the first array so 
-if we have $reshape([2,3],[1,2,3,4,5,6])$ it evaluates to $[[1,2,3],[4,5,6]]$.
-If $a_2$ is to long the elements not needed are dropped i.e. $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
-If $a_2$ is sorter than needed the elements of $a_2$ are repeated, for instance $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.\\
+Given two arrays it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array so $([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$.
+If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
+If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.\\
 
 Other interesting operators are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
 They return an array containing the 1st to $i$'th element of $a$,
-and the array containing the $i$'th to n'th element of $a$ respectively.
-If the array is multi-dimensional the operator works on the outermost dimesion of the array i.e.
-$take(2,[[1,2],[3,4][5,6]])$ evaluates to $[[1,2],[3,4]]$.
+and the array containing the $i$'th to n'th element of $a$, respectively.
+If the array is multi-dimensional, the operators work on the outermost dimesion of the array. That is $take(2,[[1,2],[3,4][5,6]])$ evaluates to $[[1,2],[3,4]]$.
 If the array contains to few elements {\tt take} pads the array with zeros,
 whereas {\tt drop} returns the empty array in case one tries to drop more elements than there are in $a$. \\
 
-The operator {\tt snoc(a,e)} takes two arrays $a$ and $e$ and return an array where the i'th element of $e$ is appended onto the end of the i'th row of $a$.
-If there is too few elements in $e$ you get an error,
-except if there is only one element in $e$ then the operator evaluates to an array where the one element from $e$
+The operator {\tt snoc(a,e)} takes two arrays $a$ and $e$ and returns an array where the i'th element of $e$ is appended onto the end of the i'th row of $a$.
+If there are too few elements in $e$ an error occurs,
+except if there is only one element in $e$ in which case the operator evaluates to an array where the one element from $e$
 is appended onto each row of $a$.\\
 
 The operator {\tt cons(e,a)} has very similar semantics as the {\tt snoc} operator.
@@ -307,35 +316,22 @@ The only difference is that it appends the contents of $e$ not on the end but at
 
 The operator {\tt cat($a_1$,$a_2$)} takes two arrays that have to have the same outer dimension and returns an array where the i'th element (for instance row if the array is two-dimensional) of $a_2$ is appended onto the end of the i'th element of $a_1$.\\
 
-The {\tt transp} operator takes an array and return the transposed array i.e.\\
- $transp([[1,2,3],[4,5,6]])$ would return $[[1,4],[2,5],[3,6]]$. If the array is multi-dimensional for instance a three-dimensional array with the shape $2x3x4$ the function would return an array with the shape $4x3x2$.\\
-
-The background for designing TAIL was to create a typed intermediate language for the array programming language APL.
-TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into
-TAIL \cite{ElsmanDybdal:Array:2014}.
-APL is an older language created in the 1960's by Kenneth E. Iverson.
-APL is an array programming language, its main type is the multi-dimensional array 
-and most of the built-in functions in the language are array operators that work on this type. 
-Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
-The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type. 
-Even though it is an old language it is still used in the financial world 
-where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
+The {\tt transp} operator takes an array and returns the transposed array. For instance,\\
+ $transp([[1,2,3],[4,5,6]])$ evaluates $[[1,4],[2,5],[3,6]]$. If the array is multi-dimensional (i.e. a three-dimensional array with the shape $2\times3\times4$) the function returns an array with the shape $4\times3\times2$.\\
 
 TAIL was designed with the purpose of targeting parallel architectures such as GPUs and allows parallel programs to be
 expressed in a highly abstract manner.
 The TAIL compiler can also efficiently compile TAIL code into sequential code in a C-like language.
 The subset of APL operators that TAIL support are shown earlier in this section.
-
 The TAIL compiler infers types for the values in the APL program and can annotate bindings with
-instance declarations. An instance declaration provides the base type and rank of the array. Or in
+instance declarations. An instance list provides the base type and rank of the array. Or in
 the case of vectors the size of the vector.
-
 The language TAIL is statically typed and supports polymorphism. 
-Most of the operators in TAIL are very general i.e. they are polymorphic with respect to array ranks and base types.
+Most of the operators in TAIL are very general that is, they are polymorphic with respect to array ranks and base types.
 Although for some operations a specific type is needed.
-An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $\alpha^\gamma$.\\
+An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $[\alpha]^\gamma$.\\
 
-TAILs type system takes the dynamically types of APL and transforms it to a more manageable form adding explicit type
+TAIL's type system takes the dynamic types of APL and transforms it to a more manageable form adding explicit type
 information to the constructs.
 Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators which
 are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. \\
@@ -359,7 +355,7 @@ Lambda expressions in TAIL can be curried so they can take multiple arguments.
 \section{The functional language Futhark}
 \label{sec:futhark}
 
-In this section we give a short introduction to the Futhark language, we will only cover the parts that are necessary to understand
+In this section we give a short introduction to the Futhark language. We will only cover the parts necessary to understand
 the reasoning behind our compilation approach. For the full language reference please refer to (ref).
 
 The syntax of Futhark types can be seen below.
@@ -372,16 +368,16 @@ $t$   $::=$   int          (Integers)
     | [t]          (Arrays)
     | *[t]         (Unique arrays)
 \end{lstlisting}
-The types in Futhark consist of four base types: integers, floating points, booleans, tuples ({\tt \{t$_1$,...,t$_n$\}}), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
+The types in Futhark consist of: integers, floating points, booleans, and chars, tuples ({\tt \{t$_1$,...,t$_n$\}}), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
 Tuple types are written as a comma separated list of types or values surrounded by braces. For example {\tt\{int,bool\}} is 
 a pair of values of integer and boolean types.
 Unlike TAIL, Futhark allows nesting of arrays and indeed nested arrays are how multi-dimensional arrays are expressed in Futhark.
 Array types are denoted by the elements (base) type enclosed by brackets.
 The layer of brackets indicates the dimensionality of the array type.
 For instance {\tt [int]} is a one-dimensional array of integers, and {\tt [[[bool]]]} is a tree-dimensional array of booleans.
-Arrays must be regular, i.e. all arrays in an array must have the same number of elements. \\
+Arrays must be regular, that is, all arrays in an array must have the same number of elements. \\
 
-The Futhark language is statically typed but does not use type interference. Also the type system of Futhark is not 
+The Futhark language is statically typed but does not use type inference. Also, the type system of Futhark is not 
 able to express polymorphism, this means it is not possible to make polymorphic functions in Futhark.
 The only exception is that a lot of the built-in functions can be used on multiple types.\\
 
@@ -451,7 +447,7 @@ Below we shortly discuss {\tt map} and {\tt reduce}.
 
 The function {\tt map} has the following type: 
 \begin{lstlisting}[numbers=none,frame=none]
-map : ($\alpha$ $\rightarrow$ $\beta$) $\rightarrow$ $[\alpha]$ $\rightarrow$ $[\beta]$
+map : $\forall\alpha\beta$($\alpha$ $\rightarrow$ $\beta$) $\rightarrow$ $[\alpha]$ $\rightarrow$ $[\beta]$
 \end{lstlisting}
 The function {\tt map($l$,$a$)} takes a function $l$ and an array $a$ and evaluates to the array consisting of $l$ applied to each element of $a$.
 In contrast to TAIL, if the array is multi-dimensional the function is applied to the outer most dimension.
@@ -460,10 +456,10 @@ of the array. This makes sense considering that Futhark represents multi-dimensi
 
 The type of the function {\tt reduce} is: 
 \begin{lstlisting}[numbers=none,frame=none]
-reduce : ($\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ $\alpha$) $\rightarrow$ $\alpha$ $\rightarrow$ $[\alpha]$ $\rightarrow$ $\alpha$
+reduce : $\forall\alpha$($\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ $\alpha$) $\rightarrow$ $\alpha$ $\rightarrow$ $[\alpha]$ $\rightarrow$ $\alpha$
 \end{lstlisting}
 Given a binary operator/function $l$, the neutral element $e$ of $l$ and an array $a$,
-{\tt reduce } evaluates to the result of applying $l$ to combine all the elements of $a$, i.e. 
+{\tt reduce } evaluates to the result of applying $l$ to combine all the elements of $a$, that is,
 \begin{lstlisting}[numbers=none,frame=none]
 $e \odot a[0] \odot \ldots \odot a[n]$ where $x \odot y = l (x,y)$
 \end{lstlisting}
@@ -670,9 +666,9 @@ $\evals{\text{zipWith}_{[t_1,t_2,t_3,r]}(f,a_1,a_2)}$ & $=$ & \\
       \evals{\text{zipWith}_{[t_1,t_2,t_3r-1]}(f,x,y)} , $zip($ \evals{a_1}, \evals{a_2})) & r>1\\
   \end{cases}$ }\\
   
-$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a)) \space\space , x = fresh\\
+$\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%} \text{size}(0,a)], iota(size(0,a)) \space\space , x is fresh\\
 
-$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)-x-1], $\text{iota}(\text{size}(0,a))$ \space\space , x = fresh\\
+$\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)$-$x$-$1], $\text{iota}(\text{size}(0,a))$ \space\space , x is fresh\\
 
 $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
 \text{osize}
@@ -683,7 +679,7 @@ $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\tex
 && \hspace{4ex} \phantom{where} isize = $ \text{size}(0,a_2)*\ldots*\text{size}(r_2,a_2) $ \\
 
 $\evals{\text{cat}_{[t,r]}(a_1,a_2)}$ & $=$ & $
-  \begin{cases}
+ \begin{cases}
     \text{concat}(\evals{a_1},\evals{a_2}) & r=1 \\
     $map (fn $ \evals{t}^{r-1} \; (\evals{t} \; x, \evals{t} \; y)$ {\tt =>} $ \evals{\text{cat}_{[t,r-1]}(x,y)}, \text{zip}(\evals{a_1}, \evals{a_2}) & r>1\\
   \end{cases}$\\
@@ -706,18 +702,18 @@ $\evals{\text{drop}(i,a)}$ & $=$ & \text{reshape}(\text{oshape}, $\text{drop1}_{
 
 $\evals{\text{dropV}_t(d,a)}$ & $=$ & $\text{drop1}_{\evals{t}}(\evals{d},\evals{a})$\\
 
-$\evals{\text{transp}_{t,r}(a)}$ & $=$ & rearrange$((r-1,\cdots,0),\evals{a})$\\
+$\evals{\text{transp}_{[t,r]}(a)}$ & $=$ & rearrange$((r-1,\cdots,0),\evals{a})$\\
 
-$\evals{\text{transp2}_{t,r}([a_1,\cdots,a_n],b)}$ & $=$ & rearrange(($\evals{a_1 $-$ 1},\cdots,\evals{a_n $-$ 1}$),$\evals{a_2}), 
+$\evals{\text{transp2}_{[t,r]}([a_1,\cdots,a_n],b)}$ & $=$ & rearrange(($\evals{a_1 - 1},\cdots,\evals{a_n - 1}$),$\evals{a_2}), 
 a_1,\ldots,a_n$ literals\\
 
-$\evals{\text{cons}_[t,r](e,a)}$ & $=$ & rearrange$((r,\cdots,0), \text{concat(exp,arr)})$\\
-&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
-&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
+$\evals{\text{cons}_{[t,r]}(e,a)}$ & $=$ & rearrange$((r,\cdots,0), \text{concat(exp,arr)})$\\
+&& \hspace{4ex} where exp = rearrange((r$-$1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r$-$1,\ldots,0),$\evals{a}$)\\
   
-$\evals{\text{snoc}_[t,r](a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(arr,exp)})$\\
-&& \hspace{4ex} where exp = rearrange((r-1,\ldots,0),$\evals{e}$)\\
-&& \hspace{4ex} \phantom{where} arr = rearrange((r-1,\ldots,0),$\evals{a}$)\\
+$\evals{\text{snoc}_{[t,r]}(a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(arr,exp)})$\\
+&& \hspace{4ex} where exp = rearrange((r$-$1,\ldots,0),$\evals{e}$)\\
+&& \hspace{4ex} \phantom{where} arr = rearrange((r$-$1,\ldots,0),$\evals{a}$)\\
 
 $\evals{\text{iota}(a)}$ & $=$ & map$(+ \; (1), \text{iota}(\evals{a})$\\
 
@@ -910,10 +906,11 @@ such restriction on {\tt transp2}. In practice the TAIL compiler will have inlin
 The operator {\tt transp2} has thus a very direct conversion.
 
 \paragraph{The cat operator} 
-% why the hell don't we use transpose/rearrange to compile cat?!?! does anyone remember the reason
+As mentioned Futhark has a concatinate function {\tt concat} that we wanted to use but it concatinate the outermost arrays while in TAIL the {\tt cat} operator concatinates the innermost arrays. To solve this we lifted the concatinate operation to the innermost dimention with map. This is the same idea used to compile the {\tt reduce}, {\tt each}, and {\tt zipWith} operators. 
+
+Alternativly we could have compiled the {\tt cat} operator using transpose instead like we have done in {\tt snoc} and {\tt cons}. We did not have any particular reason to choose one over the other. Both solutions accomplish our goul of being simple and using Futhark built-in functions. 
 
 \paragraph{The take and drop operators} 
-
 In a similar fashion to the TAIL {\tt reshape} function we have used library functions do most of the work.
 We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
 This approach has all the benefits mentioned earlier.
@@ -925,8 +922,6 @@ The idea behind the compilation of the function snoc was to transpose the two ar
 Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
 
 \paragraph{Lambda expressions} 
-% There is more.... than one lambda compilation/translation
-
 The higher order operators {\tt each, eachV, reduce, zipWith} all take functions as arguments and these functions are handled by the
 conversion rules marked with the $fn$ subscript. 
 In Futhark lambda expressions need type annotations both for the argument and the return type.
@@ -975,6 +970,8 @@ The main part of the compiler is placed in {\tt tail2futhark/src/Tail2Futhark/Co
 
 The implementation of the compiler is very close to the compilation presented in the compilation scheme in Section  \ref{sec:scheme}. 
 
+There is however some specific implementation details that 
+
 % friske navne - impl detalje - 
 % indput fra fil / standard
 % 
@@ -985,6 +982,7 @@ The source code can be found in its entirety can be found in Appendix \ref{app:c
 The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
 Tail2Futhark/Futhark/Pretty.hs}. 
 The pretty printer takes a Futhark AST and transforms the abstract representation of the componants of the AST to correct Futhark source code. 
+
 
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
@@ -1062,7 +1060,7 @@ reduce{[double],[0]}(muld,1.0,reduce{[double],[1]}(addd,0.0,v24))
 \end{lstlisting}
 
 It becomes the following Futhark code when run through the compiler...
-.
+
 \begin{lstlisting}
 futhark code here
 \end{lstlisting}
