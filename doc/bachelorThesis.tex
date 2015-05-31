@@ -966,32 +966,39 @@ The parser is located in the {\tt aplacc } directory of the project:
 The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
-The main part of the compiler is placed in {\tt tail2futhark/src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The Futhark AST is placed in {\tt tail2futhark/src/Tail2Futhark/Futhark/AST.hs}.
+The main part of the compiler is placed in {\tt src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The definition of the Futhark AST is placed in {\tt /src/Tail2Futhark/Futhark/AST.hs}.
+The implementation of the compiler is very close to the transformations rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:compiler}.\\
 
-The implementation of the compiler is very close to the compilation presented in the compilation scheme in Section  \ref{sec:scheme}. 
-The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
-
-There is however some specific implementation details that 
-
-% friske navne - impl detalje - 
-% indput fra fil / standard
-% 
-
-The compiler itself is implemented in the file {\tt src/Tail2Futhark/Compile.hs} and exports one function:
+The module defined in the {\tt Compile.hs} file exports one function:
 \begin{lstlisting}[language=haskell]
 compile :: Options -> T.Program -> F.Program
 \end{lstlisting}
 
-The {\tt compile} function produces a Futhark program given options and a TAIL program. Since a TAIL proram is an expression it calls
-a function called {\tt compileExpression} on the TAIL program. The resulting Futhark expression is then made the body of the main
-function in the Futhark program.
+The {\tt compile} function produces a Futhark program given options and a TAIL program. 
+Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. \\
 
-The {\tt compileExpression} function pattern matches on the TAIL ast to compile the expression, with the difficult case bieng an
-operator application, in that case the {\tt compileOperator} function is called which matches on the operator names.
+Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression. The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names. Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
+The resulting Futhark expression is then made the body of the main
+function in the Futhark program. 
+In our representation of the Futhark AST a Futhark program consists of a list of function declarations that are represented by the type FunDecl. 
 
-Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching
-as described earlier.
+\begin{lstlisting}[language=haskell]
+type Program = [FunDecl]
+\end{lstlisting}
 
+Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
+Library functions are added to the beginning of every file (except if the --no-include-lib-funs option is used). 
+Some of the functions are created from templates. First the function body is created as a Futhark expression. Then we make a Futhark function that is parametrised over a Futhark type. We represent such a fundtion with the type {\tt F.Type $\rightarrow$ FunDecl}. We can even parametrise the bodies of the functions by giving them the type {\tt F.Type $\rightarrow$ F.Exp}, this type is simply pased from the parametrised function when it is instanciated. To produce all the functions we simply map the parametrised versions over the basic types. \\
+
+We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. \\
+
+%i tail kan man bruge readintvec file
+%det kan ikke lige oversætte til futhark
+%futhark kan tage input ved at tage arg i man fkt men gør det ved at læse input fra standard in 
+%ikke det sto mindre skulle vil kunne læse filer for at kunne implementere nogle benchmarks
+%vi har derfor lavet et hack som siger hvis de første udtryk i programmet er indlæsnings fkt bliver de oversat til args i futhark. dvs. hvis tail programmet læser input gør futhark det også. Det eneste der supproter det er readIntVecFile i TAIL.
+%Vi tager ikke hensyn til at syntaxen for det de læser ind er forskellig fra tail og futhark.
+%programmøren er selv ansvarlig for at hvis tail filen læser ind fra en fil må man pipe indholdet (muligvis til et andet format) til standard in når man læser futhark programmer
 
 
 \subsection{Pretty print}
@@ -1045,6 +1052,7 @@ We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2fut
 
 %We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
 
+NÆVN AT ALLE TEST KØRTE MED OK! så man faktisk siger det lykkedes...
 
 \section{Benchmarks}
 \label{sec:benchmarks}
