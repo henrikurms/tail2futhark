@@ -967,12 +967,28 @@ The updated code for the compiler can be found in Appendix \ref{app:parser}.
 The main part of the compiler is placed in {\tt tail2futhark/src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The Futhark AST is placed in {\tt tail2futhark/src/Tail2Futhark/Futhark/AST.hs}.
 
 The implementation of the compiler is very close to the compilation presented in the compilation scheme in Section  \ref{sec:scheme}. 
+The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
 
 % friske navne - impl detalje - 
 % indput fra fil / standard
 % 
 
-The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
+The compiler itself is implemented in the file {\tt src/Tail2Futhark/Compile.hs} and exports one function:
+\begin{lstlisting}[language=haskell]
+compile :: Options -> T.Program -> F.Program
+\end{lstlisting}
+
+The {\tt compile} function produces a Futhark program given options and a TAIL program. Since a TAIL proram is an expression it calls
+a function called {\tt compileExpression} on the TAIL program. The resulting Futhark expression is then made the body of the main
+function in the Futhark program.
+
+The {\tt compileExpression} function pattern matches on the TAIL ast to compile the expression, with the difficult case bieng an
+operator application, in that case the {\tt compileOperator} function is called which matches on the operator names.
+
+Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching
+as described earlier.
+
+
 
 \subsection{Pretty print}
 The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
