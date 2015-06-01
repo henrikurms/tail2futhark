@@ -119,7 +119,7 @@ makeShape rank args
   | otherwise = error "shape takes one argument"
 
 -- AUX transp --
-makeTransp e r = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp e)
+makeTransp r e = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) e
 
 -- AUX transp2 --
 makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
@@ -328,6 +328,7 @@ compileOpExp ident instDecl args = case ident of
   "iota" -> compileIota instDecl args
   "iotaV" -> compileIota instDecl args
   "vrotate" -> compileVRotate instDecl args
+  "rotate" -> compileRotate instDecl args
   "vrotateV" -> compileVRotateV instDecl args
   "rotateV" -> compileVRotateV instDecl args
   "snoc" -> compileSnoc instDecl args
@@ -354,8 +355,8 @@ compileSnocV _ _ = error "snocV take two aguments"
 -- snoc --
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileSnoc (Just([tp],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,exp])
-  where exp = F.Array [makeTransp e r]
-        arr = makeTransp a (r+1)
+  where exp = F.Array [makeTransp r (compileExp e)]
+        arr = makeTransp (r+1) (compileExp a)
 
 -- consV --
 compileConsV :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -366,8 +367,8 @@ compileConsV _ _ = error "consV take two aguments"
 -- cons --
 compileCons :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileCons (Just([tp],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [exp, arr])
-  where exp = F.Array [makeTransp e r]
-        arr = makeTransp a (r+1)
+  where exp = F.Array [makeTransp r (compileExp e)]
+        arr = makeTransp (r+1) (compileExp a)
 
 -- first --
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
@@ -385,21 +386,25 @@ compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 a
 
 
 -- rotate --
-compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i a
+compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i (compileExp a)
 compileVRotate Nothing _ = error "Need instance declaration for vrotate"
 compileVRotate _ _ = error "vrotate needs 2 arguments"
 
+compileRotate (Just([tp],[r])) [i,a] = makeTransp r $ makeVRotate tp r i $ makeTransp r $ compileExp a
+compileRotate Nothing _ = error "Need instance declaration for rotate"
+compileRotate _ _ = error "rotate needs 2 arguments"
+
 -- vrotateV --
-compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i a
+compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i (compileExp a)
 compileVRotateV Nothing _ = error "Need instance declaration for vrotateV"
 compileVRotateV _ _ = error "vrotateV needs 2 arguments"
 
 -- vrotate --
-makeVRotate tp r i a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [size])
+makeVRotate tp r i a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota" [size])
   where
     kernelExp = F.Fn (mkType (tp, r-1)) [(F.IntT, "x")] (F.Index (F.Var "a") [F.BinApp F.Mod sum size])
     sum = F.BinApp F.Plus (F.Var "x") (compileExp i)
-    size = FunCall "size" [F.Constant (F.Int 0), compileExp a]
+    size = FunCall "size" [F.Constant (F.Int 0), a]
 
 -- cat --
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
@@ -548,6 +553,7 @@ convertFun fun = case fun of
   "ln"     -> Just "log"
   "expd"   -> Just "exp"
   "notb"   -> Just "!"
+  "floor"  -> Just "trunc"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
@@ -582,6 +588,3 @@ convertBinOp op = case op of
   "shli" -> Just F.Shl
   "shri" -> Just F.Shr
   _      -> Nothing
-
-
-
