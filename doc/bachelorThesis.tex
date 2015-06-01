@@ -815,7 +815,7 @@ so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
-\subsection{?????????}
+\subsection{FIND A GOOD SECTION NAME!!!!!!!}
 Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
 
 \paragraph{Basic structural constructs} are translated to their Futhark counterparts directly.
@@ -966,32 +966,39 @@ The parser is located in the {\tt aplacc } directory of the project:
 The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
-The main part of the compiler is placed in {\tt tail2futhark/src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The Futhark AST is placed in {\tt tail2futhark/src/Tail2Futhark/Futhark/AST.hs}.
+The main part of the compiler is placed in {\tt src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The definition of the Futhark AST is placed in {\tt /src/Tail2Futhark/Futhark/AST.hs}.
+The implementation of the compiler is very close to the transformations rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:compiler}.\\
 
-The implementation of the compiler is very close to the compilation presented in the compilation scheme in Section  \ref{sec:scheme}. 
-The source code can be found in its entirety can be found in Appendix \ref{app:compiler}.
-
-There is however some specific implementation details that 
-
-% friske navne - impl detalje - 
-% indput fra fil / standard
-% 
-
-The compiler itself is implemented in the file {\tt src/Tail2Futhark/Compile.hs} and exports one function:
+The module defined in the {\tt Compile.hs} file exports one function:
 \begin{lstlisting}[language=haskell]
 compile :: Options -> T.Program -> F.Program
 \end{lstlisting}
 
-The {\tt compile} function produces a Futhark program given options and a TAIL program. Since a TAIL proram is an expression it calls
-a function called {\tt compileExpression} on the TAIL program. The resulting Futhark expression is then made the body of the main
-function in the Futhark program.
+The {\tt compile} function produces a Futhark program given options and a TAIL program. 
+Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. \\
 
-The {\tt compileExpression} function pattern matches on the TAIL ast to compile the expression, with the difficult case bieng an
-operator application, in that case the {\tt compileOperator} function is called which matches on the operator names.
+Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression. The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names. Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
+The resulting Futhark expression is then made the body of the main
+function in the Futhark program. 
+In our representation of the Futhark AST a Futhark program consists of a list of function declarations that are represented by the type FunDecl. 
 
-Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching
-as described earlier.
+\begin{lstlisting}[language=haskell]
+type Program = [FunDecl]
+\end{lstlisting}
 
+Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
+Library functions are added to the beginning of every file (except if the --no-include-lib-funs option is used). 
+Some of the functions are created from templates. First the function body is created as a Futhark expression. Then we make a Futhark function that is parametrised over a Futhark type. We represent such a fundtion with the type {\tt F.Type $\rightarrow$ FunDecl}. We can even parametrise the bodies of the functions by giving them the type {\tt F.Type $\rightarrow$ F.Exp}, this type is simply pased from the parametrised function when it is instanciated. To produce all the functions we simply map the parametrised versions over the basic types. \\
+
+We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. \\
+
+%i tail kan man bruge readintvec file
+%det kan ikke lige oversætte til futhark
+%futhark kan tage input ved at tage arg i man fkt men gør det ved at læse input fra standard in 
+%ikke det sto mindre skulle vil kunne læse filer for at kunne implementere nogle benchmarks
+%vi har derfor lavet et hack som siger hvis de første udtryk i programmet er indlæsnings fkt bliver de oversat til args i futhark. dvs. hvis tail programmet læser input gør futhark det også. Det eneste der supproter det er readIntVecFile i TAIL.
+%Vi tager ikke hensyn til at syntaxen for det de læser ind er forskellig fra tail og futhark.
+%programmøren er selv ansvarlig for at hvis tail filen læser ind fra en fil må man pipe indholdet (muligvis til et andet format) til standard in når man læser futhark programmer
 
 
 \subsection{Pretty print}
@@ -1045,64 +1052,62 @@ We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2fut
 
 %We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
 
+NAEVN AT ALLE TEST KØRTE MED OK! så man faktisk siger det lykkedes...
+NÆVN HVAD MAN SKAL GØRE FOR AT KØRE TESTENE
 
 \section{Benchmarks}
 \label{sec:benchmarks}
 
-vi er nødt til at læse matricerne ind for ellers optimere futhark det væk..
+We used a number of benchmarks to mesure the performance of the code generated by our compiler. 
+All benchmarks can be found in the {\tt tests/benchmarks} directory. 
+The benchmarks is originaly written i APL like the tests we presented in Section \ref{sec:impl} and then compiled to C-code using the apltail compiler to create the TAIL version and the apltail compiler, our compiler, and the Futhark compiler to make the Futhark version. 
+Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages. \\
+The C-code is then made executable (using -xmod) and the {\tt time} tool is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
+The benchmarks is run on a INDSÆT SPECS OM DEN COMPUTER VI KØRER DET PAA! All benchmarks is taken from the apltail project \cite{ElsmanDybdal:Array:2014}.\\
 
-We have used benchmarks to mesure preformance of the generated Futhark code by comparing it with the TAIL code.
-Because no parallel backend are finished for either TAIL or Futhark we use a sequential backend for both languages. \\
+\begin{table} 
+\begin{center}
+\label{tbl:benchmark}
+\begin{tabular}{l c c c}
+Benchmark & Problem size & TAIL C & Futhark C \\ \hline \\
+Matrix multiplication    & ? & ? & ? \\
+Pi			         & ? & ? & ? \\
+Black sholes               & ? & ? & ? \\
+Easter3000                 & ? & ? & ? \\
+\end{tabular}
+\caption{Benchmark timing in miliseconds.}
+\end{center}
+\end{table}
 
-The benchmarks used to test the compiled code is all origianaly written in APL. They are then compiled using the {\tt apltail} compiler to TAIL source code and also using the same compiler to an executable file. The TAIL source code was also compiled using the Tail2Futhark compiler to Futhark source code and then using the Futhark compiler to an executable file. This was done automatically by running a make file on the directory containing all the benchmarks.
-Then the efficiency of the generated code was tested using {\tt time} on the executable TAIL and Futhark version of the files and the results compaird. In order to have data big enough to level out any initial overhead we ....\\
+%% vi er nødt til at læse matricerne ind for ellers optimere futhark det væk..
 
-\subsection{Matrix multiplication}
-The matrix multiplication program takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimention).
-The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. 
-
-The code in TAIL can be seen below. 
-
-\begin{lstlisting}[breaklines=true]
-let v1:[int]1 = readIntVecFile(['m','a','t','r','i','x']) in
-let v2:[int]1 = readIntVecFile(['s','i','z','e']) in
-let v3:[int]0 = first{[int],[1]}(v2) in
-let v5:[double]2 = reshape{[double],[1,2]}([v3,v3],each{[int,double],[1]}(fn v4:[int]0 => divd(1.0,i2d(v4)),v1)) in
-let v6:[double]2 = transp{[double],[2]}(v5) in
-let v13:[double]3 = transp2{[double],[3]}([2,1,3],reshape{[double],[2,3]}([v3,v3,v3],v5)) in
-let v19:[double]3 = transp2{[double],[3]}([1,3,2],reshape{[double],[2,3]}([v3,v3,v3],v6)) in
-let v24:[double]2 = reduce{[double],[2]}(addd,0.0,zipWith{[double,double,double],[3]}(muld,v13,v19)) in
-reduce{[double],[0]}(muld,1.0,reduce{[double],[1]}(addd,0.0,v24))
-\end{lstlisting}
-
-It becomes the following Futhark code when run through the compiler...
-
-\begin{lstlisting}
-futhark code here
-\end{lstlisting}
-
-Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. 
-
-In order to have data big enough to messure the performance of the TAIL executable file and the Futhark executable file the program code was run on a matrix that was 10.000 x 10.000. 
-The result of that is...
-
-\begin{lstlisting}
-futhark code here
-\end{lstlisting}
+\subsection{Matric multiplication}
+The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimention).
+The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. \\
 
 \subsection{Pi}
+The pi benchmark ..
+
+\subsection{Black sholes}
+The black sholes benchmark...
+
+\subsection{Easter3000}
+The easter3000 benchmark calculate the occurence of easter for all years between year 1 and year 3000. 
 
 \section{Discussion}
+The goul with this project was to see if it was possible to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
+We have been able to compile the sunset to Futhark code but since no parallel backend was finished for either TAIL or Futhark until the last week of this project we have not been able to test our compilation up against a parallel backend. Instead we have used the sequential backend that exixtsted for both languages. \\
+% hvilken betydning har dette for at vi kan sige om vores mål er nået eller ej? 
+
+Because Futhark does not support polymorphism in its type system compiling the polymorphic TAIL created some difficulties. We had to make create library functions for each basic type and create our compilation so that we only used library functions in the one-dimentional case. Otherwise we would have had to make a function for each version of basic type and array shape and considering array shapes are an infinitve set that would create a lot problems. Therefore having polymofphism in Futhark would be a very good idea.\\
+
+The compilation scheme we did in our shorthand notation worked well. It enabled us to focus on the conceptual compilation and not get lost in the implementation details while doing the project. It also adds an overview of the entire compilation (everything can be written in a page or two) that would have been difficult to have without it. 
 % Methods used
 % Library functions
 %% behrænsning kunne have været hvis vi havde valgt at implementere faste libraryfunctions en for hver rank og type. 
 % Polymorphism could have been nice
 % How could we have tested more throughly
-% ...
-
-\subsection{Polymophism}
-\subsection{Methods}
-\subsection{Limitations}
+%  Limitations
 
 \section{Conclusion}
 
