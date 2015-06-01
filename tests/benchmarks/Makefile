@@ -28,4 +28,4 @@ fut_%: %.fut
 	$(FUTHARKC) -o $@ $<
 
 clean:
-	rm $(FUTEXECS) $(TLEXECS)
+	rm *.fut *.tail *.c tail_* fut_*

@@ -13,9 +13,10 @@ easter←{                     ⍝ Easter Sunday in year ⍵
     10000 100 1+.×⍵ M D      ⍝ yyyymmdd
 }
 
-a ← easter 2014
-b ← easter 2015
-c ← easter 2016
-d ← easter 2017
+run ← {
+  ⌈/easter¨⍳ 3000+⍵
+}
 
-+/ a b c d
+a←⌊/run ¨ ⍳ 40000
+
+a

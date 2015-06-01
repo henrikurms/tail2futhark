@@ -13,6 +13,6 @@ easter←{                     ⍝ Easter Sunday in year ⍵
     10000 100 1+.×⍵ M D      ⍝ yyyymmdd
 }
 
-⎕ ← easter ¨ 2014+⍳ 4
+a ← easter ¨ 2014+⍳ 4
 
-0
++/a
