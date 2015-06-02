@@ -952,6 +952,12 @@ Lambda expressions with one argument are mapped to the same in Futhark.
 \label{sec:impl}
 In this section a Haskell implementation of the compilation scheme is presented. This compiler is devided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
 
+
+Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
+
+For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
+
+
 \subsection{The parser}
 %How we adapted the parser
 %The parser that we make use of was created in a precious project \cite{APLACC}.
@@ -992,17 +998,7 @@ Some of the functions are created from templates. First the function body is cre
 
 We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. 
 
-%i tail kan man bruge readintvec file
-%det kan ikke lige oversætte til futhark
-%futhark kan tage input ved at tage arg i man fkt men gør det ved at læse input fra standard in 
-%ikke det sto mindre skulle vil kunne læse filer for at kunne implementere nogle benchmarks
-%vi har derfor lavet et hack som siger hvis de første udtryk i programmet er indlæsnings fkt bliver de oversat til args i futhark. dvs. hvis tail programmet læser input gør futhark det også. Det eneste der supproter det er readIntVecFile i TAIL.
-%Vi tager ikke hensyn til at syntaxen for det de læser ind er forskellig fra tail og futhark.
-%programmøren er selv ansvarlig for at hvis tail filen læser ind fra en fil må man pipe indholdet (muligvis til et andet format) til standard in når man læser futhark programmer
-
-Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
-
-For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
+In TAIL there is a function called {\tt readIntVecFile} for reading input in from a file. This functionality does not exist in Futhark making it difficult to implement. However, we needed the functionality in order to implement some of our benchmarks so to get arround this problem we used the fact that Futhark can take input in a program as arguments to the main function by reading the output in from stadIn. We therefore added a check to see if the first expressions in a TAIL program is {\tt readIntVecFile}. If it is we compile the expressions to arguments in the Futhark main function. That mans that if the TAIL program reads an input so does the Futhark program. We do not take into accound that the syntax of the data they read are different from TAIL and Futhark. Also the programmer is resonsible for ensuring that if a TAIL prgram reads a file to pipe the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
 
 
 \subsection{Pretty print}
@@ -1148,21 +1144,21 @@ The expected result of the test can be found in the .ok version of the file. The
 \begin{center}
 \begin{tabular}{l l l l}
 Function  		& File name		& Describtion of test			& Result \\ \hline \\
-negi			& negi.tail			& negtes integer				& OK \\
+negi			& negi.tail			& negtes ints				& OK \\
 negd 		& negd.tail			& negate double				& OK \\
 ln 			& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
 absi 			& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
 expd 		& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
-mini 			& mini.tail			& min on 2 positive integers		& OK \\
+mini 			& mini.tail			& min on 2 positive ints		& OK \\
 signd 		& signd.tail			& ?????					& OK \\
 notb			& not1.tail			& not on true				& OK \\
 notb			& not0.tail			& not on false				& OK \\
-maxi			& maxi.tail			& max on 2 positive integers	& OK \\
+maxi			& maxi.tail			& max on 2 positive ints		& OK \\
 maxd		& maxd.tail		& max on 2 positive doubles	& OK \\
 ori			& 				& NOT TESTET				&  \\
-subi			& subi.tail			& substract positive integers	& OK \\
+subi			& subi.tail			& substract positive ints		& OK \\
 subd			& subd.tail			& substract positive doubles	& OK \\
-muli			& muli.tail			& multiply 2 positive integers	& OK \\
+muli			& muli.tail			& multiply 2 positive ints		& OK \\
 muld			& muld.tail			& multiply 2 positive doubles	& OK \\
 ltei			& ltei.tail			& 4 $\leq$ 3				& OK \\
 ltei			& lteiTrue.tail		& 4 $\leq$ 5				& OK \\
@@ -1179,6 +1175,62 @@ orb			& orFalse.tail		& (2 $=$ 1) $\lor$ (3 $=$ 2)		& OK \\
 orb			& orTrue.tail		& (2 $=$ 1) $\lor$ (2 $=$ 2)		& OK \\
 divi 			& divi.tail			& (4 / 2) + 4				& OK \\
 divd			& divd.tail			& (4.1 / 2.3) + 4				& FAIL (afrunding er forskellig)\\
+powd			& powd.tail			&  FORKERT tester ints		&  \\
+powi			& powi.tail			& power on 2 positive ints		& OK \\
+lti			& ltiTrue.tail 		& 3 < 5					& OK \\
+ltd			& ltdTrue.tail 		& 3.2 < 5.1					& OK \\
+andi			& iIMPL IS WRONG!! & 	how to test this in apl???	 & \\
+xorb			&  xorb.tail 		& (3=3) ≠ (4=1)				& OK \\
+i2d 			& i2d.tail			& integer to double 			& OK \\
+addi 			& addi.tail 			& addition of 2 positive ints		& OK \\ 
+addd 		& addd.tail 		& 2.3 + 4.5					& OK \\
+iotaV 		& iotaV.tail			& iota in positive integer		& OK \\
+iota	 		& iotaV.tail			& iota in positive integer		& OK \\
+eachV		& eachV.tail  		& add int on vector of ints 		& OK \\
+each			& each.tail			& add int on matrix af ints 		& OK \\
+reduceV		& NOT TESTET		&						&  \\
+reduce		& reduceRank0.tail	& reduce on vektor of int		& OK \\
+reduce 		& reduce2.tail		& reduce on matrix of int		& OK \\
+reduce 		& reduce3.tail		& reduce on array of rank 3 	& OK \\	
+shapeV		& NOT TESTET		&						&  \\
+reshape0		& NOT TESTET		&						&  \\		
+shape		& shape.tail		& shape of matrix of ints		& FAIL \\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{l l l l}
+Function  		& File name		& Describtion of test						& Result \\ \hline \\
+reshape		&  reshape.tail		& reshapes vector of int with padding			& OK \\
+reshape 		& reshape2.tail	 	& reshape vector into array of rank 			& OK \\ 
+vreverse		& rev2.tail			& reverse of matrix of ints					& OK \\
+vreverseV		& rev.tail			& reverse of vector of ints					& OK \\
+vrotate		& rotateRank2.tail	& rotate array of rank 3 of ints				& OK \\
+vrotateV		& rotateRank1.tail	& rotate vektoof ints 						& FAIL \\
+transp		& transp2.tail		& transpose vector of ints					& OK \\
+transp 		& transp3.tail		& transpose array of rank 3 of ints			& OK \\ 
+transp 		& transpAPL.tail		& transpose matrix of ints					& OK \\	
+
+transp2		& dyadic\_transp.tail	& transpose of matrix of ints				& OK \\
+takeV		& take1.tail		& positive int on vector with enough elements 	& OK \\ 
+takeV		& take1neg.tail		& negative int on vector with enough elements	& OK \\ 
+take			& take2.tail		& positive int on matrix with enough elements 	& OK \\
+dropV		& drop2.tail		& positive int on vector with enough elements	& OK \\
+drop			& drop2Dim.tail	    	& drops row in array rank 2 with enough elements & OK \\
+drop 			& drop2DimNeg.tail 	& drops with a negative number on array of rank 2 & FAIL \\
+drop 			& drop2DimtoMuch.tail & drops more rows than there are in the array     & OK \\
+drop 			& drop3Dim.tail		& positive int in a 3 dim array				& OK \\ 
+consV		& NOT TESTET		&									&  \\
+cons			& cons1.tail		& vector of ints on array of rank 2 of ints		& OK \\ 
+snocV		& snocRank1.tail 	& set scalar on vector						& OK \\
+snoc			& snocRank2.tail	& set vector on matrix 					& OK \\
+firstV			& firstV.tail			& first element of vektor of ints				& OK \\
+firstV			& firstV2.tail		& first element of vektor with only one element	& OK \\
+firstV			&  firstV3.tail 		& first element of vektor of ints				& OK \\
+first			& NOT TESTET		&									&  \\
+ 
+
+
 
 \end{tabular}
 \end{center}
