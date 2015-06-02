@@ -1017,9 +1017,11 @@ Each test are created in four file formats.
 A .apl file with the origianl code. A .tail file containing the code that comes from using the APLTAIL compiler on the APL code.
 A .fout file that contains the code that comes from using our compiler on the TAIL code (in the .tail file) and finaly a .ok file containing the expected results of the tests. The .ok file is used in our test framework to compare the result to. 
 
-All tests are originaly written in APL code to ensure that the programs we testet up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
+All tests are originaly written in APL code to ensure that the programs we tested up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
 
-To run the tests... \\
+To run the tests use 'cabal test' in the root directory of the repo after cloning it, you need the tail2futhark and futhark
+executables in your \$PATH to do this or the tests will fail. You can also run 'ghc tests/Test \&\& tests/Test' to see the
+test results in pretty colored output instead.\\
 
 The test framework is made using Cabal \cite{cabal} for manageing external libraries,  Tasty  \cite{tasty}, Tasty-Goldern \cite{tasty-golden}  .. \\
 
