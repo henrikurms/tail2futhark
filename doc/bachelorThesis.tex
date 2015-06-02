@@ -1000,6 +1000,10 @@ We add {\tt t\_} in front of existing variable names when we compile the express
 %Vi tager ikke hensyn til at syntaxen for det de læser ind er forskellig fra tail og futhark.
 %programmøren er selv ansvarlig for at hvis tail filen læser ind fra en fil må man pipe indholdet (muligvis til et andet format) til standard in når man læser futhark programmer
 
+Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
+
+For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
+
 
 \subsection{Pretty print}
 The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
@@ -1011,46 +1015,44 @@ The pretty printer takes a Futhark AST and transforms the abstract representatio
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
 framework that will be descussed here. The otheris is to test the efficiency of the generated code in form of benchmarks and will be descussed in Section \ref{sec:benchmarks}. 
 
+We assume that the compiler producing TAIL code from APL programs returns the correct result. We therefore use the results from running the APLTAIL compiler on APL programs to compare our own test results to. 
+The tests can be found in the {\tt tests/our\_tests/} directory. 
+Each test are created in four file formats. 
+A .apl file with the origianl code. A .tail file containing the code that comes from using the APLTAIL compiler on the APL code.
+A .fout file that contains the code that comes from using our compiler on the TAIL code (in the .tail file) and finaly a .ok file containing the expected results of the tests. The .ok file is used in our test framework to compare the result to. 
 
-We assume that the compiler producing TAIL code from APL programs returns the correct result. We therefore use the results from running the {\tt apltail} compiler on APL prigrams to compare our own test results to. All tests are originaly written in APL code. Then the {\tt apltail} compiler was used to generate TAIL programs. We did this to ensure that the programs we testet up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as
+All tests are originaly written in APL code to ensure that the programs we testet up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
+
+To run the tests... \\
 
 The test framework is made using Cabal \cite{cabal} for manageing external libraries,  Tasty  \cite{tasty}, Tasty-Goldern \cite{tasty-golden}  .. \\
 
-For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to
-do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
+
+The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. 
+Whenever a function was implemented during the development process test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
+We also added a number of more throrough tests at the end of the project in order to see if the function:
+
 We use the tasty package \cite{tasty} which provides a test framework that we use to implement our tests. Furthermore we have used the
 package tasty-golden \cite{tasty-golden} which is a plug-in for the tasty framework that allows to test against "golden" files.
 A lot of projects implement their own test frameworks and we could have done the same.
 We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
 test framework which could prove time consuming.
 
-The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. 
-Whenever a function was implemented during the development process test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
-We also added a number of more throrough tests at the end of the project in order to see if the function:
+The test results can be found in Appendix \ref{app:testresults}. Based on the results of the test we assume our implementation works as expected on the subset of TAIL we have tested, however because the tests are not exsoustive we cannot be sure everything works (see Limitations of the tests).
 
+\subsubsection{Limitations of the tests}
+In order to thoroughly test the compiler all functions should be have specific test that test one of each of the below things
+that meaningfully apply to the function. 
 \begin{itemize}
 \item works on different data types (both base types and rank)
 \item work on edgecases
 \item works on positive and negative input
 \item function correct in all branches in if-then-else expressions
 \end{itemize}
-In order to thoroughly test the compiler all functions should be have specific test that test one of each of the above things
-that meaningfully apply to the function however due to time restrains we have chosen to focus on a smaler subset. 
-
-Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
-
+However, due to time restrains we have chosen to focus on doing this on a smaler subset. 
 
 We have not testet for or taken into account the possibility of TAIL code that are incorrect as it is generated by a compiler and only used as an intermidiate language. 
 
-Based on the results of the test we assume our implementation works as expected on the subset of TAIL we have implemented. 
-Because of the importance of the multidimensional arrays for the language we have testet each function on input of 1 dimension and input of at least 2 dimensions. 
-
-%In order to test the correctness of the the generated code we have set up a test using the Cabal framework to make automatet tests that take the TAIL code though the tail2futhark compiler and the Futhark compiler and compair the result from the Futhark compiler with a premade result file containing the correct result. The automated test made it possible to run all tests whenever we did an alteration to the compiler. 
-%Running the tests every time we made an alteration enabled us to check if the new alteration had created a problem with the work we had allredy done. \\
-
-We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2futhark} project. 
-
-%We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
 
 NAEVN AT ALLE TEST KØRTE MED OK! så man faktisk siger det lykkedes...
 NÆVN HVAD MAN SKAL GØRE FOR AT KØRE TESTENE
