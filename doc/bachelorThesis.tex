@@ -75,6 +75,8 @@
 
 \abstract
 
+HUSK HUSK HUSK!!!
+
 \newpage
 
 \tableofcontents
@@ -87,24 +89,29 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-In recent years, there has been a lot of focus on leveraging the power of parallel hardware. 
+In this paper we want to examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler \cite{ElsmanDybdal:Array:2014}, into Futhark programs \cite{TroelsHenriksen} and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware?
+
+The compilation between TAIL and Futhark is described in a compilation scheme that is the main contribution of this paper. The resultning compiler created using based on this scheme is called TAIL2Futharl. 
+In Fugure \ref{fig:compilers} is an overview of the main lanuages and compilers mentioned in this project. The figure gives an overview of how the TAIL2Futhark compiler fit in between the alredy existing APLTAIL compiler that compiles APL to TAIL code and the Futhark compiler that compiles Futhark to either a sequential or parallel code. 
+
+In recent years, there has been a lot of focus on leveraging the power of parallel hardware because of the promise it offers for faster execution. 
 One approach has been to design programming languages with explicit data-parallel constructs that can be compiled 
-into highly parallel code. One such language is Futhark. The aim of Futhark is to target parallel hardware such as 
+into highly parallel code. One such language is Futhark \cite{TroelsHenriksen}. The aim of Futhark is to target parallel hardware such as 
 GPUs while itself being the target of more programmer-productivity oriented languages. The Futhark compiler 
 performs several optimizations, such as fusion, which enhance the degree of 
-parallelism \cite{T.Henriksen&C.Oancea}.\\
+parallelism \cite{T.Henriksen&C.Oancea}.
 
 APL is an array language and includes various operations that are central to the language and are good candidates 
 for parallel execution. Efforts in compiling APL to parallel backends already exist in the form of the language 
 TAIL (Typed array intermediate language) and it’s compiler \cite{ElsmanDybdal:Array:2014}.
 The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form.
 In our work we provide a compiler from TAIL 
-to Futhark thus bridging the gap between APL and Futhark.\\
+to Futhark thus bridging the gap between APL and Futhark.
 
 The language Futhark is designed to target parallel architectures and at the same time acting 
 as an intermediate language for more feature-rich languages. By compiling APL to Futhark through TAIL the 
 Futhark compiler can be used to generate parallel code from APL once a parallel backend for 
-Futhark is completed.\\
+Futhark is completed.
 
 The background for designing TAIL was to create a typed intermediate language for the array programming language APL.
 TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into
@@ -115,7 +122,7 @@ and most of the built-in functions in the language are array operators that work
 Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
 The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type. 
 Even though it is an old language it is still used in the financial world 
-where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}. \\
+where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}.
 
 There are traditionally five stages of a compiler if you compile a high level language to machine code: 
 lexical analysis, syntax analysis, type checking, intermediate code generation, register allocation, machine 
@@ -125,17 +132,17 @@ The first two phases are still lexical analysis and syntax analysis and are hand
 We made use of an already existing parser \cite{APLACC} and only modified it in order for it to work on the latest 
 version of TAIL. The third phase is transforming the abstract syntax tree of TAIL to the abstract syntax tree 
 representing the code in Futhark and the fourth phase is printing the AST so it becomes correct 
-Futhark source code. \\
+Futhark source code. 
 
 One of the main point of interest in the compilation between TAIL and Futhark is compiling the four array operators 
 of TAIL: {\tt each}, {\tt eachV}, 
  {\tt reduce} and {\tt zipWith} to Futhark source code that include the four second-order array combinators in Futhark:  
  {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan} \cite{ElsmanDybdal:Array:2014}\cite{TroelsHenriksen}. 
 However as the functionality of these functions are not completely 
-identical the work lies in creating a mapping that retains the parallelism in the original code in the target language.\\
+identical the work lies in creating a mapping that retains the parallelism in the original code in the target language.
 This can be seen in the example below which illustrate this difference. The reduce function in the
 TAIL language is mapped to a nested reduce function in the Futhark language.
-As some function names exists in both languages the Futhark version is \underline{underlined}.
+As the reshape function exists in both languages the Futhark version is \underline{underlined} for easier readability.
 
 \begin{lstlisting}[numbers=none,frame=none]
 $\text{reduce}$(+, [[1,2,3,4],[5,6,7,8]]))
@@ -154,7 +161,7 @@ this paper presents an implementation of the previous mentioned scheme in Haskel
 
 The project is open source and the source code can be found here:\\ https://github.com/henrikurms/tail2futhark.
 
-Both Futhark and TAIL are ungoing research projects and are therefore subject to change bear in mind that the references cited are not up to date. For a up to date version of the languages and their compilers refer to their recepctive github repositories: \\
+Both Futhark and TAIL are ungoing research projects and are therefore subject to change bear in mind that the references cited may not be up to date. For a up to date version of the languages and their compilers we refer to their recepctive github repositories (links for these repositories can be seen below): \\
 
 TAIL: https://github.com/melsman/apltail
 
@@ -162,6 +169,17 @@ Futhark: https://github.com/HIPERFIT/futhark
 
 % \section{Outline}
 %The compilation scheme presented later in this section is written in a form of short hand notation to be able to have the entire compilation written in a short and very detailed was that is implem
+
+\begin{figure}
+\label{fig:compilers}
+\begin{center}
+    \includegraphics[width=12cm]{compilers.png}
+    \caption{The three main languages and compilers used in this project.}
+\end{center}
+\end{figure}
+
+%The three main languages and compilers used in this project. The languages (APL, TAIL and Futhark) are shown as boxes. The compilers (APLTAIL, TAIL2Futhark and  Futhark) as arrows between the. In this project the creation of the TAIL2Futhark is shown.
+
 
 \subsection{Methods and tools}
 In this paper a compilation scheme done in a form of mathematical shorthand notation is presented. 
@@ -356,7 +374,7 @@ Lambda expressions in TAIL can be curried so they can take multiple arguments.
 \label{sec:futhark}
 
 In this section we give a short introduction to the Futhark language. We will only cover the parts necessary to understand
-the reasoning behind our compilation approach. For the full language reference please refer to (ref).
+the reasoning behind our compilation approach. For the full language reference please refer to \cite{TroelsHenriksen}.
 
 The syntax of Futhark types can be seen below.
 \begin{lstlisting}[numbers=none,frame=none]
@@ -1194,9 +1212,8 @@ reduceV		& NOT TESTET		&						&  \\
 reduce		& reduceRank0.tail	& reduce on vektor of int		& OK \\
 reduce 		& reduce2.tail		& reduce on matrix of int		& OK \\
 reduce 		& reduce3.tail		& reduce on array of rank 3 	& OK \\	
-shapeV		& NOT TESTET		&						&  \\
-reshape0		& NOT TESTET		&						&  \\		
-shape		& shape.tail		& shape of matrix of ints		& FAIL \\
+shapeV		& firstV2.tail		& shape of vector			& OK \\
+shape		& take2.tail		& shape of matrix of ints		& OK \\
 \end{tabular}
 \end{center}
 
@@ -1208,32 +1225,37 @@ reshape 		& reshape2.tail	 	& reshape vector into array of rank 			& OK \\
 vreverse		& rev2.tail			& reverse of matrix of ints					& OK \\
 vreverseV		& rev.tail			& reverse of vector of ints					& OK \\
 vrotate		& rotateRank2.tail	& rotate array of rank 3 of ints				& OK \\
-vrotateV		& rotateRank1.tail	& rotate vektoof ints 						& FAIL \\
+vrotateV		& rotateRank1.tail	& rotate vektoof ints 						& OK \\
 transp		& transp2.tail		& transpose vector of ints					& OK \\
 transp 		& transp3.tail		& transpose array of rank 3 of ints			& OK \\ 
 transp 		& transpAPL.tail		& transpose matrix of ints					& OK \\	
-
 transp2		& dyadic\_transp.tail	& transpose of matrix of ints				& OK \\
 takeV		& take1.tail		& positive int on vector with enough elements 	& OK \\ 
 takeV		& take1neg.tail		& negative int on vector with enough elements	& OK \\ 
 take			& take2.tail		& positive int on matrix with enough elements 	& OK \\
 dropV		& drop2.tail		& positive int on vector with enough elements	& OK \\
 drop			& drop2Dim.tail	    	& drops row in array rank 2 with enough elements & OK \\
-drop 			& drop2DimNeg.tail 	& drops with a negative number on array of rank 2 & FAIL \\
+drop 			& drop2DimNeg.tail 	& drops with a negative number on array of rank 2 & OK \\
 drop 			& drop2DimtoMuch.tail & drops more rows than there are in the array     & OK \\
 drop 			& drop3Dim.tail		& positive int in a 3 dim array				& OK \\ 
 consV		& NOT TESTET		&									&  \\
 cons			& cons1.tail		& vector of ints on array of rank 2 of ints		& OK \\ 
 snocV		& snocRank1.tail 	& set scalar on vector						& OK \\
 snoc			& snocRank2.tail	& set vector on matrix 					& OK \\
-firstV			& firstV.tail			& first element of vektor of ints				& OK \\
 firstV			& firstV2.tail		& first element of vektor with only one element	& OK \\
-firstV			&  firstV3.tail 		& first element of vektor of ints				& OK \\
-first			& NOT TESTET		&									&  \\
- 
-
-
-
+firstV			& firstV3.tail 		& first element of vektor of ints				& OK \\
+first			& first2.tail			& first on a matrix						& OK \\
+zipWith		& zipwith.tail		& zip addi over two vectors					& OK \\ 
+zipWith 		& zipwith2.tail		& zip addi over two matrices				& OK \\
+zipWith 		& zipwith3.tail		& zip addi over two arrays of rank 3 of ints		& OK \\
+catV			& NOT TESTET		& 									& \\
+cat			& cat.tail			& cat of arrays of rank 2 of ints				& OK \\
+cat			& catV.tail			& cat of vectors of ints					& OK \\
+cat			& concat.tail		& cat of arrays of rank 2 af ints				& OK \\
+rotate		& NOT TESTET	OR IMPL	&						&  \\
+reverse		& NOT TESTET	OR IMPL	&						&  \\
+reshape		& reshape.tail		& reshape vector to matrix					&  OK \\
+reshape		& reshape2.tail		& reshape with extending the vector			&  OK \\
 \end{tabular}
 \end{center}
 
