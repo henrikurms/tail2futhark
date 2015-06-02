@@ -955,7 +955,7 @@ In this section a Haskell implementation of the compilation scheme is presented.
 \subsection{The parser}
 %How we adapted the parser
 %The parser that we make use of was created in a precious project \cite{APLACC}.
-The parser used in this project was made previusly in another project \cite{APLACC} and therefore not a main part of this project. Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. \\
+The parser used in this project was made previusly in another project \cite{APLACC} and therefore not a main part of this project. Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. 
 
 We had to extend the abstarct syntax three to include bools and chars. 
 We changes type constructors from previusly ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank
@@ -967,7 +967,7 @@ The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
 The main part of the compiler is placed in {\tt src/Tail2Futhark/Compile.hs} and transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The definition of the Futhark AST is placed in {\tt /src/Tail2Futhark/Futhark/AST.hs}.
-The implementation of the compiler is very close to the transformations rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:compiler}.\\
+The implementation of the compiler is very close to the transformations rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:compiler}.
 
 The module defined in the {\tt Compile.hs} file exports one function:
 \begin{lstlisting}[language=haskell]
@@ -975,7 +975,7 @@ compile :: Options -> T.Program -> F.Program
 \end{lstlisting}
 
 The {\tt compile} function produces a Futhark program given options and a TAIL program. 
-Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. \\
+Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. 
 
 Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression. The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names. Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
 The resulting Futhark expression is then made the body of the main
@@ -988,9 +988,9 @@ type Program = [FunDecl]
 
 Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
 Library functions are added to the beginning of every file (except if the --no-include-lib-funs option is used). 
-Some of the functions are created from templates. First the function body is created as a Futhark expression. Then we make a Futhark function that is parametrised over a Futhark type. We represent such a fundtion with the type {\tt F.Type $\rightarrow$ FunDecl}. We can even parametrise the bodies of the functions by giving them the type {\tt F.Type $\rightarrow$ F.Exp}, this type is simply pased from the parametrised function when it is instanciated. To produce all the functions we simply map the parametrised versions over the basic types. \\
+Some of the functions are created from templates. First the function body is created as a Futhark expression. Then we make a Futhark function that is parametrised over a Futhark type. We represent such a fundtion with the type {\tt F.Type $\rightarrow$ FunDecl}. We can even parametrise the bodies of the functions by giving them the type {\tt F.Type $\rightarrow$ F.Exp}, this type is simply pased from the parametrised function when it is instanciated. To produce all the functions we simply map the parametrised versions over the basic types. 
 
-We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. \\
+We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. 
 
 %i tail kan man bruge readintvec file
 %det kan ikke lige oversætte til futhark
@@ -1009,7 +1009,7 @@ The pretty printer takes a Futhark AST and transforms the abstract representatio
 
 \subsection{Testing}
 We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
-framework that will be descussed here. The otheris is to test the efficiency of the generated code in form of benchmarks and will be descussed in Section \ref{sec:benchmarks}. \\
+framework that will be descussed here. The otheris is to test the efficiency of the generated code in form of benchmarks and will be descussed in Section \ref{sec:benchmarks}. 
 
 
 We assume that the compiler producing TAIL code from APL programs returns the correct result. We therefore use the results from running the {\tt apltail} compiler on APL prigrams to compare our own test results to. All tests are originaly written in APL code. Then the {\tt apltail} compiler was used to generate TAIL programs. We did this to ensure that the programs we testet up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as
@@ -1024,7 +1024,7 @@ A lot of projects implement their own test frameworks and we could have done the
 We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
 test framework which could prove time consuming.
 
-The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. \\
+The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. 
 Whenever a function was implemented during the development process test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
 We also added a number of more throrough tests at the end of the project in order to see if the function:
 
@@ -1035,7 +1035,7 @@ We also added a number of more throrough tests at the end of the project in orde
 \item function correct in all branches in if-then-else expressions
 \end{itemize}
 In order to thoroughly test the compiler all functions should be have specific test that test one of each of the above things
-that meaningfully apply to the function however due to time restrains we have chosen to focus on a smaler subset. \\
+that meaningfully apply to the function however due to time restrains we have chosen to focus on a smaler subset. 
 
 Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
 
@@ -1048,7 +1048,7 @@ Because of the importance of the multidimensional arrays for the language we hav
 %In order to test the correctness of the the generated code we have set up a test using the Cabal framework to make automatet tests that take the TAIL code though the tail2futhark compiler and the Futhark compiler and compair the result from the Futhark compiler with a premade result file containing the correct result. The automated test made it possible to run all tests whenever we did an alteration to the compiler. 
 %Running the tests every time we made an alteration enabled us to check if the new alteration had created a problem with the work we had allredy done. \\
 
-We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2futhark} project. \\
+We have the tests in a directory called {\tt test/ourtests} in the {\tt tail2futhark} project. 
 
 %We have not done thorough testing on all the fuctions implemented in the compiler as that is a very time consuming task. 
 
@@ -1061,9 +1061,9 @@ NÆVN HVAD MAN SKAL GØRE FOR AT KØRE TESTENE
 We used a number of benchmarks to mesure the performance of the code generated by our compiler. 
 All benchmarks can be found in the {\tt tests/benchmarks} directory. 
 The benchmarks is originaly written i APL like the tests we presented in Section \ref{sec:impl} and then compiled to C-code using the apltail compiler to create the TAIL version and the apltail compiler, our compiler, and the Futhark compiler to make the Futhark version. 
-Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages. \\
+Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages. 
 The C-code is then made executable (using -xmod) and the {\tt time} tool is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
-The benchmarks is run on a INDSÆT SPECS OM DEN COMPUTER VI KØRER DET PAA! All benchmarks is taken from the apltail project \cite{ElsmanDybdal:Array:2014}.\\
+The benchmarks is run on a INDSÆT SPECS OM DEN COMPUTER VI KØRER DET PAA! All benchmarks is taken from the apltail project \cite{ElsmanDybdal:Array:2014}.
 
 \begin{table} 
 \begin{center}
@@ -1083,7 +1083,7 @@ Easter3000                 & ? & ? & ? \\
 
 \subsection{Matric multiplication}
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
-The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. \\
+The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. 
 
 \subsection{Pi}
 The pi benchmark ..
@@ -1109,7 +1109,7 @@ information and we believe it will be able to do so.
 
 Because Futhark does not support polymorphism in its type system compiling the polymorphic TAIL created some difficulties.
 We had to create library functions for each basic type and create our compilation so that we only used library functions in the one-dimensional case.
-Otherwise we would have had to make a function for each version of basic type and array shape and considering array shapes are an infinitve set that would create a lot problems. Therefore having polymofphism in Futhark would be a very good idea.\\
+Otherwise we would have had to make a function for each version of basic type and array shape and considering array shapes are an infinitve set that would create a lot problems. Therefore having polymofphism in Futhark would be a very good idea.
 
 The compilation scheme we did in our shorthand notation worked well.
 It enabled us to focus on the conceptual compilation and not get lost in the implementation details while doing the project.
@@ -1136,4 +1136,52 @@ It also adds an overview of the entire compilation (everything can be written in
 
 \section{Pretty printer source code}
 \label{app:pretty}
+
+\newpage
+
+\section{Test results}
+\label{app:testresults}
+The expected result of the test can be found in the .ok version of the file. The results in the table below is OK if the result of the compilation (found in the .out file) matches the expected one or FAIL if it does not.
+
+\begin{center}
+\begin{tabular}{l l l l}
+Function  		& File name		& Describtion of test			& Result \\ \hline \\
+negi			& negi.tail			& negtes integer				& OK \\
+negd 		& negd.tail			& negate double				& OK \\
+ln 			& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
+absi 			& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
+expd 		& blacksholes.tail	& -					& blacksholes evaluates to correct result \\
+mini 			& mini.tail			& min on 2 positive integers		& OK \\
+signd 		& signd.tail			& ?????					& OK \\
+notb			& not1.tail			& not on true				& OK \\
+notb			& not0.tail			& not on false				& OK \\
+maxi			& maxi.tail			& max on 2 positive integers	& OK \\
+maxd		& maxd.tail		& max on 2 positive doubles	& OK \\
+ori			& 				& NOT TESTET				&  \\
+subi			& subi.tail			& substract positive integers	& OK \\
+subd			& subd.tail			& substract positive doubles	& OK \\
+muli			& muli.tail			& multiply 2 positive integers	& OK \\
+muld			& muld.tail			& multiply 2 positive doubles	& OK \\
+ltei			& ltei.tail			& 4 $\leq$ 3				& OK \\
+ltei			& lteiTrue.tail		& 4 $\leq$ 5				& OK \\
+lted			& lted.tail			& 2.3 $\geq$ 3.3				& OK \\
+eqi			& eqiTrue.tail		& 4 $=$ 4					& OK \\
+eqi 			& eqiFalse.tail		& 4 $=$ 5					& OK \\
+eqd			& eqdFalse.tail		& 3.4 $=$ 1.2				& OK \\
+gti			& gtiTrue.apl		& 5 $>$ 4					& OK \\
+gtd			& gtdTrue.apl		& 3.4 $>$ 1.2				& OK \\
+gtei			& gteiTrue.tail		& 3 $\geq$ 2				& OK \\
+gted			& gtedFalse.tail		& 3.0 $\geq$ 3.2				& OK \\
+andb 		& andbTrue.tail 		& (2 $=$ 2) $\land$ (3 $=$ 3)	& OK \\
+orb			& orFalse.tail		& (2 $=$ 1) $\lor$ (3 $=$ 2)		& OK \\
+orb			& orTrue.tail		& (2 $=$ 1) $\lor$ (2 $=$ 2)		& OK \\
+divi 			& divi.tail			& (4 / 2) + 4				& OK \\
+divd			& divd.tail			& (4.1 / 2.3) + 4				& FAIL (afrunding er forskellig)\\
+
+\end{tabular}
+\end{center}
+
+
+
+
 \end{document}
