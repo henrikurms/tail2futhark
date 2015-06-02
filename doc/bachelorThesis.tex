@@ -237,6 +237,8 @@ The follwing sections of the report is structured as follows. Section \ref{sec:t
 \section{The intermidiate language TAIL}
 \label{sec:tail}
 
+In this section we present an overview on the language TAIL.
+
 The syntax of types in TAIL can be seen below. Types are divided into base types ($\kappa$), shape types ($\rho$), types ($\tau$), and type schemes ($\sigma$).The letter $i$ denotes an integer scalar value and the letter $\alpha$, and the letter $\gamma$ denotes type variables and shape variables, respectively.
 \begin{lstlisting}[numbers=none,frame=none]
 $\kappa$ ::= int | double | bool | $\alpha$
@@ -246,18 +248,24 @@ $\sigma$ ::= $\forall\vec{\alpha}\vec{\gamma}$.$\tau$
 \end{lstlisting}
 The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the rank of the array in its type.
 The integer scalar in the array's shape type denotes the rank of the array and must be a non-negative integer.
-The type system also supports vector types ($\langle \kappa \rangle^\rho$), which we used specifically to denote vectors of a specific length. For example, {\tt <int>8} denotes a vector of ints of known length 8. If a vector's length is not staticallly known, it can instead be expressed as an array of rank 1.
-Scalar values that are statically known have a separate type (S$_{\kappa}$($\rho$)), that is integers, and booleans, their value is contained in the type.
-In addition there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$) for singleton vectors where the element is statically known.
-Finally there exists function types ($\tau \rightarrow \tau$'). \\
+The type system also supports vector types ($\langle \kappa \rangle^\rho$), which are used specifically to denote vectors of a specific length. For example, {\tt <int>8} denotes a vector of ints of known length 8. If a vector's length is not staticallly known, it can instead be expressed as an array of rank 1.
+Scalar values that are statically known have a separate type (S$_{\kappa}$($\rho$)), that is integers, and booleans,
+for which their value is contained in the type.
+In addition, there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$)) for singleton vectors where the element is statically known.
+Finally there exists function types ($\tau \rightarrow \tau$').
 
 %The types schemes ($\sigma$) are expressed through substitution...
-The type system makes use of substitution in order to express instances of type schemes ($\sigma$). Type substitution ($S_t$) that maps type variables to base types and shape substitution ($S_s$) that maps shape variables to shape types. A general substitution ($S$) is a pair ($S_t$,$S_s$) of a type substitution and a shape substitution. Using the substitution $S$ on an object $B$ means applying 
-both $S_t$ and $S_s$ on objects in $B$. A type $\tau'$ is an instance of a type scheme $\sigma$ = $\forall\vec{\alpha}\vec{\gamma}$.$\tau$ (written $\sigma$ $\geq$ $\tau'$) if a substitution $S$ exists such that $S(\tau)$ = $\tau'$. \\
+The type system makes use of substitution in order to express instances of type schemes ($\sigma$).
+A type substitution ($S_t$) maps type variables to base types and shape substitution ($S_s$) maps shape variables to shape types.
+A general substitution ($S$) is a pair ($S_t$,$S_s$) of a type substitution and a shape substitution.
+Using the substitution $S$ on an object $B$ means applying both $S_t$ and $S_s$ on objects in $B$.
+A type $\tau'$ is an instance of a type scheme $\sigma$ = $\forall\vec{\alpha}\vec{\gamma}$.$\tau$ (written $\sigma$ $\geq$ $\tau'$) if a substitution $S$ exists such that $S(\tau)$ = $\tau'$. All type schemes are assumed closed.
 
 The syntax of operators and expressions is given below. The letter $v$ is used to denote values and the letter $x$ is used to denote program variables. 
+%\end{lstlisting}
+%\begin{lstlisting}[numbers=none,frame=none]
 \begin{lstlisting}[numbers=none,frame=none]
-op ::= addi | subi | multi | mini | maxi | addd | subd | 
+$op$ ::= addi | subi | multi | mini | maxi | addd | subd | 
        muld | mind | maxd | andb | orb | xorb |  nanb | 
        norb | notb | lti | ltei | gti | gtei | eqi | neqi |
        ltd | lted | gtd | gted | eqd | neqd | iota | each |
@@ -265,15 +273,16 @@ op ::= addi | subi | multi | mini | maxi | addd | subd |
        transp | transp2 | zipWith | shape | take | drop |
        first | cat | cons | snoc | shapeV | catV | consV | 
        snocV | iotaV | rotateV | takeV | dropV | firstV 
-\end{lstlisting}
 
-\begin{lstlisting}[numbers=none,frame=none]
-e ::= $v$ 
+$e$ ::= $v$ 
     | $x$ 
     | $[\vec{e}]$ 
     | $e$ $e'$ 
     | let $x$ = $e_1$ in $e_2$ 
     | $op(\vec{e})$
+
+$v$ ::= $[\vec{a}]^{\delta}$
+    | $\lambda x.e$
 \end{lstlisting}
 A TAIL program always consists of a single expression. An expression can then be a value, a variable, 
 a list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme. \\
@@ -290,7 +299,7 @@ The type scheme for the function {\tt each} is:
 \begin{lstlisting}[numbers=none,frame=none]
 each : $\forall\alpha\beta\gamma.(\alpha \rightarrow \beta)\rightarrow [\alpha]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-Given a function $f$ and an array $a$ {\tt each(f,a)} evaluates to an array where $f$ is applied to each element of $a$ given the value $[f(a_1),..,f(a_n)]$.
+Given a function $f$ and an array $a$, the application {\tt each(f,a)} evaluates to an array where $f$ is applied to each element of $a$ given the value $[f(a_1),..,f(a_n)]$.
 If the rank of the array is greater than 1 the {\tt each} function works as a map on the fattened representation of the array,
 that is, the function is applied on the inner most dimension of the array, or seen in another way, on each basic value.
 
@@ -317,10 +326,10 @@ Given two arrays it reshapes the flattened representation of the second array $a
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
 If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.\\
 
-Other interesting operators are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
+Other interesting operator expressions are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
 They return an array containing the 1st to $i$'th element of $a$,
 and the array containing the $i$'th to n'th element of $a$, respectively.
-If the array is multi-dimensional, the operators work on the outermost dimesion of the array. That is $take(2,[[1,2],[3,4][5,6]])$ evaluates to $[[1,2],[3,4]]$.
+If the array is multi-dimensional, the operators work on the outermost dimesion of the array. That is $take(2,[[1,2],[3,4],[5,6]])$ evaluates to $[[1,2],[3,4]]$.
 If the array contains to few elements {\tt take} pads the array with zeros,
 whereas {\tt drop} returns the empty array in case one tries to drop more elements than there are in $a$. \\
 
