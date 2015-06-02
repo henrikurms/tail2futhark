@@ -1,0 +1,1 @@
+i2d(reduce{[int],[0]}(addi,0,each{[bool,int],[1]}(b2i,zipWith{[bool,bool,bool],[1]}(orb,[ff,tt],[tt,tt]))))
