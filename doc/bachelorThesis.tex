@@ -1125,9 +1125,10 @@ benchmarks, hvordan kører vi dem og hvorfor bruges denne opsætning (smart for 
 \begin{tabular}{l c c c}
 Benchmark & Problem size & TAIL C & Futhark C \\ \hline \\
 Matrix multiplication    & ? & ? & ? \\
-Pi			         & ? & ? & ? \\
+Pi		     	         & ? & ? & ? \\
 Black sholes               & ? & ? & ? \\
-Easter3000                 & ? & ? & ? \\
+Easter                     & ? & ? & ? \\
+Primes                     & ? & ? & ? \\
 \end{tabular}
 \caption{Benchmark timing in miliseconds.}
 \end{center}
@@ -1135,20 +1136,34 @@ Easter3000                 & ? & ? & ? \\
 
 %% vi er nødt til at læse matricerne ind for ellers optimere futhark det væk..
 
-\subsection{Matric multiplication}
-The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
-The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. 
-
-
+\subsection{Matrix multiplication}
+The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
+It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
+The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus.
 
 \subsection{Pi}
-The pi benchmark ..
+The pi benchmark approximates pi by computing the ratio of points in the range $[0,1] \times [0,1]$ that have a distance to $(0,0)$ of less than 1.
+It does so by using $n \times n$ evenly spaced points in the interval $[0,1] \times [0,1]$, it can be helpful to imagine the set of points as a regular grid.
+The more fine grained the grid the closer he approximation to pi.
 
+The program first generates $n$ evenly spaced points in the interval $[0,1]$, it then squares those points before replicating them $n$ times to a $n \times n$ matrix.
+Then the matrix is added with it's own transpose and from the resulting matrix is produced a boolean matrix
+where all the entries with points with distance less than one from 0 are set to 1 and the rest to 0. Is is not necessary to take
+the square root of the sums since that square root will be less that 1 only if the original sum is less that 1.
+Finally the matrix is reduced with plus two times to get the number of points, the amount is divided by the total number of points and
+this number is multiplied by 4 to get pi.
 \subsection{Black sholes}
-The black sholes benchmark...
+The black sholes benchmark is taken directly from the bechmark suite of the apltail compiler and computes the price of european style options. We have not modified this benchamark this benchamrk and while it doesn't give any insight into performance it demonstrates
+that it is possible to compile this benchmark.
 
-\subsection{Easter3000}
-The easter3000 benchmark calculate the occurence of easter for all years between year 1 and year 3000. 
+\subsection{Easter}
+The easter benchmark computes the date of easter and is found in the apltail project as {\tt tests/easter3000.apl}, the only
+modification we have done is to make the date the result from the program instead of printing it and changed a parameter to scale
+the program up.
+
+\subsection{Primes}
+The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
+Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 
 \section{Discussion}
 The goul with this project was to see if it was possible to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
