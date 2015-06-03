@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{tabu}
 \usepackage{geometry}
+\usepackage[utf8x]{inputenc}
 
 \lstset{
   mathescape,
@@ -75,7 +76,14 @@
 
 \abstract
 
-HUSK HUSK HUSK!!!
+We present an implementation independent scheme for the compiling of a subset of the intermidiate array language TAIL
+ to the functional programming language Futhark, 
+ preserving the the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comapring the esecution time of selected benchmarks on sequential backends to both laguages, showing that the Futhark compiler optimises the execution time with up to a factor X on some benchmarks. \\\\\\\\\\\\\\\\
+
+\begin{center}
+Resumé
+\end{center}
+Vi præsenterer et implementations uafhængigt oversættelses ?? for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af ?? og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden med op til en faktor X.
 
 \newpage
 
