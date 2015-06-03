@@ -426,45 +426,43 @@ The only exception is that a lot of the built-in functions can be used on multip
 
 The syntax of Futhark expressions is show below as follows:
 \begin{lstlisting}[numbers=none,frame=none]
-$k$ ::= $n$ | $x$ | $b$ | $c$ | {$v_1$,...,$v_n$} | [v$_1$,...,$v_n$] 
-\end{lstlisting}
-\begin{lstlisting}[numbers=none,frame=none]
-$p$ ::= $id$ | {$p_1$,...,$p_n$}
-\end{lstlisting}
-
-\begin{lstlisting}[numbers=none,frame=none]
-$e$ ::=  $k$
-    | $v$ 
-    | {$e_1,...,e_n$} 
-    | [$e_1,...,e_n$] 
-    | $e_1$ $\odot$ $e_2$ 
-    | $-e$ 
-    | !$e$ 
-    | if $e_1$ then $e_2$ else $e_3$ 
-    | $v$[$e_1,...,e_n$] 
-    | $v$($e_1,...,e_n$) 
-    | let $p$ = $e_1$ in $e_2$
-    | zip($e_1,...,e_n$) 
-    | unzip($e$)
-    | iota($e$) 
-    | replicate($e_n, e_v$) 
-    | size($i$,$e$) 
-    | reshape(($e_1,...,e_n$),e)
-    | transpose($e$)
-    | split($e_1,e_2$)
-    | concat($e_1,e_2$)
-    | let $v_1$ = $v_2$ with [$e_1,...,e_n$] <- $e_v$ in $e_b$
-    | loop ($p$ = $e_1$) = for $v$ < $e_2$ do $e_3$ in $e_4$
-    | map($l$, $e$)
-    | filter($l$, $e$)
-    | reduce($l$, $x$, $e$)
-    | scan($l$, $x$, $e$)
+$k$ ::= $n$				(Integer)
+    | $d$				(Decimal number)
+    | $b$				(Boolean) 		
+    | $c$ 				(Character)
+    | {$v_1$,...,$v_n$} 		(Tuble)
+    | [v$_1$,...,$v_n$] 		(Array)
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
-$l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$
-    | $id$ ($e_1,...,e_n$)
-    | op $\odot$ ($e_1,..., e_n$)
+$e$ ::=  $k$								(Constant)
+    | $v$ 								(Variable)
+    | {$e_1,...,e_n$} 							(Tuble expression)
+    | [$e_1,...,e_n$] 							(Array expression)
+    | $e_1$ $\odot$ $e_2$ 							(Binary operator)
+    | $-e$ 								(Prefic minus)
+    | !$e$ 							(Logical negation)
+    | if $e_1$ then $e_2$ else $e_3$ 				(Branching)
+    | $v$[$e_1,...,e_n$] 							(Indexing)
+    | $v$($e_1,...,e_n$) 							(Function call)
+    | let $p$ = $e_1$ in $e_2$					(Pattern binding)
+    | zip($e_1,...,e_n$) 						(Zipping)
+    | unzip($e$)						(Unzipping)
+    | iota($e$) 						(Range)
+    | replicate($e_n, e_v$) 					(Replication)
+    | size($i$,$e$) 						(Array length)
+    | reshape(($e_1,...,e_n$),e)					(Array reshape)
+    | transpose($e$)					(Transposition)
+    | split($e_1,e_2$)						(Split $e_2$ at index $e_1$)
+    | concat($e_1,e_2$)						(Concationation)
+    | let $v_1$ = $v_2$ with					(In-place update)
+             [$e_1,...,e_n$] <- $e_v$ in $e_b$
+    | loop ($p$ = $e_1$) = for $v$ < $e_2$ do		(Loop)
+             $e_3$ in $e_4$
+\end{lstlisting}
+\begin{lstlisting}[numbers=none,frame=none]
+$p$ ::= $id$ 
+    | {$p_1$,...,$p_n$}
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
@@ -475,6 +473,22 @@ $fun$ ::=  fun t v(t$_1$ v$_1$,...t$_n$ v$_n$) = $e$
 $prog$ ::= $\epsilon$ | $fun$ $prog$
 \end{lstlisting}
 
+\begin{lstlisting}[numbers=none,frame=none]
+$l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$			(Anonymus function)
+    | $id$ ($e_1,...,e_n$)					   (Curried function)
+    | op $\odot$ ($e_1,..., e_n$)			   	   (Curried operator)
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none,frame=none]
+$e$ ::=  map($l$, $e$)					
+    | filter($l$, $e$)
+    | reduce($l$, $x$, $e$)
+    | scan($l$, $x$, $e$)
+\end{lstlisting}
+
+
+
+
 Note that the syntactical construct denoted by $l$ can only occur in {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
 The functions {\tt map }, {\tt filter }, {\tt reduce } and {\tt scan } are second-order array combinators, or SOACs for short.
 
@@ -484,8 +498,8 @@ binary operators, or lambda expressions.
 Futhermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
 the return type and argument types, and argument bindings follow the normal shadowing rules.
 
-We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and as such will not discuss them here.
-The SOACs can be used on arrays of any type even though it cannot be expressed by Futhark types, for clarity we give the type for each SOAC that it would have had in a polymorphic language.
+We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and we will not discuss them in detail here.
+The SOACs can be used on arrays of any type even though it cannot be expressed by Futhark types. For clarity we give the type for each SOAC that it would have had in a polymorphic language.
 Below we shortly discuss {\tt map} and {\tt reduce}.
 
 The function {\tt map} has the following type: 
@@ -495,39 +509,38 @@ map : $\forall\alpha\beta$($\alpha$ $\rightarrow$ $\beta$) $\rightarrow$ $[\alph
 The function {\tt map($l$,$a$)} takes a function $l$ and an array $a$ and evaluates to the array consisting of $l$ applied to each element of $a$.
 In contrast to TAIL, if the array is multi-dimensional the function is applied to the outer most dimension.
 This means that if the function $l$ is mapped into a 2-dimensional array the function would be applied to an array not the elements
-of the array. This makes sense considering that Futhark represents multi-dimensional arrays using nested arrays.\\
+of the array. This makes sense considering that Futhark represents multi-dimensional arrays using nested arrays.
 
 The type of the function {\tt reduce} is: 
 \begin{lstlisting}[numbers=none,frame=none]
-reduce : $\forall\alpha$($\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ $\alpha$) $\rightarrow$ $\alpha$ $\rightarrow$ $[\alpha]$ $\rightarrow$ $\alpha$
+reduce : $\forall\alpha$.($\alpha$ $\rightarrow$ $\alpha$ $\rightarrow$ $\alpha$) $\rightarrow$ $\alpha$ $\rightarrow$ $[\alpha]$ $\rightarrow$ $\alpha$
 \end{lstlisting}
 Given a binary operator/function $l$, the neutral element $e$ of $l$ and an array $a$,
 {\tt reduce } evaluates to the result of applying $l$ to combine all the elements of $a$, that is,
 \begin{lstlisting}[numbers=none,frame=none]
 $e \odot a[0] \odot \ldots \odot a[n]$ where $x \odot y = l (x,y)$
 \end{lstlisting}
-Like {\tt map}, {\tt reduce} applies the function on the outer-most dimension of the array. \cite{TroelsHenriksen}.\\ 
+Like {\tt map}, {\tt reduce} applies the function on the outer-most dimension of the array \cite{TroelsHenriksen}.
 
 The first-order segment of Futhark has many of the typical language features like constants, variables, many of the usual binary operators, branching, array indexing and some additional features like in-place updates and looping which we do not use.
 
 Futhark features array zipping with the built-in {\tt zip} which produces an array of pairs from a pair of arrays.
-The resulting arrays can then be mapped over with binary operators such as +.\\
+The resulting arrays can then be mapped over with binary operators such as +.
 
 The {\tt iota} function given an integer $n$ produces an array with integer values ranging from 0 to $n-1$.
 The {\tt replicate} function given an integer $n$ and an array $a$ returns an array consisting of $n$ copies of $a$.
 The {\tt size} primitive will given a positive integer $i$ and an array $a$ return the i'th dimension, or put in another way
 the length of the arrays nested with depth $i$ in $a$. Remember that these arrays will all have the same length.
 The {\tt reshape} function takes a number of dimensions $(dim_1,..., dim_n)$ and an array $a$ and returns an array where the elements of $a$ is reshaped into the shape specified by the list of dimensions.
-The number of elements in $a$ must be equal to the product of the dimensions i.e. $elements$ $of$ $a$ $=$ $dim_1 * ... * dim_n$.\\
+The number of elements in $a$ must be equal to the product of the dimensions i.e. $elements$ $of$ $a$ $=$ $dim_1 * ... * dim_n$.
 
 The function {\tt transpose} take an array $a$ and return the transposed $a$.
-If {\tt transpose} is used on an array of more than two dimensions it transposes the array a little different than one might expect.
-For instance the result of transposing an three-dimensional array with dimensions $2 x 3 x 4$ is not as one might expect an array with dimensions $4 x 3x 2$ but instead an array with dimensions $3x4x2$.\\
+Transposing a three-dimensional array with dimensions $2 \times 3 \times 4$ is not like in TAIL an array with dimensions $4\times3\times2$ but instead an array with dimensions $3\times4\times2$.
 
 The function {\tt split} given an integer $n$ and an array $a$ partitions $a$ into two arrays $a[0,..,n]$ and $a[n+1,...]$ and returns them as a tuple. 
 The function {\tt concat} takes two arrays and concatenates them by concatenating the row/elements of one array with another. The shape of the two arrays have to be the same except in the first dimension. 
 
-The undocumented {\tt rearrange} function takes as arguments a comma separated list of dimensions (surrounded in parentheses) and an array. It then rearranges the shape of the array to the by the list specified. \\
+The undocumented {\tt rearrange} function takes as arguments a comma separated list of dimensions (surrounded in parentheses) and an array. It then rearranges the shape of the array to the by the list specified.
 
 The aim of Futhark is to be an attractive choice for expressing complex parallel programs.
 This goal is pursued by featuring high expressive power without
@@ -559,14 +572,14 @@ The general strategy for compiling TAIL expressions was to aim for the simplest 
 the built-in functions of Futhark to make it easy for the Futhark compiler to optimize away the overhead that the compilation
 from TAIL to Futhark may have created.
 This means we have not directly focused on optimization in the compilation as it was futhermore not in the scope of this project.
-Still we have tried as much as possible to not introduce any unecessary inefficiencies.\\
+Still we have tried as much as possible to not introduce any unecessary inefficiencies.
  %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
 In the cases where it was not posible to use built-in Futhark functions library functions was created instead. 
 %There are several reasons for making libary functions. One was to keep our compilation scheme simple.
 %By having a small library of Furhark functions which is inlined in each compiled program we... % ja hvad får vi egentlig ud af det??? :)
 
-Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.\\
+Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.
 
 % Er der flere fordele ved biblioteksfunktionerne??
 % Hvad er det negative ved biblioteksfuntionerne
@@ -578,9 +591,10 @@ In this section we go over some of the library functions we have defined and dis
 \subsection{The take1, drop1 and reshape1 functions}
 The {\tt take1}, {\tt drop1} and {\tt reshape1} functions implement the TAIL operators {\tt take}, {\tt drop} and {\tt reshape} in the one-dimensional case. In Section \ref{sec:scheme}, we see how they can be used to implement the multi-dimensional cases. It is advantageous to use a library function for only the one-dimensional case as we would otherwise need a separate library function for each 
 rank and basic type combination which we then needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
-There is a template for each of the functions that make four functions (one for each base type). This way we can be sure to have the same function code for each type and it makes maintaning the functions easier. 
+There is a template written i Haskell code for each of the functions (take1, drop1, and reduce1). This template is a function that given a type returns Futhark code for that function with the given type. That way we can use the same template for making all four functions (one for each base type). This way we can be sure to have the same function code for each type and it makes maintaning the functions easier. 
 
-\paragraph{The take1 functions} is defined as follow. Note that this int version.
+\subsubsection{The take1 functions}
+The {\tt take1} functions is defined as follow: 
 \begin{lstlisting}[language=Futhark]
 fun [int] take1_int(int l,[int] x) =
   if (0 <= l)
@@ -591,14 +605,15 @@ fun [int] take1_int(int l,[int] x) =
        then let {_,v2} = split(((l + size(0,x))),x) in v2
        else concat(replicate((l - size(0,x)),0),x)
 \end{lstlisting}
+Note that this is the {\tt int} version. The template is as menstioned used to make a boolean, char, and float version as well but we have chosen only to show one for space reasoons. 
 
 The function first checks if it should perform a positive of negative take and then checks whether it should split so it can return
 part of the argument or pad the argument with zeros based on whether the take size was smaller or bigger than the array.
 
 %TODO what details are we missing?
 %TODO discuss how it knows what to pad with
-\paragraph{The drop1 functions}
-
+\subsubsection{The drop1 functions}
+The {\tt drop1} functions is defined as follows: 
 \begin{lstlisting}[language=Futhark]
 fun [int] drop1_int(int l,[int] x) =
   if (size(0,x) <= if (l <= 0) then -l else l)
@@ -607,8 +622,10 @@ fun [int] drop1_int(int l,[int] x) =
        then let {v1,_} = split(((l + size(0,x))),x) in v1
        else let {_,v2} = split((l),x) in v2
 \end{lstlisting}
+Again we show only the int version. 
 
-\paragraph{The reshape functions} int version can be seen below. 
+\subsubsection{The reshape1 functions}
+The {\tt reshape1} function's int version can be seen below.
 
 To adjust the array we first make sure it is long enough by extending it using the function replicate and then
 truncate it to the correct length with split.
@@ -639,6 +656,7 @@ fun bool eqb(bool x,bool y) =
 \end{lstlisting}
 
 Two booleans are equal if they both are true or none of them are true.
+
 \subsubsection{Xor} Likewise there is no logical xor operation so we included it in the library:
 
 \begin{lstlisting}[language=Futhark]
@@ -655,9 +673,7 @@ The rest of the library funcyions are implemented very straight forward and are 
 boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,
 nandb,norb,neqi,neqd,resi
 \end{lstlisting}
-
 The implementation of these functions can be found in Appendix \ref{app:impl}
-
 
 \section{The compilation scheme}
 \label{sec:scheme}
@@ -1143,8 +1159,6 @@ Easter3000                 & ? & ? & ? \\
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed. It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
 The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus. Replicating the patrices with reshape takes up a lot of memory. The TAIL compiler optimizes this memory utilation away (at least in the compiler generating sequential code.) Futhark however do not and therefore Futhark has to find a way to use less memory. This is very relevant because of the limitid memory when using the GPU to execute the code in parallel. 
 
-
-
 \subsection{Pi}
 The pi benchmark ..
 
@@ -1196,6 +1210,105 @@ It also adds an overview of the entire compilation (everything can be written in
 
 \section{Pretty printer source code}
 \label{app:pretty}
+
+\begin{lstlisting}[language=haskell,  mathescape=false]
+module Tail2Futhark.Futhark.Pretty (prettyPrint)  where
+
+import Text.PrettyPrint
+import Tail2Futhark.Futhark.AST
+
+prettyPrint :: Program -> String
+prettyPrint = render . vcat . map ppFun
+
+ppFun :: FunDecl -> Doc
+ppFun (tp, ident, args, exp) =
+  text "fun"
+  <+> ppType tp
+  <+> text ident
+  <> (commaList . map ppArg) args
+  <+> equals $+$ nest 2 (ppExp exp)
+  
+  ppFun :: FunDecl -> Doc
+ppFun (tp, ident, args, exp) =
+  text "fun"
+  <+> ppType tp
+  <+> text ident
+  <> (commaList . map ppArg) args
+  <+> equals $+$ nest 2 (ppExp exp)
+
+commaList = parens . hcat . punctuate comma
+commaExps = commaList . map ppExp
+brackList = brackets . hcat . punctuate comma
+brackExps = brackList . map ppExp
+
+ppType :: Type -> Doc
+ppType IntT = text "int"
+ppType RealT = text "real"
+ppType BoolT = text "bool"
+ppType CharT = text "char"
+ppType (ArrayT at) = brackets (ppType at)
+
+ppExp (Var ident) = text ident
+ppExp (Let Indent pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" $+$ ppExp exp2
+ppExp (Let Inline pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp exp1 <+> text "in" <+> ppExp exp2
+ppExp (IfThenElse Indent e1 e2 e3) = text "if" <+> ppExp e1 $+$ text "then" <+> ppExp e2 $+$ text "else" <+> ppExp e3
+ppExp (IfThenElse Inline e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
+ppExp (Constant c) = ppConstant c
+ppExp (Neg exp)    = text "-" <> ppExp exp
+ppExp (Index exp exps) = ppExp exp <> brackExps exps
+ppExp (Array exps) = brackExps exps
+ppExp (BinApp op e1 e2) = parens $ ppExp e1 <+> ppOp op <+> ppExp e2
+ppExp (FunCall ident exps) = text ident <> commaExps exps
+ppExp (FunCall2 ident exps exp) = text ident <> parens (commaExps exps <> comma <> ppExp exp)
+--ppExp (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppExp exp)
+ppExp (Empty tp) = text "empty" <> parens (ppType tp)
+ppExp e = case e of
+  Map k e         -> pp1 "map" k e
+  Filter k e      -> pp1 "filter" k e
+  Scan k e1 e2    -> pp2 "scan" k e1 e2
+  Reduce k e1 e2  -> pp2 "reduce" k e1 e2
+  where pp1 id k e     = text id <> parens ((ppKernel k) <> comma <> ppExp e)
+             pp2 id k e1 e2 = text id <> parens ((ppKernel k) <> comma <> ppExp e1 <> comma <> ppExp e2)
+
+ppKernel (Fn tp args exp) = text "fn" <+> ppType tp <+> (commaList . map ppArg $ args) <+> text "=>" <+> ppExp exp
+ppKernel (Fun ident []) = text ident
+ppKernel (Fun ident exps) = text ident <+> (commaList . map ppExp $ exps)
+ppKernel (Op op) = ppOp op
+
+ppOp op = text $ case op of
+  Plus -> "+"
+  Minus -> "-"
+  LessEq -> "<="
+  Mult -> "*"
+  Div -> "/"
+  Eq -> "=="
+  Mod -> "%"
+  Greater -> ">"
+  Less -> "<"
+  GreaterEq -> ">="
+  LogicAnd -> "&&"
+  LogicOr -> "||"
+  Pow -> "pow"
+  Or -> "|"
+  And -> "&"
+  Shl -> ">>"
+  Shr -> "<<"
+  --XOr -> "^"
+
+ppConstant (Int int) = integer int
+ppConstant (Real f) = double f
+ppConstant (Char c) = quotes $ char c
+ppConstant (Bool b) = text (if b then "True" else "False")
+ppConstant (ArrayConstant arr) = braces . hcat . punctuate comma . map ppConstant $ arr
+
+-- Arguments --
+ppArg (tp,ident) = ppType tp <+> text ident
+
+-- Pattern --
+ppPat :: Pattern -> Doc
+ppPat (Ident ident) = text ident
+ppPat (TouplePat pat) = braces . hcat . punctuate comma . map ppPat $ pat
+\end{lstlisting}
 
 \newpage
 
