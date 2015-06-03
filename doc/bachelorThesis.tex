@@ -89,10 +89,9 @@ HUSK HUSK HUSK!!!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-In this paper we want to examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler \cite{ElsmanDybdal:Array:2014}, into Futhark programs \cite{TroelsHenriksen} and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware?
+In this paper we want to examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler \cite{ElsmanDybdal:Array:2014}, into Futhark programs \cite{TroelsHenriksen} and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
 
-In recent years, there has been a lot of focus on leveraging the power of parallel hardware because of the promise it offers for faster exextution afther the exponential growth curve for computer power on secuential hardware (explaind as Moore's Law) broke around 2006. 
-
+In recent years, there has been a lot of focus on leveraging the power of parallel hardware. 
 One approach has been to design programming languages with explicit data-parallel constructs that can be compiled 
 into highly parallel code. One such language is Futhark \cite{TroelsHenriksen}. The aim of Futhark is to target parallel hardware such as 
 GPUs while still being the target of more programmer-productivity oriented languages. The Futhark compiler 
@@ -330,9 +329,9 @@ Given a function $f$ that works on a pair $(x,y)$ and two arrays $a$ and $b$, {\
 Like the other three operators, it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.\\
 
 There are other interesting operators besides the parallel ones. One of them is the operator {\tt reshape($a_1$,$a_2$)}.
-Given two arrays it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array so $([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$.
+Given two arrays it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array so $([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
-If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.
+If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$. Note that this is not how arrays are represented in TAIL. Instead of using nested brackets to represent the dimentions arrays in TAIL are represented with a shape, for instance $[1,2,3,4,5,6]^{[2,3]}$. Howver, using this representation can make what happens less obvius so we use the nested brackets representation insted. 
 
 Other interesting operators are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
 They return an array containing the 1st to $i$'th element of $a$,
@@ -859,7 +858,8 @@ and must be passed by the caller when the rule is used.
 \subsection{FIND A GOOD SECTION NAME!!!!!!!}
 Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
 
-\paragraph{Basic structural constructs} are translated to their Futhark counterparts directly.
+\subsubsection{Basic structural constructs} 
+Basic structual constructs are translated to their Futhark counterparts directly.
 In let-expresions the type annotations that exist in TAIL variable bindings are ignored in Futhark. 
 % var, literals/constants, let, array litterals, neg
 
@@ -868,7 +868,7 @@ They are all translated to their Futhark equivalents.\\
 
 This part of the language was straight-forward to compile and there was no reason to do it any other way.
 
-\paragraph{The each operator} 
+\subsubsection{The each operator} 
 
 In TAIL applying the {\tt each} operator produces an array where the argument function is applied to each basic element in the
 argument array, regardless of the rank of the array.
@@ -887,7 +887,7 @@ each(f,a)       =>      map(fn x => map (f,x), a)
 The plan in this rule is to target the Futhark map SOAC as directly as possible. An alternative could have been to reshape the
 argument to a flat array before mapping and reshape it back to it's original shape afterwards, we have not explored this option.
 
-\paragraph{The reduce operator}
+\subsubsection{The reduce operator}
 
 in TAIL uses an associative binary operator to reduce an array of rank
 $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension\cite{ElsmanDybdal:Array:2014}.
@@ -903,7 +903,7 @@ reduce(+,a)     =>      map(fn x => _reduce_(+,x), a)
 
 Lifting the reduce operation with maps into the inner-most array was the simplest solution, it utilizes only parallel operations.
 
-\paragraph{The zipWith operator}
+\subsubsection{The zipWith operator}
 The {\tt zipWith} operator applies a scalar binary operator on pairs of elements from two arrays of the same shape to
 produce a third array of the same shape as the input arrays \cite{ElsmanDybdal:Array:2014}.
  
@@ -911,7 +911,7 @@ To do this in Futhark we use the zip function to convert two arrays to an array 
 
 The rationale behind this rule was the same as in {\tt each}.
 
-\paragraph{The reshape operator} 
+\subsubsection{The reshape operator} 
 %reshape gets as argument the return type.\\
 %It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
 %The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
@@ -928,7 +928,7 @@ the correct type, this type is conveniently available in the instance list.
 In this rule we wanted to make use of the already existing reshape operation in Futhark because we assume this appoach has the best
 chance of optimization by the Futhark compiler.
 
-\paragraph{The transp operator} 
+\subsubsection{The transp operator} 
 There exists a {\tt transpose(a)} function in Futhark which does not have the same semantics as the {\tt transp} operator from TAIL.
 The Futhark transpose on a three dimensional array for example produces a (2,0,1) permutation of the dimensions, whereas we are
 looking for a (2,1,0) or more generally the reverse permutation of the dimensions. By inspection the Futhark IL generated from
@@ -938,7 +938,7 @@ the behavior of the {\tt transp} operator.
 
 This conversion is as direct as we could hope.
 
-\paragraph{The transp2 operator} 
+\subsubsection{The transp2 operator} 
 We have also converted the operator {\tt transp2} to a rearrange application, the only thing we needed to change was to substract
 one from each number in the first argument since Futhark indexes dimensions from zero.
 A thing of note is that {\tt rearrange} only supports a list of integer literals in it's first argument while TAIL has no
@@ -946,23 +946,27 @@ such restriction on {\tt transp2}. In practice the TAIL compiler will have inlin
 
 The operator {\tt transp2} has thus a very direct conversion.
 
-\paragraph{The cat operator} 
+\subsubsection{The cat operator} 
 As mentioned Futhark has a concatinate function {\tt concat} that we wanted to use but it concatinate the outermost arrays while in TAIL the {\tt cat} operator concatinates the innermost arrays. To solve this we lifted the concatinate operation to the innermost dimension with map. This is the same idea used to compile the {\tt reduce}, {\tt each}, and {\tt zipWith} operators. 
 
 Alternativly we could have compiled the {\tt cat} operator using transpose instead like we have done in {\tt snoc} and {\tt cons}. We did not have any particular reason to choose one over the other. Both solutions accomplish our goul of being simple and using Futhark built-in functions. 
 
-\paragraph{The take and drop operators} 
+\subsubsection{The take operator} 
 In a similar fashion to the TAIL {\tt reshape} function we have used library functions do most of the work.
 We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
 This approach has all the benefits mentioned earlier.
 
-\paragraph{The cons and snoc operators}
-The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array.\\
+\subsubsection{The drop operator} 
 
-\paragraph{The iota operator} 
+\subsubsection{The snoc operator}
+The idea behind the compilation of the function snoc was to transpose the two arrays, then concating the arrays and then transposing the resulting array again. That way we would get the desired result of the nth elements from the first array added to the nth element of the second array.
+
+\subsubsection{The cons operator}
+
+\subsubsection{The iota operator} 
 Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
 
-\paragraph{Lambda expressions} 
+\subsubsection{Lambda expressions} 
 The higher order operators {\tt each, eachV, reduce, zipWith} all take functions as arguments and these functions are handled by the
 conversion rules marked with the $fn$ subscript. 
 In Futhark lambda expressions need type annotations both for the argument and the return type.
@@ -987,7 +991,7 @@ Lambda expressions with one argument are mapped to the same in Futhark.
 %If the kernel is an identifier the fun or op translations are used.
 
 
-\paragraph{Binary scalar first-order operators} are mapped to their natural Futhark counterparts.
+\subsubsection{Binary scalar first-order operators} are mapped to their natural Futhark counterparts.
 
 \section{Implementation}
 \label{sec:impl}
@@ -1166,7 +1170,7 @@ It also adds an overview of the entire compilation (everything can be written in
 % How could we have tested more throughly
 %  Limitations
 
-\section{Conclusion}
+\section{Summery and future work}
 
 %%%%% references %%%%%
 \bibliography{references}{} 
