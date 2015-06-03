@@ -690,8 +690,7 @@ The implementation of these functions can be found in Appendix \ref{app:impl}
 
 There main contribution with this paper is the compilation scheme presented in this section.
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
-The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen on the next page.\\
-
+The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen in figure (ref). 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
 %% Implementation independent overview of the compilation
@@ -706,8 +705,10 @@ The notation is explained is explained and the compilation of some of the more i
 %% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-\newgeometry{top=15pt,left=30pt,bottom=70pt}
-\begin{flushleft}
+%\newgeometry{top=15pt,left=30pt,bottom=70pt}
+%\begin{flushleft}
+
+\begin{figure}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
@@ -797,21 +798,28 @@ $\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
 $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
-\\
+\end{tabular}
+\end{figure}
 
+\begin{figure}
+\begin{tabular}{l c l}
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
-
 \end{tabular}
-\begin{tabu} to \linewidth { l X}
-$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
-lti, ltd, andi, andd, ori, shli, shri\\
-$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
-nandb, norb, neqi, neqd
-\end{tabu}
-\end{flushleft}
-\restoregeometry
+\end{figure}
+
+
+%\begin{tabu} to \linewidth { l X}
+%$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
+%lti, ltd, andi, andd, ori, shli, shri\\
+%$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
+%nandb, norb, neqi, neqd
+%\end{tabu}
+%\end{flushleft}
+%\restoregeometry
+
+\begin{figure}
 
 The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
@@ -823,9 +831,10 @@ $\evals{ln}_{fun}$ & $=$ & log\\
 $\evals{expd}_{fun}$ & $=$ & exp\\ 
 $\evals{notb}_{fun}$ & $=$ & !\\ 
 \end{tabular}\\
-
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
-  
+\end{figure}
+
+\begin{figure}
 The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
@@ -856,7 +865,8 @@ $\evals{$ori$}_{op}$ & $=$   & $|$   \\
 $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 
-\end{tabular}\\
+\end{tabular}
+\end{figure}
 
 \subsection{The notation}
 Each line in the scheme consists of a TAIL expression in double brackets $\evals{\;}$ on the left, followed by a
@@ -890,7 +900,10 @@ so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
-\subsection{FIND A GOOD SECTION NAME!!!!!!!}
+The set $binops$ is the defined as the set of operators that have an $op$ rule, similarily the set $funs$ is the set of
+operators that have a $fun$ rule.
+
+\subsection{Explanation of the compilation of selected parts of TAIL}
 Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
 
 \subsubsection{Basic structural constructs} 
