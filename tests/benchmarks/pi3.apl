@@ -2,7 +2,7 @@
 linspace ← { ((⍳⍵)-1) ÷ (⍵-1) }
 
 ⍝ Compute pi
-m ← 20000
+m ← 13722
 n ← m×m
 a ← linspace m
 b ← (n 1 ⍴ (m m ⍴ a)) , (n 1 ⍴ ⍉ (m m ⍴ a))
