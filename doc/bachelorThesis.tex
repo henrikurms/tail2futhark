@@ -56,6 +56,8 @@
   \Large{Compiling TAIL to Futhark}
 }
 
+\setcounter{tocdepth}{2}
+
 \begin{document}
 %\renewcommand{\arraystretch}{1.2}
 
@@ -78,10 +80,10 @@
 
 We present an implementation independent scheme for the compiling of a subset of the intermidiate array language TAIL
  to the functional programming language Futhark, 
- preserving the the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comapring the esecution time of selected benchmarks on sequential backends to both laguages, showing that the Futhark compiler optimises the execution time with up to a factor X on some benchmarks. \\\\\\\\\\\\\\\\
+ preserving the the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comapring the esecution time of selected benchmarks on sequential backends to both laguages, showing that the Futhark compiler optimises the execution time with up to a factor X on some benchmarks. \\\\\\\\\\\\\\\\\\\\\\\\
 
 \begin{center}
-Resumé
+\textbf{Resumé}
 \end{center}
 Vi præsenterer et implementations uafhængigt oversættelses ?? for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af ?? og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden med op til en faktor X.
 
@@ -104,7 +106,7 @@ One approach has been to design programming languages with explicit data-paralle
 into highly parallel code. One such language is Futhark \cite{TroelsHenriksen}. The aim of Futhark is to target parallel hardware such as 
 GPUs while still being the target of more programmer-productivity oriented languages. The Futhark compiler 
 performs several optimizations, such as fusion, which enhance the degree of 
-parallelism \cite{T.Henriksen&C.Oancea}.
+parallelism \cite{T.Henriksen&C.Oancea} \cite{T2graph} \cite{Hybrid}.
 
 APL (short for A Programming Language) \cite{APLbook} is an array language and includes various operations that are central to the language and are good candidates 
 for parallel execution. Efforts in compiling APL to parallel backends already exist in the form of the language 
@@ -130,7 +132,7 @@ and most of the built-in functions in the language are array operators that work
 Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
 The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type. 
 Even though it is an old language it is still used in the financial world 
-where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014}.
+where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014} \cite{Array:2015}.
 
 There are traditionally five stages of a compiler if you compile a high level language to machine code: 
 lexical analysis, syntax analysis, type checking, intermediate code generation, register allocation, machine 
@@ -191,7 +193,7 @@ Futhark: https://github.com/HIPERFIT/futhark
 \subsection{Scope}
 In this project we create an implementation independent compilation scheme showing a compilation between TAIL and Futhark as well as a Haskell implementation of the compilation scheme. 
 
-We will not present an overview of APL but only reference to it. For a language reference pleace refer to \cite{APLbook} and (Dyalog REFERENCE!!).
+We will not present an overview of APL but only reference to it. For a language reference pleace refer to \cite{APLbook} and \cite{APLDyalog}.
 
 We will also not explain what a parser or a compiler is as we assume the reader posses a knowledge of these terms. 
 
@@ -258,7 +260,7 @@ The follwing sections of the report is structured as follows. Section \ref{sec:t
 
 % Benchmarks...
 
-\section{The intermidiate language TAIL}
+\section{TAIL}
 \label{sec:tail}
 
 In this section we present an overview on the language TAIL.
@@ -403,7 +405,7 @@ Lambda expressions in TAIL can be curried so they can take multiple arguments.
 
 %So far TAIL only support a subset of the APL functions and operators. 
 
-\section{The functional language Futhark}
+\section{Futhark}
 \label{sec:futhark}
 
 In this section we give a short introduction to the Futhark language. We will only cover the parts necessary to understand
@@ -654,7 +656,7 @@ round down.
 %for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
 %rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 
-\subsubsection{Bool equality}
+\subsection{Bool equality}
 
 Futhark has no bool equality so we implemented our own:
 
@@ -665,7 +667,7 @@ fun bool eqb(bool x,bool y) =
 
 Two booleans are equal if they both are true or none of them are true.
 
-\subsubsection{Xor} Likewise there is no logical xor operation so we included it in the library:
+\subsection{Xor} Likewise there is no logical xor operation so we included it in the library:
 
 \begin{lstlisting}[language=Futhark]
 fun bool xorb(bool x,bool y) =
@@ -674,7 +676,7 @@ fun bool xorb(bool x,bool y) =
 
 The Xor of two booleans is true if one but not both of them are true.
 
-\subsubsection{All other library functions}
+\subsection{All other library functions}
 The rest of the library funcyions are implemented very straight forward and are therefore only mentioned as a list here:
 
 \begin{lstlisting}[numbers=none,frame=none]
@@ -1168,8 +1170,6 @@ Primes                        & 10.000                & 2294,1      & 489,3 \\
 \caption{Benchmark timing in miliseconds.}
 \end{center}
 \end{table}
-
-%% vi er nødt til at læse matricerne ind for ellers optimere futhark det væk..
 
 \subsection{Matrix multiplication}
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
