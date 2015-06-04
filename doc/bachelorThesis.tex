@@ -707,6 +707,7 @@ The notation is explained is explained and the compilation of some of the more i
 %\begin{flushleft}
 
 \begin{figure}
+\label{fig:compilationscheme}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
@@ -797,14 +798,17 @@ $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{siz
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 \end{tabular}
+    \caption{Transformation rules for ???}
 \end{figure}
 
 \begin{figure}
+\label{fig:lambdas}
 \begin{tabular}{l c l}
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
+    \caption{Transformation rules for lambda expressions}
 \end{figure}
 
 
@@ -818,7 +822,7 @@ $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & 
 %\restoregeometry
 
 \begin{figure}
-
+\label{fig:funs}
 The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
@@ -830,9 +834,11 @@ $\evals{expd}_{fun}$ & $=$ & exp\\
 $\evals{notb}_{fun}$ & $=$ & !\\ 
 \end{tabular}\\
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
+\caption{Transformation rules for library functions}
 \end{figure}
 
 \begin{figure}
+\label{fig:binops}
 The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
@@ -862,8 +868,8 @@ $\evals{$andd$}_{op}$ & $=$  & $\&$  \\
 $\evals{$ori$}_{op}$ & $=$   & $|$   \\
 $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
-
 \end{tabular}
+\caption{Transformation rules for binary operators}
 \end{figure}
 
 \subsection{The notation}
@@ -1262,6 +1268,8 @@ was in development.
 \bibliography{references}{} 
 \bibliographystyle{plain}
 
+\newpage
+
 \appendix
 \section{Parser source code}
 \label{app:parser}
@@ -1272,11 +1280,15 @@ In this appendix is the source code for the APLACC parser \cite{APLACC} with the
 
 \lstinputlisting[language=haskell,  mathescape=false]{../aplacc/src/APLAcc/TAIL/Parser.hs}
 
+\newpage
+
 \section{Compiler source code}
 \label{app:impl}
 
 This appendix contains the source code of the TAIL2Futhark compiler found in file {\tt src/Tail2Futhark/Compile.hs}. 
 \lstinputlisting[language=haskell,  mathescape=false]{../src/Tail2Futhark/Compile.hs}
+
+\newpage
 
 \section{Pretty printer source code}
 \label{app:pretty}
@@ -1386,8 +1398,5 @@ reshape		& reshape.tail		& reshape vector to matrix					&  OK \\
 reshape		& reshape2.tail		& reshape with extending the vector			&  OK \\
 \end{tabular}
 \end{center}
-
-
-
 
 \end{document}
