@@ -234,9 +234,11 @@ data from files and the mesured difference between {\tt time} and a built-in tim
 \subsubsection{Using an existing parser}
 The parser we used for this project is created in previous project that also worked with compiling TAIL to a parallel backend \cite{APLACC}. We used this because even though small changes had to be done to bring it up to date with the version of TAIL we workes with, it saves time, thereby enbeling us to focus on essential work for our own project namely the compilation.
 
-\subsection{Report outline IKKE FAERDIGT!!!}
-The follwing sections of the report is structured as follows. Section \ref{sec:tail} and Section \ref{sec:futhark} introduce the source and the target language. Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the implementation.
-
+\subsection{Report outline}
+The follwing sections of this paper is structured as follows. 
+Section \ref{sec:tail} and Section \ref{sec:futhark} gives an introduction to the source and the target language. 
+In Section \ref{sec:strategy} is a short presentation of the overall strategy for compiling TAIL to Futhark.
+Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the Haskell implementation of the scheme and Section \ref{sec:benchmarks} describes the benchmarks used to messure the efficiency of the generated Futhark code by comparing it to the TAIL backend. Finaly Section \ref{sec:discussion} and Section \ref{sec:conclusion} is a discussion and conclusion of the results and contain ideas to possible future work. 
 
 % into about the skemaet
 % Hvorfor valgte vi at lave skemaet
@@ -562,6 +564,7 @@ depend upon even though it does make optimization more difficult \cite{TroelsHen
 %Does not support polymorfism in types
 
 \section{The compilation strategy}
+\label{sec:strategy}
 Where possible, TAIL privimitives have mapped directly to their corresponding versions in the Futhark language.
 Where direct translation is not possible the approach has been to use exisiting operations as much
 as possible and generate code to bridge the gap.
@@ -690,7 +693,9 @@ There main contribution with this paper is the compilation scheme presented in t
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
 The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. 
 
-The main part of the compilation scheme that contains the built-in operators can be seen in figure \ref{fig:compilationscheme}. In Figure \ref{fig:lambdas} is the conversion rules for lambda expressions. In Figure \ref{fig:funs} are the functions that are compiled directly to a corresponding function in Futhark and in Figure \ref{fig:binops} are the compilation of the binary operators. Note that the schemes in the above mentioned figures all are mutually recursive. 
+The main part of the compilation scheme that contains the expressions can be seen in figure \ref{fig:compilationscheme}. In Figure \ref{fig:lambdas} is the conversion rules for lambda expressions. In Figure \ref{fig:funs} are the functions that are compiled directly to a corresponding function in Futhark and in Figure \ref{fig:binops} are the compilation of the binary operators. Note that the schemes in the above mentioned figures are all mutually recursive. 
+
+When $e$ is some TAIL expression, and $e'$ is some Futhark expression we specify the translation as rules of the form $\evals{e} = e'$. The rules of are syntax-directed in the sense that they follow the structure of $e$, recursively. 
 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
@@ -1234,6 +1239,7 @@ This is a limitation the authors are aware of and describe in their publication 
 It remains to be seen whether these results are reproducible on parallel hardware.
 
 \section{Discussion}
+\label{sec:discussion}
 Our main goal has been to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
 We have been able to compile TAIL to Futhark code using parallel constructs in Futhark whenever we encountered parallel constructs in TAIL.
 Because of this we have reason to believe that no parallelism has been eliminated during the compilation.
@@ -1265,6 +1271,7 @@ It also adds an overview of the entire compilation (everything can be written in
 %  Limitations
 
 \section{Conclusion and future work}
+\label{sec:conclusion}
 
 We have presented a compilation scheme between TAIL and Futhark and a compiler from TAIL to Futhark that follows this scheme. 
 
