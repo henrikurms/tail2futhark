@@ -690,7 +690,10 @@ The implementation of these functions can be found in Appendix \ref{app:impl}
 
 There main contribution with this paper is the compilation scheme presented in this section.
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
-The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen in figure (ref). 
+The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. 
+
+The main part of the compilation scheme that contains the built-in operators can be seen in figure \ref{fig:compilationscheme}. In Figure \ref{fig:lambdas} is the conversion rules for lambda expressions. In Figure \ref{fig:funs} are the functions that are compiled directly to a corresponding function in Futhark and in Figure \ref{fig:binops} are the compilation of the binary operators. Note that the schemes in the above mentioned figures all are mutually recursive. 
+
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
 %% Implementation independent overview of the compilation
@@ -800,7 +803,7 @@ $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{siz
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 \end{tabular}
-    \caption{Transformation rules for ???}
+    \caption{Conversion rules for expressions}
 \end{figure}
 
 \begin{figure}
@@ -810,7 +813,7 @@ $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau 
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
-    \caption{Transformation rules for lambda expressions}
+    \caption{Conversion rules for lambda expressions}
 \end{figure}
 
 
@@ -835,8 +838,10 @@ $\evals{ln}_{fun}$ & $=$ & log\\
 $\evals{expd}_{fun}$ & $=$ & exp\\ 
 $\evals{notb}_{fun}$ & $=$ & !\\ 
 \end{tabular}\\
+
+
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
-\caption{Transformation rules for library functions}
+\caption{Conversion rules for functions names and functions with a 1:1 correspondance}
 \end{figure}
 
 \begin{figure}
@@ -871,7 +876,7 @@ $\evals{$ori$}_{op}$ & $=$   & $|$   \\
 $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 \end{tabular}
-\caption{Transformation rules for binary operators}
+\caption{Conversion rules for binary operators}
 \end{figure}
 
 \subsection{The notation}
