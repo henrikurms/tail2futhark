@@ -1218,25 +1218,29 @@ Again we have only made the program return the result instead of printing it and
 
 The impementation is in the file {\tt primes0.apl}
 \section{Discussion}
-The goul with this project was to see if it was possible to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
-We have been able to compile the subset to Futhark code using parrallel constructs in Futhark whenever we encountered parrallel constructs in TAIL. Because of this we have reason to believe that no parallelism has been eliminated during the translation.
+Our main goal has been to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
+We have been able to compile TAIL to Futhark code using parrallel constructs in Futhark whenever we encountered parrallel constructs in TAIL.
+Because of this we have reason to believe that no parallelism has been eliminated during the compilation.
 Although we have not veriefied the effect the compilation has on performance on parallel hardware we have seen significant speed-ups
-in sequential execution mainly due to the effects of fusion and as such are confident that these speed-ups can be reproduced on parallel hardware.
+in sequential execution as measured in our benchmarks and are confident that these speed-ups can be reproduced on parallel hardware.
+We feel these sequentially executed benchmarks are relevant because the are parallel in their structure and should therefore
+execute efficiently on parallel hardware.
 
-Because of the differences in the types systems between TAIL and Futhark some structural information can be said to have been lost
+Because of the differences between the types systems of TAIL and Futhark some structural information can be said to have been lost
 in the compilation, for example a single {\tt each} operation might have been compiled to a set of nested map operations,
 which seems harder to compile to lower-level parrallel code, since the compiler must inspect the nested maps to discover that
 the expression is completely parrallel. We leave it to the flattening analysis of the Futhark compiler to rediscover this
 information and we believe it will be able to do so.
 % hvilken betydning har dette for at vi kan sige om vores mål er nået eller ej? 
 
-Because Futhark does not support polymorphism in its type system compiling the polymorphic TAIL created some difficulties.
+Because Futhark's type system does not support polymorphism compiling the polymorphic TAIL created some challenges.
 We had to create library functions for each basic type and create our compilation so that we only used library functions in the one-dimensional case.
 Otherwise we would have had to make a function for each version of basic type and array shape and considering array shapes are an infinitve set that would create a lot problems. Therefore having polymofphism in Futhark would be a very good idea.
 
 The compilation scheme we did in our shorthand notation worked well.
 It enabled us to focus on the conceptual compilation and not get lost in the implementation details while doing the project.
-It also adds an overview of the entire compilation (everything can be written in a page or two) that would have been difficult to have without it. 
+It also adds an overview of the entire compilation (everything can be written in a page or two) that would have been difficult to have without it.
+
 % Methods used
 % Library functions
 %% behrænsning kunne have været hvis vi havde valgt at implementere faste libraryfunctions en for hver rank og type. 
@@ -1244,14 +1248,15 @@ It also adds an overview of the entire compilation (everything can be written in
 % How could we have tested more throughly
 %  Limitations
 
-As both laguages are still under development an a parallel backend is still not finished we have not been able to test the compiled code un a parallel backend. Howver this could be very interesting to 
+\section{Conclusion and future work}
 
-\section{Summary and future work}
+We have presented a compilation scheme between TAIL and Futhark and a compiler from TAIL to Futhark that follows this scheme. 
 
-We have presented a compilation scheme between TAIL and Futhark and an implementation of that scheme. 
+We have measured significant speed-ups from utilizing the Futhark compiler in our benchmarks.
 
-It could be interesting to look at the efficiency of the code on the parallel backends for TAIL and Futhark (ref). 
-
+As we began our project no parallel backends for either languages were available, however towards the end of the project a
+parallel backend for TAIL using Accelerate had been published \cite{Array:2015} and a parralel backend for Futhark using OpenCL
+was in development.
 
 %%%%% references %%%%%
 \bibliography{references}{} 
@@ -1261,7 +1266,7 @@ It could be interesting to look at the efficiency of the code on the parallel ba
 \section{Parser source code}
 \label{app:parser}
 
-In this appendix is the source code for the APLACC parser \ref{APLACC} with the motifications we added. Note that the magority of the parser was not created by us. The thing we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for this project. 
+In this appendix is the source code for the APLACC parser \cite{APLACC} with the motifications we added. Note that the magority of the parser was not created by us. The thing we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for this project. 
 
 \lstset{breaklines=true}
 
