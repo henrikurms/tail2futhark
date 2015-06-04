@@ -8,8 +8,6 @@
 \usepackage{stmaryrd}
 \usepackage{fixltx2e}
 \usepackage{amsmath}
-\usepackage{tabu}
-\usepackage{geometry}
 \usepackage[utf8x]{inputenc}
 
 \lstset{
@@ -690,8 +688,7 @@ The implementation of these functions can be found in Appendix \ref{app:impl}
 
 There main contribution with this paper is the compilation scheme presented in this section.
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
-The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen on the next page.\\
-
+The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. The compilation scheme can be seen in figure (ref). 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
 %% Implementation independent overview of the compilation
@@ -706,8 +703,10 @@ The notation is explained is explained and the compilation of some of the more i
 %% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
 %%% explain WHY we chose libraryfunctions and what the alternative was. 
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-\newgeometry{top=15pt,left=30pt,bottom=70pt}
-\begin{flushleft}
+%\newgeometry{top=15pt,left=30pt,bottom=70pt}
+%\begin{flushleft}
+
+\begin{figure}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
@@ -797,21 +796,28 @@ $\evals{\text{iotaV}(a)}$ & $=$ & $\evals{\text{iota}(a)}$\\
 $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{size}(r-1,\evals{a})]$\\
 
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
-\\
+\end{tabular}
+\end{figure}
 
+\begin{figure}
+\begin{tabular}{l c l}
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
-
 \end{tabular}
-\begin{tabu} to \linewidth { l X}
-$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
-lti, ltd, andi, andd, ori, shli, shri\\
-$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
-nandb, norb, neqi, neqd
-\end{tabu}
-\end{flushleft}
-\restoregeometry
+\end{figure}
+
+
+%\begin{tabu} to \linewidth { l X}
+%$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
+%lti, ltd, andi, andd, ori, shli, shri\\
+%$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
+%nandb, norb, neqi, neqd
+%\end{tabu}
+%\end{flushleft}
+%\restoregeometry
+
+\begin{figure}
 
 The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
@@ -823,9 +829,10 @@ $\evals{ln}_{fun}$ & $=$ & log\\
 $\evals{expd}_{fun}$ & $=$ & exp\\ 
 $\evals{notb}_{fun}$ & $=$ & !\\ 
 \end{tabular}\\
-
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
-  
+\end{figure}
+
+\begin{figure}
 The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
@@ -856,7 +863,8 @@ $\evals{$ori$}_{op}$ & $=$   & $|$   \\
 $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 
-\end{tabular}\\
+\end{tabular}
+\end{figure}
 
 \subsection{The notation}
 Each line in the scheme consists of a TAIL expression in double brackets $\evals{\;}$ on the left, followed by a
@@ -890,7 +898,10 @@ so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
-\subsection{FIND A GOOD SECTION NAME!!!!!!!}
+The set $binops$ is the defined as the set of operators that have an $op$ rule, similarily the set $funs$ is the set of
+operators that have a $fun$ rule.
+
+\subsection{Explanation of the compilation of selected parts of TAIL}
 Below is the motiativation and explanation for most of the conversion rules from the compilation scheme. 
 
 \subsubsection{Basic structural constructs} 
@@ -933,7 +944,7 @@ We have adopted the same approach as with each by using nested maps to map the r
 For example reducing an array of rank 2 emits the following code:
  
 \begin{lstlisting}[numbers=none,frame=none]
-reduce(+,a)     =>      map(fn x => _reduce_(+,x), a)
+reduce(+,a)     =>      map(fn x => reduce(+,x), a)
 \end{lstlisting}
 
 Lifting the reduce operation with maps into the inner-most array was the simplest solution, it utilizes only parallel operations.
@@ -1178,7 +1189,7 @@ Primes                        & 10.000                & 2294,1      & 489,3 \\
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
 It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
 The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus.
-
+The impementation is in the file {\tt matmul.apl}
 \subsection{Pi}
 The pi benchmark approximates pi by computing the ratio of points in the range $[0,1] \times [0,1]$ that have a distance to $(0,0)$ of less than 1.
 It does so by using $n \times n$ evenly spaced points in the interval $[0,1] \times [0,1]$, it can be helpful to imagine the set of points as a regular grid.
@@ -1190,20 +1201,22 @@ where all the entries with points with distance less than one from 0 are set to 
 the square root of the sums since that square root will be less that 1 only if the original sum is less that 1.
 Finally the matrix is reduced with plus two times to get the number of points, the amount is divided by the total number of points and
 this number is multiplied by 4 to get pi.
-
+The impementation is in the file {\tt pi.apl}
 \subsection{Black sholes}
 The black sholes benchmark is taken directly from the bechmark suite of the apltail compiler and computes the price of european style options. We have not modified this benchamark this benchamrk and while it doesn't give any insight into performance it demonstrates
 that it is possible to compile this benchmark.
-
+The impementation is in the file {\tt blackscholes.apl}
 \subsection{Easter}
 The easter benchmark computes the date of easter and is found in the apltail project as {\tt tests/easter3000.apl}, the only
 modification we have done is to make the date the result from the program instead of printing it and changed a parameter to scale
 the program up.
 
+The impementation is in the file {\tt easter3000.apl}
 \subsection{Primes}
 The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 
+The impementation is in the file {\tt primes0.apl}
 \section{Discussion}
 The goul with this project was to see if it was possible to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
 We have been able to compile the subset to Futhark code using parrallel constructs in Futhark whenever we encountered parrallel constructs in TAIL. Because of this we have reason to believe that no parallelism has been eliminated during the translation.
