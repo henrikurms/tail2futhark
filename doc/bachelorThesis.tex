@@ -398,8 +398,10 @@ the expression, let expressions, operators and lambda expressions.
 %      op[e$_1$,...,e$_n$] | fn x:$t$ e | [e$_1$,...,e$_n$]
 %\end{lstlisting}
 
-Lambda expressions in TAIL can be curried so they can take multiple arguments.
-
+Generally it is not possible to define higher-order lambda expressions in TAIL, however higher-order operators
+may use currying of lambda expressions to express multi-argument functional arguments.
+This means lambda expressions that evaluate to lambda expressions can occur as arguments in higher-order operator
+applications and nowhere else.
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
@@ -1123,14 +1125,15 @@ The pretty printer takes a Futhark AST and transforms the abstract representatio
 
 \subsection{Testing}
 
-We have applied two types of testing in our project. One if a form of correctness test set op as an automated test
-framework that will be descussed here. The otheris is to test the efficiency of the generated code in form of benchmarks and will be descussed in Section \ref{sec:benchmarks}. 
+In this sections we discuss the test suite of our implementation.
 
-We assume that the compiler producing TAIL code from APL programs returns the correct result. We therefore use the results from running the APLTAIL compiler on APL programs to compare our own test results to. 
-The tests can be found in the {\tt tests/our\_tests/} directory. 
-Each test are created in four file formats. 
-A .apl file with the origianl code. A .tail file containing the code that comes from using the APLTAIL compiler on the APL code.
-A .fout file that contains the code that comes from using our compiler on the TAIL code (in the .tail file) and finaly a .ok file containing the expected results of the tests. The .ok file is used in our test framework to compare the result to. 
+Both the apltail compiler and the Futhark compiler has an interpreter option.
+To test the correctness of our implementation we compare the output of the apltail interpreter with the output og the Futhark interpreter.
+The tests can be found in the {\tt tests/our\_tests/} directory.
+The test framework compiles each file with a tail extension in the directory to a fut file of the same name. Then the Futhark program
+is executed with the Futhark interpreter and the output is written to a file with the out extension.
+Finally this file is compared to a file with the same name and the ok extension, if the files match the test passed.
+The ok files were to running the test suite produced with the apltail interpreter.
 
 All tests are originaly written in APL code to ensure that the programs we tested up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
 
@@ -1138,12 +1141,8 @@ To run the tests use 'cabal test' in the root directory of the repo after clonin
 executables in your \$PATH to do this or the tests will fail. You can also run 'ghc tests/Test \&\& tests/Test' to see the
 test results in pretty colored output instead.\\
 
-The test framework is made using Cabal \cite{cabal} for manageing external libraries,  Tasty  \cite{tasty}, Tasty-Goldern \cite{tasty-golden}  ???????????????????????????????????\\
-
-
-The above mentioned framework enabled us to run the tests wehenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. 
-Whenever a function was implemented during the development process test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
-We also added a number of more throrough tests at the end of the project in order to see if the function:
+The above mentioned framework enabled us to run the tests whenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that effected the old. 
+Whenever a function was implemented during the development process, test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
 
 We use the tasty package \cite{tasty} which provides a test framework that we use to implement our tests. Furthermore we have used the
 package tasty-golden \cite{tasty-golden} which is a plug-in for the tasty framework that allows to test against "golden" files.
@@ -1151,7 +1150,7 @@ A lot of projects implement their own test frameworks and we could have done the
 We chose not to do so as this freed us to use our resources on developing the compiler instead of developing and maintaining a
 test framework which could prove time consuming.
 
-The test results can be found in Appendix \ref{app:testresults}. Based on the results of the test we assume our implementation works as expected on the subset of TAIL we have tested, however because the tests are not exsoustive we cannot be sure everything works (see Limitations of the tests).
+The test results can be found in Appendix \ref{app:testresults}. Based on the results of the test we assume our implementation works as expected on the subset of TAIL we have tested, however because the tests are not exhaustive we cannot be sure everything works (see Limitations of the tests).
 
 \subsubsection{Limitations of the tests}
 In order to thoroughly test the compiler all functions should be have specific test that test one of each of the below things
@@ -1162,12 +1161,12 @@ that meaningfully apply to the function.
 \item works on positive and negative input
 \item function correct in all branches in if-then-else expressions
 \end{itemize}
-However, due to time restrains we have chosen to focus on doing this on a smaler subset. 
+However, due to time restraints we have chosen to focus on doing this on a smaller subset. 
 
-We have not testet for or taken into account the possibility of TAIL code that are incorrect as it is generated by a compiler and only used as an intermidiate language. 
+We have not testet for or taken into account the possibility of TAIL code that is incorrect as it is generated by a compiler and only used as an intermidiate language. 
 
 All tests returns the expected results. 
-As we have not done extencive testing we cannot be sure that all functionality work as expected only that the one we have testet for does. 
+As we have not done exhaustive testing we cannot be sure that all functionality work as expected only that the one we have testet for does. 
 
 \section{Benchmarks}
 \label{sec:benchmarks}
