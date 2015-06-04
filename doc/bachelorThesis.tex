@@ -695,7 +695,9 @@ There main contribution with this paper is the compilation scheme presented in t
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
 The notation is explained is explained and the compilation of some of the more interesting operators or expressions of TAIL is described in detail. 
 
-The main part of the compilation scheme that contains the built-in operators can be seen in figure \ref{fig:compilationscheme}. In Figure \ref{fig:lambdas} is the conversion rules for lambda expressions. In Figure \ref{fig:funs} are the functions that are compiled directly to a corresponding function in Futhark and in Figure \ref{fig:binops} are the compilation of the binary operators. Note that the schemes in the above mentioned figures all are mutually recursive. 
+The main part of the compilation scheme that contains the expressions can be seen in figure \ref{fig:compilationscheme}. In Figure \ref{fig:lambdas} is the conversion rules for lambda expressions. In Figure \ref{fig:funs} are the functions that are compiled directly to a corresponding function in Futhark and in Figure \ref{fig:binops} are the compilation of the binary operators. Note that the schemes in the above mentioned figures are all mutually recursive. 
+
+When $e$ is some TAIL expression, and $e'$ is some Futhark expression we specify the translation as rules of the form $\evals{e} = e'$. The rules of are syntax-directed in the sense that they follow the structure of $e$, recursively. 
 
 % Presentation of the compilation scheme
 % Explain the reson for making the scheme
