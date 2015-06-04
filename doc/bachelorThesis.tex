@@ -78,12 +78,12 @@
 
 We present an implementation independent scheme for the compiling of a subset of the intermidiate array language TAIL
  to the functional programming language Futhark, 
- preserving the the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comapring the esecution time of selected benchmarks on sequential backends to both laguages, showing that the Futhark compiler optimises the execution time with up to a factor X????? on some benchmarks. \\\\\\\\\\\\\\\\\\\\\\\\
+ preserving the the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comapring the esecution time of selected benchmarks on sequential backends to both laguages, showing that the Futhark compiler optimises the execution time significantly on our benchmarks. \\\\\\\\\\\\\\\\\\\\\\\\
 
 \begin{center}
 \textbf{Resumé}
 \end{center}
-Vi præsenterer et implementations uafhængigt oversættelses ????? for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af ?? og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden med op til en faktor X?????.
+Vi præsenterer et implementations uafhængigt oversættelses skema for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af skema og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden betydeligt på vores benchmarks.
 
 \newpage
 
@@ -873,7 +873,7 @@ $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 \end{figure}
 
 \subsection{The notation}
-Each line in the scheme consists of a TAIL expression in double brackets $\evals{\;}$ on the left, followed by a
+Each line in the scheme consists of a TAIL expression in double brackets $\evals{\cdot}$ on the left, followed by a
 equals sign in the middle and a Futhark expression on the right side. This means that the TAIL expression on the left
 side should be compiled to the Futhark expression on the right side. We call such a line a rule. Some rules have side
 conditions after a comma which means some conditions must be met before that rule can be executed, otherwise another
@@ -894,13 +894,13 @@ Some of the rules are subscripted with either $op$, $fun$ of $fn$.
 These are seperate sets of rules which are invoked on the right hand side of regular rules.
 We also call such a set a rule.
 From context it will be clear what we mean when we say rule, for example when talking about the set of rules subscripted by
-$fn$ we will just say: the $\evals{\;}_{fn}$ rule. The $\evals{\;}$ rule is also called the default rule.
+$fn$ we will just say: the $\evals{\cdot}_{fn}$ rule. The $\evals{\cdot}$ rule is also called the default rule.
 
-Apart from the $\evals{\;}$ rule, there are also the $\evals{\;}_{op}$, $\evals{\;}_{fun}$,  and $\evals{\;}_{fn}^{\tau}$ rules.
+Apart from the $\evals{\cdot}$ rule, there are also the $\evals{\cdot}_{op}$, $\evals{\cdot}_{fun}$,  and $\evals{\cdot}_{fn}^{\tau}$ rules.
 The first two are simple lookup rules that map to Futhark operators and functions respectively.
 The third is used to compile lambda expressions.
 Unlike the other rules $\evals{fn}$ is parametrized by a Futhark type variable $\tau$ which we denote with a superscript
-so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
+so the rule will usually be written $\evals{\cdot}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
@@ -1054,21 +1054,26 @@ In this section a Haskell implementation of the compilation scheme is presented.
 
 Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
 
-For building our project and managing external libraries we have used the cabal package \cite{cabal}. This is a very common thing to do in Haskell projects REFERENCE OR REMOVE!! and should make it easy for anyone to build our code.
+For building our project and managing external libraries we have used the cabal packaging system \cite{cabal}.
+This is because cabal is the standard build architecture for Haskell and should make it easy for anyone to build our code.
 
 
 \subsection{The parser}
 \label{sec:parser}
 %How we adapted the parser
 %The parser that we make use of was created in a precious project \cite{APLACC}.
-The parser used in this project was made previusly in another project \cite{APLACC} and therefore not a main part of this project. Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. 
+The parser used in this project was made previuosly in another project \cite{APLACC} and therefore not a main part of this project.
+Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. 
+We have forked the original repository to work on the parser.
 
-We forked the parser into our own repository. 
+The original parser has since been adapted to work with the new version of TAIL.
 
-We had to extend the abstarct syntax three to include bools and chars. 
-We changes type constructors from previusly ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank
-to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank. 
-This meant updating the parser to read angles ([]).
+Below we discuss some of the changes we had to make to the parser and the abstract sytax tree representation of TAIL.
+
+We had to extend the abstract syntax three to include bools and chars. 
+Before the parser had type constructors ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank.
+We have changed them to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank.
+This meant updating the parser to read angles (<>) since this is the new syntax of vectors.
 
 The parser is located in the {\tt aplacc } directory of the project: 
 The updated code for the compiler can be found in Appendix \ref{app:parser}.
@@ -1107,7 +1112,6 @@ In TAIL there is a function called {\tt readIntVecFile} for reading input in fro
 The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
 Tail2Futhark/Futhark/Pretty.hs}. 
 The pretty printer takes a Futhark AST and transforms the abstract representation of the componants of the AST to correct Futhark source code. 
-
 
 \subsection{Testing}
 
@@ -1223,9 +1227,18 @@ The primes benchmark computes the number of primes below $n$ and is found in the
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 
 The impementation is in the file {\tt primes0.apl}
+
+\subsection{Results}
+
+In all of the benchmarks except blackscholes we have seen significant speed-ups by compiling to Futhark.
+The biggest difference was in the pi benchmark, this is due to the fact that the apltail compiler ends up fusing too much and
+duplicates work. It calculates $x * x$ $n^2$ times instead of just $n$ times as expressed in the APL program.
+This is a limitation the authors are aware of and describe in their publication \cite{Array:2015}.
+It remains to be seen whether these results are reproducible on parallel hardware.
+
 \section{Discussion}
 Our main goal has been to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
-We have been able to compile TAIL to Futhark code using parrallel constructs in Futhark whenever we encountered parrallel constructs in TAIL.
+We have been able to compile TAIL to Futhark code using parallel constructs in Futhark whenever we encountered parallel constructs in TAIL.
 Because of this we have reason to believe that no parallelism has been eliminated during the compilation.
 Although we have not veriefied the effect the compilation has on performance on parallel hardware we have seen significant speed-ups
 in sequential execution as measured in our benchmarks and are confident that these speed-ups can be reproduced on parallel hardware.
@@ -1234,8 +1247,8 @@ execute efficiently on parallel hardware.
 
 Because of the differences between the types systems of TAIL and Futhark some structural information can be said to have been lost
 in the compilation, for example a single {\tt each} operation might have been compiled to a set of nested map operations,
-which seems harder to compile to lower-level parrallel code, since the compiler must inspect the nested maps to discover that
-the expression is completely parrallel. We leave it to the flattening analysis of the Futhark compiler to rediscover this
+which seems harder to compile to lower-level parallel code, since the compiler must inspect the nested maps to discover that
+the expression is completely parallel. We leave it to the flattening analysis of the Futhark compiler to rediscover this
 information and we believe it will be able to do so.
 % hvilken betydning har dette for at vi kan sige om vores mål er nået eller ej? 
 
@@ -1264,6 +1277,11 @@ As we began our project no parallel backends for either languages were available
 parallel backend for TAIL using Accelerate had been published \cite{Array:2015} and a parralel backend for Futhark using OpenCL
 was in development.
 
+It would be interesting to test the bechmarks with the parallel backends to compare TAIL and Futhark on parallel hardware.
+Depending on the results it could be interesting to look at the generated C code to see the cause of the differences in the
+runtime of the benchmarks.
+
+It could also be interesting to try out bigger and more comprehensive benchmarks and compare the runtimes.
 %%%%% references %%%%%
 \bibliography{references}{} 
 \bibliographystyle{plain}
