@@ -83,13 +83,7 @@ We present an implementation independent scheme for the compiling of a subset of
 \begin{center}
 \textbf{Resumé}
 \end{center}
-<<<<<<< HEAD
 Vi præsenterer et implementations uafhængigt oversættelses skema for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af skema og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden betydeligt på vores benchmarks.
-||||||| merged common ancestors
-Vi præsenterer et implementations uafhængigt oversættelses ?? for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af ?? og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden med op til en faktor X.
-=======
-Vi præsenterer et implementations uafhængigt oversættelses ????? for en delmængde af intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at ustrykke TAIL operationerne i. Vi præsenterer også en implementation af ?? og bruger denne implementation til at demonstrere anvendeligheden ved at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark compilerens optimer udførselstiden med op til en faktor X?????.
->>>>>>> bce3181209470242600775fcc4382c77216d3c0b
 
 \newpage
 
@@ -873,7 +867,7 @@ $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 \end{figure}
 
 \subsection{The notation}
-Each line in the scheme consists of a TAIL expression in double brackets $\evals{\;}$ on the left, followed by a
+Each line in the scheme consists of a TAIL expression in double brackets $\evals{\cdot}$ on the left, followed by a
 equals sign in the middle and a Futhark expression on the right side. This means that the TAIL expression on the left
 side should be compiled to the Futhark expression on the right side. We call such a line a rule. Some rules have side
 conditions after a comma which means some conditions must be met before that rule can be executed, otherwise another
@@ -894,13 +888,13 @@ Some of the rules are subscripted with either $op$, $fun$ of $fn$.
 These are seperate sets of rules which are invoked on the right hand side of regular rules.
 We also call such a set a rule.
 From context it will be clear what we mean when we say rule, for example when talking about the set of rules subscripted by
-$fn$ we will just say: the $\evals{\;}_{fn}$ rule. The $\evals{\;}$ rule is also called the default rule.
+$fn$ we will just say: the $\evals{\cdot}_{fn}$ rule. The $\evals{\cdot}$ rule is also called the default rule.
 
-Apart from the $\evals{\;}$ rule, there are also the $\evals{\;}_{op}$, $\evals{\;}_{fun}$,  and $\evals{\;}_{fn}^{\tau}$ rules.
+Apart from the $\evals{\cdot}$ rule, there are also the $\evals{\cdot}_{op}$, $\evals{\cdot}_{fun}$,  and $\evals{\cdot}_{fn}^{\tau}$ rules.
 The first two are simple lookup rules that map to Futhark operators and functions respectively.
 The third is used to compile lambda expressions.
 Unlike the other rules $\evals{fn}$ is parametrized by a Futhark type variable $\tau$ which we denote with a superscript
-so the rule will usually be written $\evals{\;}_{fn}^{\tau}$.
+so the rule will usually be written $\evals{\cdot}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
