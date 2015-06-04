@@ -1241,7 +1241,6 @@ The compilation scheme we did in our shorthand notation worked well.
 It enabled us to focus on the conceptual compilation and not get lost in the implementation details while doing the project.
 It also adds an overview of the entire compilation (everything can be written in a page or two) that would have been difficult to have without it.
 
-
 % Methods used
 % Library functions
 %% behrænsning kunne have været hvis vi havde valgt at implementere faste libraryfunctions en for hver rank og type. 
@@ -1249,7 +1248,15 @@ It also adds an overview of the entire compilation (everything can be written in
 % How could we have tested more throughly
 %  Limitations
 
-\section{Summary and future work}
+\section{Conclusion and future work}
+
+We have presented a compilation scheme between TAIL and Futhark and a compiler from TAIL to Futhark that follows this scheme. 
+
+We have measured significant speed-ups from utilizing the Futhark compiler in our benchmarks.
+
+As we began our project no parallel backends for either languages were available, however towards the end of the project a
+parallel backend for TAIL using Accelerate had been published \cite{Array:2015} and a parralel backend for Futhark using OpenCL
+was in development.
 
 %%%%% references %%%%%
 \bibliography{references}{} 
@@ -1259,7 +1266,7 @@ It also adds an overview of the entire compilation (everything can be written in
 \section{Parser source code}
 \label{app:parser}
 
-In this appendix is the source code for the APLACC parser \ref{APLACC} with the motifications we added. Note that the magority of the parser was not created by us. The thing we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for this project. 
+In this appendix is the source code for the APLACC parser \cite{APLACC} with the motifications we added. Note that the magority of the parser was not created by us. The thing we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for this project. 
 
 \lstset{breaklines=true}
 
