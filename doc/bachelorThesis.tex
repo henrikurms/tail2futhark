@@ -8,8 +8,6 @@
 \usepackage{stmaryrd}
 \usepackage{fixltx2e}
 \usepackage{amsmath}
-\usepackage{tabu}
-\usepackage{geometry}
 \usepackage[utf8x]{inputenc}
 
 \lstset{
@@ -946,7 +944,7 @@ We have adopted the same approach as with each by using nested maps to map the r
 For example reducing an array of rank 2 emits the following code:
  
 \begin{lstlisting}[numbers=none,frame=none]
-reduce(+,a)     =>      map(fn x => _reduce_(+,x), a)
+reduce(+,a)     =>      map(fn x => reduce(+,x), a)
 \end{lstlisting}
 
 Lifting the reduce operation with maps into the inner-most array was the simplest solution, it utilizes only parallel operations.
@@ -1191,7 +1189,7 @@ Primes                        & 10.000                & 2294,1      & 489,3 \\
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
 It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
 The multiplication is as mentioned done using reshape and then the arguments is transposed so they can be zipped with plus.
-
+The impementation is in the file {\tt matmul.apl}
 \subsection{Pi}
 The pi benchmark approximates pi by computing the ratio of points in the range $[0,1] \times [0,1]$ that have a distance to $(0,0)$ of less than 1.
 It does so by using $n \times n$ evenly spaced points in the interval $[0,1] \times [0,1]$, it can be helpful to imagine the set of points as a regular grid.
@@ -1203,20 +1201,22 @@ where all the entries with points with distance less than one from 0 are set to 
 the square root of the sums since that square root will be less that 1 only if the original sum is less that 1.
 Finally the matrix is reduced with plus two times to get the number of points, the amount is divided by the total number of points and
 this number is multiplied by 4 to get pi.
-
+The impementation is in the file {\tt pi.apl}
 \subsection{Black sholes}
 The black sholes benchmark is taken directly from the bechmark suite of the apltail compiler and computes the price of european style options. We have not modified this benchamark this benchamrk and while it doesn't give any insight into performance it demonstrates
 that it is possible to compile this benchmark.
-
+The impementation is in the file {\tt blackscholes.apl}
 \subsection{Easter}
 The easter benchmark computes the date of easter and is found in the apltail project as {\tt tests/easter3000.apl}, the only
 modification we have done is to make the date the result from the program instead of printing it and changed a parameter to scale
 the program up.
 
+The impementation is in the file {\tt easter3000.apl}
 \subsection{Primes}
 The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 
+The impementation is in the file {\tt primes0.apl}
 \section{Discussion}
 The goul with this project was to see if it was possible to compile a subset of TAIL \cite{ElsmanDybdal:Array:2014} to Futhark while still preserving the parallelism in the original code. 
 We have been able to compile the subset to Futhark code using parrallel constructs in Futhark whenever we encountered parrallel constructs in TAIL. Because of this we have reason to believe that no parallelism has been eliminated during the translation.
