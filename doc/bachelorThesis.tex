@@ -254,7 +254,9 @@ One reason it is not ideal is because it also includes the time spend on reading
 data from files and the mesured difference between {\tt time} and a built-in timing function of the program only differed by 1 ms.
 
 \subsubsection{Using an existing parser}
-The parser we used for this project is created in previous project that also worked with compiling TAIL to a parallel backend \cite{APLACC}. We used this because even though small changes had to be done to bring it up to date with the version of TAIL we workes with, it saves time, thereby enbeling us to focus on essential work for our own project namely the compilation.
+The parser we used for this project is created in previous project that also worked with compiling TAIL to a parallel backend \cite{APLACC}. 
+The latest version of the parser can be found in the github repository: https://github.com/mbudde/aplacc.
+We did therefore not create the parser our selves. Instead we used the exsisting one because even though small changes had to be done to bring it up to date with the version of TAIL we work with, it saves time, thereby enbeling us to focus on essential work for our own project namely the compilation.
 
 \subsection{Report outline}
 The follwing sections of this paper is structured as follows. 
@@ -1085,7 +1087,8 @@ Lambda expressions with one argument are mapped to the same in Futhark.
 %If the kernel is an identifier the fun or op translations are used.
 
 
-\subsubsection{Binary scalar first-order operators} are mapped to their natural Futhark counterparts.
+\subsubsection{Binary scalar first-order operators} 
+The binary scalar first-order operators are mapped to their natural Futhark counterparts.
 
 \section{Implementation}
 \label{sec:impl}
@@ -1097,11 +1100,10 @@ Because we have only implemented a subset of TAIL not all TAIL programs can be c
 \label{sec:parser}
 %How we adapted the parser
 %The parser that we make use of was created in a precious project \cite{APLACC}.
-The parser used in this project was made previuosly in another project \cite{APLACC} and therefore not a main part of this project.
-Because of the ungoing development of the TAIL language however a few changes had to be done to update the parser to work on the latest version of the language. 
-We have forked the original repository to work on the parser.
-
-The original parser has since been adapted to work with the new version of TAIL.
+The parser used in this project was made previuosly in another project \cite{APLACC}. We did not create the parser and therefore the parser is not a main part of this project.
+Because of the ungoing development of the TAIL language however, a small number of changes had to be done to update the parser to work on the latest version of the language. 
+We have forked the original repository to work on updating the parser.
+The original parser has since been adapted to work with the new version of TAIL. For the latest verion of the parser see the github repository: https://github.com/mbudde/aplacc. 
 
 Below we discuss some of the changes we had to make to the parser and the abstract sytax tree representation of TAIL.
 
@@ -1324,7 +1326,8 @@ Compiling the code with the Futhark compiler has the benefit of optimizing the c
 \section{Parser source code}
 \label{app:parser}
 
-In this appendix is the source code for the APLACC parser \cite{APLACC} with the motifications we added. Note that the magority of the parser was not created by us. The thing we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for this project. 
+In this appendix is the source code for the APLACC parser \cite{APLACC} with the motifications we added.
+We did not develop the code presentet in this appendix but only made small alterations to the existing code. A describtion of the alterations we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for our project. 
 
 \lstset{breaklines=true}
 
