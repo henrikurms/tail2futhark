@@ -174,7 +174,7 @@ zero F.BoolT = Constant (Bool False)
 zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
 
--- ?????
+-- make Futhark function expression from ident
 makeKernel ident
   | Just fun <- convertFun ident = F.Fun fun []
   | Just op  <- convertBinOp ident = F.Op op
@@ -194,11 +194,11 @@ makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
 makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
 
--- ????
+-- make curried Futhark function that have 1 as basic element and folds with times
 multExp :: [F.Exp] -> F.Exp
 multExp = foldr (BinApp Mult) (Constant (Int 1))
 
--- ??
+-- make Futhark kernel expression with type
 compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) rtp = makeKernel ident
 compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident),(compileTp tp2,"t_" ++ ident2)] (compileExp exp)
@@ -294,7 +294,7 @@ dropFuns = map dropFun btypes
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) | ident == "pi" = Constant(Real 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
 compileExp (I int) = Constant (Int int)
-compileExp (D double) = Constant (Real double) --(Float (double2Float double)) -- isn't this supporsed to be real??????????
+compileExp (D double) = Constant (Real double)
 compileExp (C char)   = Constant (Char char)
 compileExp (B bool)   = Constant (Bool bool)
 compileExp Inf = Constant (Real (read "Infinity"))
