@@ -8,7 +8,7 @@
 \usepackage{stmaryrd}
 \usepackage{fixltx2e}
 \usepackage{amsmath}
-\usepackage[utf8x]{inputenc}
+\usepackage[utf8]{inputenc}
 
 \lstset{
   mathescape,
@@ -145,14 +145,15 @@ This can be seen in the example below which illustrate this difference. The redu
 TAIL language is mapped to a nested reduce function in the Futhark language.
 As the reshape function exists in both languages the Futhark version is \underline{underlined} for easier readability.
 
+
 \begin{lstlisting}[numbers=none,frame=none]
 $\text{reduce}$(+, [[1,2,3,4],[5,6,7,8]]))
-
-  =>
-
-$\underline{\text{reduce}}$(fn x => map(+,x),[[1,2,3,4],[5,6,7,8,]])
-
 \end{lstlisting}
+
+\begin{lstlisting}[numbers=none,frame=none]
+$\text{reduce}$(+, [[1,2,3,4],[5,6,7,8]]))
+\end{lstlisting}
+
 
 This paper contributes with a compilation scheme that are implementation independent, showing a replicable 
 way of how to translate the typed intermediate language of APL, TAIL, to the functional language Futhark. Also 
@@ -1127,7 +1128,7 @@ In this sections we discuss the test suite of our implementation.
 
 Both the apltail compiler and the Futhark compiler has an interpreter option.
 To test the correctness of our implementation we compare the output of the apltail interpreter with the output og the Futhark interpreter.
-The tests can be found in the {\tt tests/our\_tests/} directory.
+The tests can be found in the {\tt tests/basic\_tests/} directory.
 The test framework compiles each file with a tail extension in the directory to a fut file of the same name. Then the Futhark program
 is executed with the Futhark interpreter and the output is written to a file with the out extension.
 Finally this file is compared to a file with the same name and the ok extension, if the files match the test passed.
@@ -1268,7 +1269,7 @@ The compilation scheme we did in our shorthand notation worked well.
 It enabled us to focus on the conceptual compilation and not get lost in the implementation details while doing the project.
 It also adds an overview of the entire compilation (everything can be written in a page or two) that would have been difficult to have without it.
 
-% Doing the project have tought us a lot about parallelism in general and data-parallelism in particular. The possibility of harnesting the power of parallelism without as a programmer having to think about parallelism. 
+ Doing the project have tought us a lot about parallelism in general and data-parallelism in particular. The possibility of harnesting the power of parallelism without as a programmer having to think about parallelism. 
 % Also we have discovered what a huge effect the type system of different languages can have. In our concrete example we had an issue with polymorphism. This made the compilation a lot less simple since we had to make design desisions on how to handle this in the best way and what the best way was. 
 % We learned a lot from creating the compilation scheme. The way of thinking in that level of abstraction about the compilation independent of a implementation have been informating. You get an easier overview and can se connections that can be difficult to spot otherwise. Also, it is a method that can be used later in other projects. 
 
@@ -1295,6 +1296,7 @@ Depending on the results it could be interesting to look at the generated C code
 runtime of the benchmarks.
 
 It could also be interesting to try out bigger and more comprehensive benchmarks and compare the runtimes.
+
 %%%%% references %%%%%
 \bibliography{references}{} 
 \bibliographystyle{plain}
@@ -1373,7 +1375,7 @@ powi			& powi.tail			& power on 2 positive ints		& OK \\
 lti			& ltiTrue.tail 		& 3 < 5					& OK \\
 ltd			& ltdTrue.tail 		& 3.2 < 5.1					& OK \\
 andi			& - 				& 				          	& \\
-xorb			&  xorb.tail 		& (3=3) ≠ (4=1)				& OK \\
+xorb			&  xorb.tail 		& (3=3) $\neq$ (4=1)				& OK \\
 i2d 			& i2d.tail			& integer to double 			& OK \\
 addi 			& addi.tail 			& addition of 2 positive ints		& OK \\ 
 addd 		& addd.tail 		& 2.3 + 4.5					& OK \\
