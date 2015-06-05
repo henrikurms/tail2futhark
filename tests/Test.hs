@@ -7,13 +7,13 @@ import System.Process
 import System.FilePath.Posix
 
 main = do
-    files <- findByExtension [".tail"] "tests/our_tests"
+    files <- findByExtension [".tail"] "tests/basic_tests"
     let tests = testGroup "Tests"$ map (\f -> goldenVsFile f (replaceExtension f "ok") (replaceExtension f "out") (makeTest f)) files
     G.defaultMain tests
 
 makeTest :: FilePath -> IO ()
-makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "fout"] >>
-                system ("futhark -i " ++ replaceExtension file "fout" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
+makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "fut"] >>
+                system ("futhark -i " ++ replaceExtension file "fut" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
 
 
 --tests = testGroup "Tests" [crashTests,outputTests]

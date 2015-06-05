@@ -13,7 +13,7 @@ TLEXECS=$(APLFILES:%.apl=tail_%)
 all: $(FUTEXECS) $(TLEXECS)
 
 tail_%.c: %.apl
-	$(APLT) -silent -c -oc $@ $(PRELUDE) $<
+	$(APLT) -silent -c -O2 -opt_hoist -oc $@ $(PRELUDE) $<
 
 tail_%: tail_%.c
 	cc -lm -std=c99 -o $@ -I $(INCLUDE) $<
