@@ -16,7 +16,13 @@
 }
 
 \lstdefinelanguage{Futhark}{
-  keywords={fun,int,bool,char,if,then,else,let,in},
+  keywords={fun,fn,int,bool,char,if,then,else,let,in},
+  keywordstyle=\color{blue!40!black}\bfseries,
+  identifierstyle=\color{green!40!black},
+}
+
+\lstdefinelanguage{TAIL}{
+  keywords={int,bool,char,if,let,in},
   keywordstyle=\color{blue!40!black}\bfseries,
   identifierstyle=\color{green!40!black},
 }
@@ -1132,7 +1138,12 @@ type Program = [FunDecl]
 
 Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
 Library functions are added to the beginning of every file (except if the --no-include-lib-funs option is used). 
-Some of the functions are created from our templates. First the function body is created as a Futhark expression. Then we make a Futhark function that is parametrised over a Futhark type. We represent such a fundtion with the type {\tt F.Type -> FunDecl}. We can even parametrise the bodies of the functions by giving them the type {\tt F.Type -> F.Exp}, this type is simply passed from the parametrised function when it is instantiated. To produce all the functions we simply map the parametrised versions over the basic types. 
+Some of the functions are created from our templates. First the function body is created as a Futhark expression.
+Then we make a Futhark function that is parametrised over a Futhark type. We represent such a function with the Haskell type {\tt F.Type -> FunDecl}.
+We can even parametrise the bodies of the functions by giving them the Haskell type {\tt F.Type -> F.Exp}, this type is simply passed from the parametrised function when it is instantiated.
+We use this for example in the body of {\tt drop} where the empty list of the argument Futhark type has to be returned.
+Also the body of {\tt take} is paramtrized over the expression with which the input should be padded, so it has the Haskell type {\tt F.Exp -> F.Exp}.
+To produce all the functions we simply map the parametrised versions over the basic Futhark types. 
 
 We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. 
 
@@ -1260,10 +1271,40 @@ The impementation is in the file {\tt easter3000.apl}
 \subsection{Primes}
 The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
+The APL program can be seen below:\\
+\fbox{\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes}}
+The APLTAIL compiler compiles the code to the following TAIL program:
+\begin{lstlisting}[breaklines=true,language=TAIL]
+let v1:<int>8 = dropV{[int],[8]}(1,iotaV(9)) in
+let v7:[int]2 = transp{[int],[2]}(reshape{[int],[1,2]}([8,8],v1)) in
+let v8:[int]2 = reshape{[int],[1,2]}([8,8],v1) in
+let v11:[int]2 = zipWith{[int,int,int],[2]}(resi,v7,v8) in
+let v18:[int]1 = transp{[int],[1]}(reduce{[int],[1]}(addi,0,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(v13)))) in
+let v13:[bool]2 = each{[int,bool],[2]}(fn v12:[int]0 => eqi(0,v12),v11) in
+let v20:[bool]1 = each{[int,bool],[1]}(fn v19:[int]0 => eqi(1,v19),v18) in
+let v24:[int]0 = reduce{[int],[0]}(addi,0,each{[bool,int],[1]}(b2i,v20)) in
+i2d(v24)
+\end{lstlisting}
+The tail2futhark compiler then produces this result where the library functions are omitted:
+\begin{lstlisting}[language=Futhark,breaklines=true]
+fun real main() =
+  let t_v1 = drop1_int(1,map(fn int (int x) => (x + 1),iota(9))) in
+  let t_v7 = rearrange((1,0),reshape((8,8),reshape1_int((8 * (8 * 1)),reshape(((size(0,t_v1) * 1)),t_v1)))) in
+  let t_v8 = reshape((8,8),reshape1_int((8 * (8 * 1)),reshape(((size(0,t_v1) * 1)),t_v1))) in
+  let t_v11 = map(fn [int] ([int] x,[int] y) => map(resi,zip(x,y)),zip(t_v7,t_v8)) in
+  let t_v13 = map(fn [bool] ([int] x) => map(fn bool (int t_v12) => (0 == t_v12),x),t_v11) in
+  let t_v18 = rearrange((0),map(fn int ([int] x) => reduce(+,0,x),map(fn [int] ([bool] x) => map(boolToInt,x),rearrange((1,0),t_v13)))) in
+  let t_v20 = map(fn bool (int t_v19) => (1 == t_v19),t_v18) in
+  let t_v24 = reduce(+,0,map(boolToInt,t_v20)) in
+  toFloat(t_v24)
+\end{lstlisting}
 
-The impementation is in the file {\tt primes0.apl}
+% For at vise et større eksempel har vi medtaget det her benchmark
+% Man kan se parallel operatorer bliver oversat til andre parallele operatorer
+% Man kan se transformation af curried lambdaer
+% Biblioteksfunktioner bliver brugt
 
-
+The impementation can also be seen in the file {\tt primes0.apl}\\
 \subsection{Results}
 
 In all of the benchmarks except black-scholes we have seen significant speed-ups by compiling to Futhark.
@@ -1285,8 +1326,8 @@ in sequential execution as measured in our benchmarks and are confident that the
 We feel these sequentially executed benchmarks are relevant because the are parallel in their structure and should therefore execute efficiently on parallel
  hardware.
  
- % dataparallelisme, hvile ting er forskellige er vigtige for dem, fx memory på GPU. Tilgang på 
- % større forståelse for hvad der inpacter/har betydning for parallelisme
+ % dataparallelisme, hvile ting er forskellige er vigtige for dem, fx memory paa GPU. Tilgang paa 
+ % stoerre forstaaelse for hvad der inpacter/har betydning for parallelisme
 
 During this project we have learned the value of using a symbolic notation to work from and to present and reason about in the form of our compilation scheme. 
 Without our compilation scheme it is not clear how to present the work, either we would have to argue based on the
@@ -1318,9 +1359,10 @@ Finaly, it could also be interesting to try out bigger and more comprehensive be
 
 \section{Conclusion}
 \label{sec:conclusion}
+
  % forklar kort hvad der var i rapporten
 % Hvad var det vi ville i forhold til projektet/ hvad var vores tese
-% Svar på om vi har opnået det. 
+% Svar paa om vi har opnaaet det. 
 
 In this paper we have desribed relevant part of the two languages TAIL and Futhark. 
 We have also presented a compilation between the two languages shown in an implementation independent mathermatical notation as well as an implementation of this scheme in Haskell and test of this implementation. 
@@ -1410,8 +1452,8 @@ divi 			& divi.tail			& (4 / 2) + 4				& OK \\
 divd			& divd.tail			& (4.0 / 2.0) + 4				& OK \\
 powd			& powd.tail			&  FORKERT tester ints		&  \\
 powi			& powi.tail			& power on 2 positive ints		& OK \\
-lti			& ltiTrue.tail 		& 3 < 5					& OK \\
-ltd			& ltdTrue.tail 		& 3.2 < 5.1					& OK \\
+lti			& ltiTrue.tail 		& 3 $<$ 5					& OK \\
+ltd			& ltdTrue.tail 		& 3.2 $<$ 5.1					& OK \\
 andi			& - 				& 				          	& \\
 xorb			&  xorb.tail 		& (3=3) $\neq$ (4=1)				& OK \\
 i2d 			& i2d.tail			& integer to double 			& OK \\
