@@ -1206,6 +1206,8 @@ The matrix multiplication benchmark takes a matrix and multiplies it with itself
 It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
 The implementation is in the file {\tt matmul.apl}
 
+To run the Futhark version of the benchamark run '{\tt fut\_matmul < matmul.in}'
+
 \subsection{Pi}
 The pi benchmark approximates pi by computing the ratio of points in the range $[0,1] \times [0,1]$ that have a distance to $(0,0)$ of less than 1.
 It does so by using $n \times n$ evenly spaced points in the interval $[0,1] \times [0,1]$, it can be helpful to imagine the set of points as a regular grid.
