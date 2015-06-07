@@ -115,7 +115,7 @@ Vi præsenterer et implementations uafhængigt oversættelses skema for en delm�
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 \label{intro}
-In this paper we want to examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler \cite{ElsmanDybdal:Array:2014}, into Futhark programs \cite{TroelsHenriksen} and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
+In this paper we want to examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
 
 In recent years, there has been a lot of focus on leveraging the power of parallel hardware. 
 One approach has been to design programming languages with explicit data-parallel constructs that can be compiled 
@@ -125,24 +125,8 @@ performs several optimizations, such as fusion, which enhance the degree of
 parallelism \cite{T.Henriksen&C.Oancea} \cite{T2graph} \cite{Hybrid}.
 
 APL (short for A Programming Language) \cite{APLbook} is an array language and includes various operations that are central to the language and are good candidates 
-for parallel execution. Efforts in compiling APL to parallel backends already exist in the form of the language 
-TAIL (Typed array intermediate language) and it’s compiler \cite{ElsmanDybdal:Array:2014}.
-The TAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form.
-In our work we provide a compiler from TAIL 
-to Futhark thus bridging the gap between APL and Futhark.
+for parallel execution. 
 
-The compilation between TAIL and Futhark is described in a compilation scheme that is the main contribution of this paper.
-The compiler based on this scheme is called TAIL2Futhark. 
-In Figure \ref{fig:compilers} is an overview of the main compilers mentioned in this project, it also show the code they produce.
-The figure gives an overview of how the TAIL2Futhark compiler fits between the alredy existing APLTAIL compiler that compiles APL to TAIL code and the Futhark compiler that compiles Futhark to either sequential or parallel code C-code \cite{TroelsHenriksen}. 
-
-The language Futhark is designed to target parallel architectures while at the same time acting 
-as an intermediate language for more feature-rich languages.
-By compiling APL to Futhark through TAIL the  Futhark compiler can be used to generate parallel code from APL once a parallel backend for Futhark is completed.
-
-The background for designing TAIL was to create a typed intermediate language for the array programming language APL.
-TAIL is still under development and so is the {\tt apltail} compiler which compiles a subset of APL into
-TAIL \cite{ElsmanDybdal:Array:2014}.
 APL is an older language created in the 1960's by Kenneth E. Iverson.
 APL is an array programming language, its main type is the multi-dimensional array 
 and most of the built-in functions in the language are array operators that work on this type. 
@@ -151,6 +135,20 @@ The APL language is dynamically typed. It supports first and second order functi
 Even though it is an old language it is still used in the financial world 
 where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014} \cite{Array:2015}.
 
+Efforts in compiling APL to parallel backends already exist in the form of the language 
+TAIL (Typed array intermediate language) and it’s compiler \cite{ElsmanDybdal:Array:2014} that compiles a subset of APL.
+The APLTAIL compiler captures the parallelism inherent in APL source code and brings it to a much more manageable form.
+
+In our work we provide a compiler from TAIL 
+to Futhark thus bridging the gap between APL and Futhark.
+
+The compilation between TAIL and Futhark is described in a compilation scheme that is the main contribution of this paper. 
+In Figure \ref{fig:compilers} is an overview of the main compilers mentioned in this project and the the code they produce.
+The figure gives an overview of how our compiler (the TAIL2Futhark compiler) fits between the alredy existing APLTAIL compiler that compiles APL to TAIL code and the Futhark compiler that compiles Futhark to either sequential or parallel code C-code \cite{TroelsHenriksen}. 
+
+By compiling APL to Futhark through TAIL the Futhark compiler can be used to generate parallel code from APL once a parallel backend for Futhark is completed.
+
+% skal der stå noget med at grunden til de 4 array operatorer er interesante er fordi de kan udføres parallelt???
 One of the main point of interest in the compilation between TAIL and Futhark is compiling the four array operators 
 of TAIL: {\tt each}, {\tt eachV}, 
  {\tt reduce} and {\tt zipWith} to Futhark source code that include the four second-order array combinators in Futhark:  
@@ -158,20 +156,10 @@ of TAIL: {\tt each}, {\tt eachV},
 However as the functionality of these functions is somewhat different the work lies in creating a mapping that retains the parallelism in the original code in the target language.
 This can be seen in the example below which illustrate this difference. 
 The APL code is given first. We do not describe APL in detail but the comments on each line should be explanation enough to understand what happens. 
-%The reduce function in the
-%TAIL language is mapped to a nested reduce function in the Futhark language.
-%As the reshape function exists in both languages the Futhark version is \underline{underlined} for easier readability.
-%
-%$\text{reduce}$(+, [[1,2,3,4],[5,6,7,8]]))
-%
-%  =>
-%
-%$\underline{\text{reduce}}$(fn x => map(+,x),[[1,2,3,4],[5,6,7,8,]])
 
 \includegraphics[scale=0.7,trim=6em 72em 10em 6em,clip=true]{reduce}
 
 The APL code becomes the following TAIL code when using the APLTAIL compiler and now contains type information. The reason for the {\tt i2d} (int to double) operator is that the APLTAIL compiler only accept programs that returns doubles at the moment.
-
 
 \begin{lstlisting}[numbers=none,frame=none,language=TAIL]
 let v1:[int]2 = reshape{[int],[1,2]}([2,2],[2,3,4,5]) in
@@ -197,7 +185,7 @@ this paper presents an implementation of the previous mentioned scheme in Haskel
 The efficiency of this implementation has been tested by comparing benchmark results on code generated by the C-backend to TAIL 
 and the generated Futhark source code by using the C-backend to Futhark.
 The project is open source and the source code can be found here:\\ https://github.com/henrikurms/tail2futhark.
-Both Futhark and TAIL are ungoing research projects and are therefore subject to change bear in mind that the references cited may not be up to date (The versions used in this project was the versions available on github from Februar 2015 and until mid May 2015). For a up to date version of the languages and their compilers we refer to their recepctive github repositories (links for these repositories can be seen below): \\
+Both Futhark and TAIL are ungoing research projects and are therefore subject to change bear in mind that the references cited may not be up to date (the versions used in this project was the versions available on github from Februar 2015 and until mid May 2015). For a up to date version of the languages and their compilers we refer to their recepctive github repositories (links for these repositories can be seen below): \\
 
 TAIL: https://github.com/melsman/apltail
 
@@ -728,22 +716,6 @@ In Figure \ref{fig:funs} are the functions that are compiled directly to a corre
 
 When $e$ is some TAIL expression, and $e'$ is some Futhark expression we specify the translation as rules of the form $\evals{e} = e'$. The rules are syntax-directed in the sense that they follow the structure of $e$, recursively. 
 
-% Presentation of the compilation scheme
-% Explain the reson for making the scheme
-%% Implementation independent overview of the compilation
-%% A way to easy create an overview thereby limiting the chances that we missed something
-%% Easy for others to use 
-%% way to get the ide down on paper
-% Explain the notation/ who to read the scheme
-%% how is it possible to destinct between futhark and tail functions/expressions 
-%% how is the types represented og hvad betydning har de
-% Explain the general idea behind the compilation
-%% try to use futhark functions whenever posible.
-%% inlined library functions to deal with cases where no futhark function existed or polymorphism was required
-%%% explain WHY we chose libraryfunctions and what the alternative was. 
-% Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
-%\newgeometry{top=15pt,left=30pt,bottom=70pt}
-%\begin{flushleft}
 \begin{figure}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -1205,10 +1177,25 @@ All tests returns the expected results.
 As we have not done exhaustive testing we cannot be sure that all functionality work as expected only that the one we have testet for does. 
 
 \section{Benchmarks}
+\label{sec:benchmarks}
+We used a number of benchmarks to mesure the performance of the code generated by our compiler. 
+All benchmarks can be found in the {\tt tests/benchmarks} directory in our project. 
+The benchmarks are written i APL code and then compiled to C-code using the APLTAIL compiler to create the TAIL version and the APLTAIL compiler, our compiler, and the Futhark compiler to make the Futhark version. The path from APL code to executable file can be seen in Figure \ref{fig:code}.
+
+\begin{figure}[h]
+\begin{center}
+    \includegraphics[width=11cm]{code.png}
+    \caption{The path for a benchmark from APL to an executable file.}
+    \label{fig:code}
+\end{center}
+\end{figure}
+
+Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages. 
+The C-code is then compiled using a C compiler and the comandline tool {\tt time} is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
+The benchmarks is run on a Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz. 
 
 \begin{table}[h]
 \begin{center}
-\label{tbl:benchmark}
 \begin{tabular}{l c c c}
 Benchmark & Problem size & TAIL C & Futhark C \\ \hline \\
 Matrix multiplication    & 512$\times$512 &  5478,4     & 2706,5  \\
@@ -1218,25 +1205,9 @@ Easter                         & 400 		    & 1650,2      & 677,1 \\
 Primes                        & 10.000                & 2294,1      & 489,3 \\
 \end{tabular}
 \caption{Benchmark timing in miliseconds.}
-\label{sec:benchmarks}
+\label{tbl:benchmark}
 \end{center}
 \end{table}
-
-We used a number of benchmarks to mesure the performance of the code generated by our compiler. 
-All benchmarks can be found in the {\tt tests/benchmarks} directory in our project. 
-The benchmarks are written i APL code and then compiled to C-code using the APLTAIL compiler to create the TAIL version and the APLTAIL compiler, our compiler, and the Futhark compiler to make the Futhark version. The path from APL code to executable file can be seen in Figure \ref{fig:code}.
-
-\begin{figure}[h]
-\begin{center}
-    \includegraphics[width=11cm]{code.png}
-    \caption{The path for a benchmark from APL to an executable file.}
-\end{center}
-\label{fig:code}
-\end{figure}
-
-Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages. 
-The C-code is then compiled using a C compiler and the comandline tool {\tt time} is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table 1.
-The benchmarks is run on a Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz. 
 
 We made a Makefile to manage the building of the benchmarks. The Makefile is also placed in the {\tt tests/benchmarks} directory.
 
@@ -1306,13 +1277,14 @@ fun real main() =
   toFloat(t_v24)
 \end{lstlisting}
 
-Note that the definition of the library functions are omitted from this example to save space. They are included above the main function in the file containing the code. 
+Note that the definition of the library functions are omitted from this example to save space. They are included above the main function in the file containing the code. The entire Futhark file can be found in Appendix \ref{app:fut}.
 This example ilustrates that the parallel operators of TAIL ({\tt zipWith}, {\tt each} and {\tt reduce}) are compiled to parallel  second order functions in Futhark ({\tt map} and {\tt reduce}). 
 We also see that library functions are used ({\tt drop1\_int} and {\tt reshape1\_int}) on the one-dimentional case.
 
-The impementation can also be seen in the file {\tt primes0.apl}\\
-\subsection{Results}
+The impementation can also be seen in the file {\tt primes0.apl}.
 
+\subsection{Results}
+As mentioned previusly the results can be seen Tabel \ref{tbl:benchmark}.
 In all of the benchmarks except black-scholes we have seen significant speed-ups by compiling to Futhark.
 The biggest difference was in the pi benchmark, this is due to the fact that the APLTAIL compiler ends up fusing too much and
 duplicates work. It calculates $x * x$ $n^2$ times instead of just $n$ times as expressed in the APL program.
@@ -1329,11 +1301,10 @@ We have been able to compile TAIL to Futhark code using parallel constructs in F
 Because of this we have reason to believe that no parallelism has been eliminated during the compilation.
 Although we have not veriefied the effect the compilation has on performance on parallel hardware we have seen significant speed-ups
 in sequential execution as measured in our benchmarks and are confident that these speed-ups can be reproduced on parallel hardware.
-We feel these sequentially executed benchmarks are relevant because the are parallel in their structure and should therefore execute efficiently on parallel
+We feel these sequentially executed benchmarks are relevant because they are parallel in their structure and should therefore execute efficiently on parallel
  hardware.
  
- % dataparallelisme, hvile ting er forskellige er vigtige for dem, fx memory paa GPU. Tilgang paa 
- % stoerre forstaaelse for hvad der inpacter/har betydning for parallelisme
+During this project we have gotten a greater understanding of data-parallalism and some of the things that can influence the effiency of the parallel code, such as memory constrains in the case of general computing on the GPUs. 
 
 During this project we have learned the value of using a mathematical notation to work from and to present and reason about in the form of our compilation scheme. 
 Without our compilation scheme it is not clear how to present the work, either we would have to argue based on the
@@ -1347,10 +1318,9 @@ This made the compilation a lot less simple since we had to make design desision
 We decided to create library functions for each basic type and create our compilation so that we only used library functions in the one-dimensional case.
 Otherwise we could have made a function for each version of basic type and array shape for a limited set of combinations. But this means we could not have supported a significant portion of TAIL.
 
-
 If we had to redo this project we would have focused more on the benchnarks from the beginning as soon as we
 started implementing. This makes for a more goal oriented work-flow instead of the check-list like work-flow we had.
-Maybe we would have implement fewer operators and instead focus on analyzing the code generated by the compilers (APLTAIL and Futhark) and
+Maybe we would have implemented fewer operators and instead focused on analyzing the code generated by the compilers (APLTAIL and Futhark) and
 from that argue about the soundness of our conversion rules.
 
 As we began our project no parallel backends for either languages were available, however towards the end of the project a
@@ -1377,8 +1347,12 @@ Finaly, we have compaired the execution time of selected benchmarks.
 In this project we wanted to examine if it was possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
 
 We have shown that it is possible to effectivly compile TAIL to Futhark by expressing this compilation in a compilation scheme done in a mathematical notation that is language independent and also implement this compilation scheme in Haskell. We have used the Haskell implementation to test the correctness of the compilation scheme. 
-We have preserved the parallelism in the code by ensuring that all parallel operators in TAIL are mapped to parallel functions in Futhark. 
-Compiling the code with the Futhark compiler has the benefit of optimizing the code as we have measured significant speed-ups from utilizing the Futhark compiler in our benchmarks.
+
+We have argued that the parallalism in the code is preserved by ensuring that all parallel operators in TAIL are mapped to parallel functions in Futhark. This parallelism in the resulting code means that the Futhark infarstructure for optimization can be used to optimize the code as well as the create a posibility for targeting parallel hardware. 
+
+We have shown that compiling the code with the Futhark compiler has the benefit of optimizing the code as we have measured significant speed-ups from utilizing the Futhark compiler in our benchmarks.
+
+We therefore beleve we have mead our goal. 
 
 
 %%%%% references %%%%%
@@ -1417,10 +1391,189 @@ This appendix contains the source code of the pretty printer used to print the F
 
 \newpage
 
+\section{Complete Futhark primes code}
+\label{app:fut}
+\begin{lstlisting}[language=Futhark,breaklines=true]
+fun int boolToInt(bool x) =
+  if x then 1 else 0
+fun int negi(int x) =
+  -x
+fun real negd(real x) =
+  -x
+fun int absi(int x) =
+  if (x <= 0) then -x else x
+fun real absd(real x) =
+  if (x <= 0.0) then -x else x
+fun int mini(int x,int y) =
+  if (x <= y) then x else y
+fun real mind(real x,real y) =
+  if (x <= y) then x else y
+fun int signd(real x) =
+  if (0.0 < x)
+  then 1
+  else if (0.0 == x)
+       then 0
+       else -1
+fun int signi(int x) =
+  if (0 < x)
+  then 1
+  else if (0 == x)
+       then 0
+       else -1
+fun int maxi(int x,int y) =
+  if (x <= y) then y else x
+fun real maxd(real x,real y) =
+  if (x <= y) then y else x
+fun bool eqb(bool x,bool y) =
+  (!((x || y)) || (x && y))
+fun bool xorb(bool x,bool y) =
+  (!((x && y)) && (x || y))
+fun bool nandb(bool x,bool y) =
+  !((x && y))
+fun bool norb(bool x,bool y) =
+  !((x || y))
+fun bool neqi(int x,int y) =
+  !((x == y))
+fun bool neqd(real x,real y) =
+  !((x == y))
+fun int resi(int x,int y) =
+  if (x == 0)
+  then y
+else if ((((y % x) == 0) || ((y > 0) && (x > 0))) || ((y < 0) && (x < 0)))
+       then (y % x)
+       else (y % (x + x))
+fun [int] reshape1_int(int l,[int] x) =
+  let roundUp = ((l + (size(0,x) - 1)) / size(0,x)) in
+  let extend = reshape(((size(0,x) * roundUp)),replicate(roundUp,x)) in
+  let {v1,_} = split((l),extend) in v1
+fun [real] reshape1_real(int l,[real] x) =
+  let roundUp = ((l + (size(0,x) - 1)) / size(0,x)) in
+  let extend = reshape(((size(0,x) * roundUp)),replicate(roundUp,x)) in
+  let {v1,_} = split((l),extend) in v1
+fun [bool] reshape1_bool(int l,[bool] x) =
+  let roundUp = ((l + (size(0,x) - 1)) / size(0,x)) in
+  let extend = reshape(((size(0,x) * roundUp)),replicate(roundUp,x)) in
+  let {v1,_} = split((l),extend) in v1
+fun [char] reshape1_char(int l,[char] x) =
+  let roundUp = ((l + (size(0,x) - 1)) / size(0,x)) in
+  let extend = reshape(((size(0,x) * roundUp)),replicate(roundUp,x)) in
+  let {v1,_} = split((l),extend) in v1
+fun [int] take1_int(int l,[int] x) =
+  if (0 <= l)
+  then if (l <= size(0,x))
+       then let {v1,_} = split((l),x) in v1
+       else concat(x,replicate((l - size(0,x)),0))
+  else if (0 <= (l + size(0,x)))
+       then let {_,v2} = split(((l + size(0,x))),x) in v2
+       else concat(replicate((l - size(0,x)),0),x)
+fun [real] take1_real(int l,[real] x) =
+  if (0 <= l)
+  then if (l <= size(0,x))
+       then let {v1,_} = split((l),x) in v1
+       else concat(x,replicate((l - size(0,x)),0.0))
+  else if (0 <= (l + size(0,x)))
+       then let {_,v2} = split(((l + size(0,x))),x) in v2
+       else concat(replicate((l - size(0,x)),0.0),x)
+fun [bool] take1_bool(int l,[bool] x) =
+  if (0 <= l)
+  then if (l <= size(0,x))
+       then let {v1,_} = split((l),x) in v1
+       else concat(x,replicate((l - size(0,x)),False))
+  else if (0 <= (l + size(0,x)))
+       then let {_,v2} = split(((l + size(0,x))),x) in v2
+       else concat(replicate((l - size(0,x)),False),x)
+       fun [char] take1_char(int l,[char] x) =
+  if (0 <= l)
+  then if (l <= size(0,x))
+       then let {v1,_} = split((l),x) in v1
+       else concat(x,replicate((l - size(0,x)),' '))
+  else if (0 <= (l + size(0,x)))
+       then let {_,v2} = split(((l + size(0,x))),x) in v2
+       else concat(replicate((l - size(0,x)),' '),x)
+fun [int] drop1_int(int l,[int] x) =
+  if (size(0,x) <= if (l <= 0) then -l else l)
+  then empty(int)
+  else if (l <= 0)
+       then let {v1,_} = split(((l + size(0,x))),x) in v1
+       else let {_,v2} = split((l),x) in v2
+fun [real] drop1_real(int l,[real] x) =
+  if (size(0,x) <= if (l <= 0) then -l else l)
+  then empty(real)
+  else if (l <= 0)
+       then let {v1,_} = split(((l + size(0,x))),x) in v1
+       else let {_,v2} = split((l),x) in v2
+fun [bool] drop1_bool(int l,[bool] x) =
+  if (size(0,x) <= if (l <= 0) then -l else l)
+  then empty(bool)
+  else if (l <= 0)
+       then let {v1,_} = split(((l + size(0,x))),x) in v1
+       else let {_,v2} = split((l),x) in v2
+fun [char] drop1_char(int l,[char] x) =
+  if (size(0,x) <= if (l <= 0) then -l else l)
+  then empty(char)
+  else if (l <= 0)
+       then let {v1,_} = split(((l + size(0,x))),x) in v1
+       else let {_,v2} = split((l),x) in v2
+fun real main() =
+  let t_v1 = drop1_int(1,map(fn int (int x) => (x + 1),iota(9999))) in
+  let t_v7 = rearrange((1,0),reshape((9998,9998),reshape1_int((9998 * (9998 * 1)),reshape(((size(0,t_v1) * 1)),t_v1)))) in
+  let t_v8 = reshape((9998,9998),reshape1_int((9998 * (9998 * 1)),reshape(((size(0,t_v1) * 1)),t_v1))) in
+  let t_v11 = map(fn [int] ([int] x,[int] y) => map(resi,zip(x,y)),zip(t_v7,t_v8)) in
+  let t_v13 = map(fn [bool] ([int] x) => map(fn bool (int t_v12) => (0 == t_v12),x),t_v11) in
+  let t_v18 = rearrange((0),map(fn int ([int] x) => reduce(+,0,x),map(fn [int] ([bool] x) => map(boolToInt,x),rearrange((1,0),t_v13)))) in
+  let t_v20 = map(fn bool (int t_v19) => (1 == t_v19),t_v18) in
+  let t_v24 = reduce(+,0,map(boolToInt,t_v20)) in
+  let t_v25 = reshape((2,2),reshape1_int((2 * (2 * 1)),reshape(((size(0,[2,3,4,5]) * 1)),[2,3,4,5]))) in
+  let t_v28 = map(fn int ([int] x) => reduce(*,1,x),t_v25) in
+  toFloat(reduce(+,0,t_v28))
+\end{lstlisting}
+
+\newpage
+
 \section{Test results}
 \label{app:testresults}
 The tests can be found in the {\tt test/basic\_tests/} directory in our project.
 The expected result of the test can be found in the .ok version of the file. The results in the table below is OK if the result of the compilation (found in the .out file) matches the expected one or FAIL if it does not.
+
+\begin{center}
+\begin{tabular}{l l l l}
+Function  		& File name		& Describtion of test						& Result \\ \hline \\
+reshape		&  reshape.tail		& reshapes vector of int with padding			& OK \\
+reshape 		& reshape2.tail	 	& reshape vector into array of rank 			& OK \\ 
+vreverse		& rev2.tail			& reverse of matrix of ints					& OK \\
+vreverseV		& rev.tail			& reverse of vector of ints					& OK \\
+vrotate		& rotateRank2.tail	& rotate array of rank 3 of ints				& OK \\
+vrotateV		& rotateRank1.tail	& rotate vektoof ints 						& OK \\
+transp		& transp2.tail		& transpose vector of ints					& OK \\
+transp 		& transp3.tail		& transpose array of rank 3 of ints			& OK \\ 
+transp 		& transpAPL.tail		& transpose matrix of ints					& OK \\	
+transp2		& dyadic\_transp.tail	& transpose of matrix of ints				& OK \\
+takeV		& take1.tail		& positive int on vector with enough elements 	& OK \\ 
+takeV		& take1neg.tail		& negative int on vector with enough elements	& OK \\ 
+take			& take2.tail		& positive int on matrix with enough elements 	& OK \\
+dropV		& drop2.tail		& positive int on vector with enough elements	& OK \\
+drop			& drop2Dim.tail	    	& drops row in array rank 2 with enough elements & OK \\
+drop 			& drop2DimNeg.tail 	& drops with a negative number on array of rank 2 & OK \\
+drop 			& drop2DimtoMuch.tail & drops more rows than there are in the array     & OK \\
+drop 			& drop3Dim.tail		& positive int in a 3 dim array				& OK \\ 
+consV		& -				&									&  \\
+cons			& cons1.tail		& vector of ints on array of rank 2 of ints		& OK \\ 
+snocV		& snocRank1.tail 	& set scalar on vector						& OK \\
+snoc			& snocRank2.tail	& set vector on matrix 					& OK \\
+firstV			& firstV2.tail		& first element of vektor with only one element	& OK \\
+firstV			& firstV3.tail 		& first element of vektor of ints				& OK \\
+first			& first2.tail			& first on a matrix						& OK \\
+zipWith		& zipwith.tail		& zip addi over two vectors					& OK \\ 
+zipWith 		& zipwith2.tail		& zip addi over two matrices				& OK \\
+zipWith 		& zipwith3.tail		& zip addi over two arrays of rank 3 of ints		& OK \\
+catV			& - 				& 									& \\
+cat			& cat.tail			& cat of arrays of rank 2 of ints				& OK \\
+cat			& catV.tail			& cat of vectors of ints					& OK \\
+cat			& concat.tail		& cat of arrays of rank 2 af ints				& OK \\
+reshape		& reshape.tail		& reshape vector to matrix					&  OK \\
+reshape		& reshape2.tail		& reshape with extending the vector			&  OK \\
+\end{tabular}
+\end{center}
 
 \begin{center}
 \begin{tabular}{l l l l}
@@ -1478,44 +1631,5 @@ shape		& take2.tail		& shape of matrix of ints		& OK \\
 \end{tabular}
 \end{center}
 
-\begin{center}
-\begin{tabular}{l l l l}
-Function  		& File name		& Describtion of test						& Result \\ \hline \\
-reshape		&  reshape.tail		& reshapes vector of int with padding			& OK \\
-reshape 		& reshape2.tail	 	& reshape vector into array of rank 			& OK \\ 
-vreverse		& rev2.tail			& reverse of matrix of ints					& OK \\
-vreverseV		& rev.tail			& reverse of vector of ints					& OK \\
-vrotate		& rotateRank2.tail	& rotate array of rank 3 of ints				& OK \\
-vrotateV		& rotateRank1.tail	& rotate vektoof ints 						& OK \\
-transp		& transp2.tail		& transpose vector of ints					& OK \\
-transp 		& transp3.tail		& transpose array of rank 3 of ints			& OK \\ 
-transp 		& transpAPL.tail		& transpose matrix of ints					& OK \\	
-transp2		& dyadic\_transp.tail	& transpose of matrix of ints				& OK \\
-takeV		& take1.tail		& positive int on vector with enough elements 	& OK \\ 
-takeV		& take1neg.tail		& negative int on vector with enough elements	& OK \\ 
-take			& take2.tail		& positive int on matrix with enough elements 	& OK \\
-dropV		& drop2.tail		& positive int on vector with enough elements	& OK \\
-drop			& drop2Dim.tail	    	& drops row in array rank 2 with enough elements & OK \\
-drop 			& drop2DimNeg.tail 	& drops with a negative number on array of rank 2 & OK \\
-drop 			& drop2DimtoMuch.tail & drops more rows than there are in the array     & OK \\
-drop 			& drop3Dim.tail		& positive int in a 3 dim array				& OK \\ 
-consV		& -				&									&  \\
-cons			& cons1.tail		& vector of ints on array of rank 2 of ints		& OK \\ 
-snocV		& snocRank1.tail 	& set scalar on vector						& OK \\
-snoc			& snocRank2.tail	& set vector on matrix 					& OK \\
-firstV			& firstV2.tail		& first element of vektor with only one element	& OK \\
-firstV			& firstV3.tail 		& first element of vektor of ints				& OK \\
-first			& first2.tail			& first on a matrix						& OK \\
-zipWith		& zipwith.tail		& zip addi over two vectors					& OK \\ 
-zipWith 		& zipwith2.tail		& zip addi over two matrices				& OK \\
-zipWith 		& zipwith3.tail		& zip addi over two arrays of rank 3 of ints		& OK \\
-catV			& - 				& 									& \\
-cat			& cat.tail			& cat of arrays of rank 2 of ints				& OK \\
-cat			& catV.tail			& cat of vectors of ints					& OK \\
-cat			& concat.tail		& cat of arrays of rank 2 af ints				& OK \\
-reshape		& reshape.tail		& reshape vector to matrix					&  OK \\
-reshape		& reshape2.tail		& reshape with extending the vector			&  OK \\
-\end{tabular}
-\end{center}
 
 \end{document}
