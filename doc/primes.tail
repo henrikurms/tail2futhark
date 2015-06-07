@@ -1,0 +1,9 @@
+let v1:<int>8 = dropV{[int],[8]}(1,iotaV(9)) in
+let v7:[int]2 = transp{[int],[2]}(reshape{[int],[1,2]}([8,8],v1)) in
+let v8:[int]2 = reshape{[int],[1,2]}([8,8],v1) in
+let v11:[int]2 = zipWith{[int,int,int],[2]}(resi,v7,v8) in
+let v13:[bool]2 = each{[int,bool],[2]}(fn v12:[int]0 => eqi(0,v12),v11) in
+let v18:[int]1 = transp{[int],[1]}(reduce{[int],[1]}(addi,0,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(v13)))) in
+let v20:[bool]1 = each{[int,bool],[1]}(fn v19:[int]0 => eqi(1,v19),v18) in
+let v24:[int]0 = reduce{[int],[0]}(addi,0,each{[bool,int],[1]}(b2i,v20)) in
+i2d(v24)

@@ -165,7 +165,7 @@ The APL code is given first. We do not describe APL in detail but the comments o
 The APL code becomes the following TAIL code when using the APLTAIL compiler and now contains type information. The reason for the {\tt i2d} (int to double) operator is that the APLTAIL compiler only accept programs that returns doubles at the moment.
 
 
-\begin{lstlisting}[numbers=none,frame=none]
+\begin{lstlisting}[numbers=none,frame=none,language=TAIL]
 let v1:[int]2 = reshape{[int],[1,2]}([2,2],[2,3,4,5]) in
 let v4:[int]1 = reduce{[int],[1]}(muli,1,v1) in
 i2d(reduce{[int],[0]}(addi,0,v4))
@@ -173,7 +173,7 @@ i2d(reduce{[int],[0]}(addi,0,v4))
 
 This TAIL code is then compiled to Futhark code where the reduce function is mapped to a nested reduce function in the Futhark language. 
 
-\begin{lstlisting}[numbers=none,frame=none,breaklines=true]
+\begin{lstlisting}[numbers=none,frame=none,breaklines=true,language=Futhark]
 fun real main() =
   let t_v1 = reshape((2,2),reshape1_int((2 * (2 * 1)),reshape(((size(0,[2,3,4,5]) * 1)),[2,3,4,5]))) in
   let t_v4 = map(fn int ([int] x) => reduce(*,1,x),t_v1) in
@@ -256,7 +256,7 @@ extensive\cite{TroelsHenriksen}.
 
 \subsubsection{Choice of language for implementation}
 The implementation described in this project is written in the functional programming language Haskell.
-The language constructs in Haskell are smiliar to our symbolic notation and functional languages are good for developing compilers in general.\cite{TorbenMogensen}
+The language constructs in Haskell are smiliar to our mathematical notation and functional languages are good for developing compilers in general.\cite{TorbenMogensen}
 
 \subsubsection{Other tools}
 For building our project and managing external libraries we have used the cabal packaging system \cite{cabal}.
@@ -304,8 +304,6 @@ Using the substitution $S$ on an object $B$ means applying both $S_t$ and $S_s$ 
 A type $\tau'$ is an instance of a type scheme $\sigma$ = $\forall\vec{\alpha}\vec{\gamma}$.$\tau$ (written $\sigma$ $\geq$ $\tau'$) if a substitution $S$ exists such that $S(\tau)$ = $\tau'$. All type schemes are assumed closed.
 
 The syntax of operators and expressions is given below. The letter $v$ is used to denote values and the letter $x$ is used to denote program variables. 
-%\end{lstlisting}
-%\begin{lstlisting}[numbers=none,frame=none]
 \begin{lstlisting}[numbers=none,frame=none]
 $op$ ::= addi | subi | multi | mini | maxi | addd | subd | 
        muld | mind | maxd | andb | orb | xorb |  nanb | 
@@ -1117,7 +1115,7 @@ The updated code for the compiler can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
 The main part of the compiler is (placed in {\tt src/Tail2Futhark/Compile.hs}) transforms the TAIL AST that are returned by the {\tt aplacc} parser to a Futhark AST. The definition of the Futhark AST is placed in {\tt src/Tail2Futhark/Futhark/AST.hs}.
-The implementation of the compiler is very close to the transformations rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:impl}.
+The implementation of the compiler is very close to the conversion rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:impl}.
 
 The module defined in the {\tt Compile.hs} file exports one function:
 \begin{lstlisting}[language=haskell]
@@ -1329,7 +1327,7 @@ We feel these sequentially executed benchmarks are relevant because the are para
  % dataparallelisme, hvile ting er forskellige er vigtige for dem, fx memory paa GPU. Tilgang paa 
  % stoerre forstaaelse for hvad der inpacter/har betydning for parallelisme
 
-During this project we have learned the value of using a symbolic notation to work from and to present and reason about in the form of our compilation scheme. 
+During this project we have learned the value of using a mathematical notation to work from and to present and reason about in the form of our compilation scheme. 
 Without our compilation scheme it is not clear how to present the work, either we would have to argue based on the
 implementation which muddles the picuture with implementation details, or we would have to argue in prose which
 makes it difficult to precisely explain the concepts without being very verbose.
@@ -1365,7 +1363,7 @@ Finaly, it could also be interesting to try out bigger and more comprehensive be
 % Svar paa om vi har opnaaet det. 
 
 In this paper we have desribed relevant part of the two languages TAIL and Futhark. 
-We have also presented a compilation between the two languages shown in an implementation independent mathermatical notation as well as an implementation of this scheme in Haskell and test of this implementation. 
+We have also presented a compilation between the two languages shown in an implementation independent mathematical notation as well as an implementation of this scheme in Haskell and test of this implementation. 
 Finaly, we have compaired the execution time of selected benchmarks. 
 
 In this project we wanted to examine if it was possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
