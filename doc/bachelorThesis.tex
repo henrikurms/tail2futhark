@@ -101,7 +101,7 @@ We present an implementation independent scheme for compiling a subset of the in
 \begin{center}
 \textbf{Resumé}
 \end{center}
-Vi præsenterer et implementations uafhængigt oversættelses skema for en delmængde af det intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at udtrykke TAIL operationerne i. Vi præsenterer også en implementation af skemaet og bruger implementationen til at demonstrere anvendeligheden af at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends der viser at Futhark oversætteren optimerer udførselstiden betydeligt.
+Vi præsenterer et implementations uafhængigt oversættelses skema for en delmængde af det intermediære array sprog TAIL til det funktionelle sprog Futhark der bibeholder den data parallelisme der er i TAIL ved at bruge indbyggede data parallele funktioner i Futhark til at udtrykke TAIL operationerne i. Vi præsenterer også en implementation og bruger implementationen til at demonstrere anvendeligheden af at oversætte TAIL til Futhark ved at sammenligne udførselstiden af udvalgte benchmarks på sekventielle backends til begge sprog.
 
 \newpage
 
@@ -1123,7 +1123,7 @@ In TAIL there is a function called {\tt readIntVecFile} for reading input in fro
 We do not take into account that the syntax of the data the prorams read are different from TAIL and Futhark. Futharmore, it is the responsibility of the programmer to ensure that if a TAIL program reads a file to a pipe the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
 
 \subsection{Pretty print}
-The final part of the compiler is the pretty printer located at {\tt tail2futhark/src/
+The final part of the compiler is the pretty printer located at {\tt src/
 Tail2Futhark/Futhark/Pretty.hs}. 
 The pretty printer takes a Futhark AST and transforms the abstract representation of the componants of the AST to correct Futhark source code. 
 
