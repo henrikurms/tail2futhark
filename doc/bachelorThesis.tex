@@ -95,9 +95,9 @@
 
 \abstract
 
-We present an implementation independent scheme for compiling a subset of the intermidiate array language TAIL
+We present an implementation independent scheme for compiling a subset of the intermediate array language TAIL
  to the functional programming language Futhark, 
- preserving the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefullness of compiling TAIL to Futhark by comparing the execution time of selected benchmarks on sequential backends to both languages. \\\\\\\\\\\\\\\\\\\\\\\\
+ preserving the data parallelism of the host language by using built-in data parallel functions in the target language to express the TAIL operations. We also present an implementation of the compilation scheme using this implementation to demonstrate the usefulness of compiling TAIL to Futhark by comparing the execution time of selected benchmarks on sequential back-ends to both languages. \\\\\\\\\\\\\\\\\\\\\\\\
 
 
 \begin{center}
@@ -118,7 +118,7 @@ Vi præsenterer et implementations uafhængigt oversættelses skema for en delm�
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 \label{intro}
-In this report we examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
+In this report we examine if it is possible, effectively to compile TAIL programs, produced by the APLTAIL compiler, into Futhark programs and thereby make use of the Futhark infrastructure for optimization and the possibility for targeting parallel hardware.
 
 In recent years, there has been much focus on leveraging the power of parallel hardware. 
 One approach has been to design programming languages with explicit data-parallel constructs that can be compiled 
@@ -141,12 +141,11 @@ In our work we provide a compiler from TAIL
 to Futhark thus bridging the gap between APL and Futhark.
 
 The compilation between TAIL and Futhark is described in terms of a compilation scheme, which is the main contribution of this work. 
-Figure \ref{fig:compilers} gives an overview of the main compilers involved in this project and the the code they produce.
-The figure gives an overview of how our compiler (the TAIL2Futhark compiler) fits between the alrady existing APLTAIL compiler, which compiles APL to TAIL code, and the Futhark compiler that compiles Futhark to either sequential or parallel code C-code \cite{TroelsHenriksen}. 
+Figure \ref{fig:compilers} gives an overview of the main compilers involved in this project and the code they produce.
+The figure gives an overview of how our compiler (the TAIL2Futhark compiler) fits between the already existing APLTAIL compiler, which compiles APL to TAIL code, and the Futhark compiler that compiles Futhark to either sequential or parallel code C-code \cite{TroelsHenriksen}. 
 
-A major motivation for this work is that compiling APL to Futhark through TAIL the Futhark compiler can be used to generate parallel code from APL once a parallel backend for Futhark is completed.
+A major motivation for this work is that compiling APL to Futhark through TAIL the Futhark compiler can be used to generate parallel code from APL once a parallel back-end for Futhark is completed.
 
-% skal der stå noget med at grunden til de 4 array operatorer er interesante er fordi de kan udføres parallelt???
 One of the main point of interest in the compilation between TAIL and Futhark is compiling the four array operators 
 of TAIL: {\tt each}, {\tt eachV}, 
  {\tt reduce} and {\tt zipWith} to Futhark source code, which involves the four second-order array combinators in Futhark:  
@@ -174,25 +173,22 @@ fun real main() =
   toFloat(reduce(+,0,t_v4))
 \end{lstlisting}
 
-The nesting of the operator happens because the reduce function in APL and therefore TAIL works on the innermost dimention of the array but the reduce function in Futhark works on the outermost dimention of the array. In order to get the same functionality, namely reducing the content of the inner arrays, the Futhark function have to be mapped onto them. This can be seen in the definition of the {\tt t\_v4} variable. 
+The nesting of the operator happens because the reduce function in APL and therefore TAIL works on the innermost dimension of the array but the reduce function in Futhark works on the outermost dimention of the array. In order to get the same functionality, namely reducing the content of the inner arrays, the Futhark function have to be mapped onto them. This can be seen in the definition of the {\tt t\_v4} variable. 
 The function {\tt reshape1\_int} is a library function that will be explained later. 
 
 This report contributes with a compilation scheme that is implementation independent, showing a replicable 
 way of how to translate TAIL, to the functional language Futhark. Also, 
 this report presents an implementation of the previous mentioned scheme in Haskell.
 The effectiveness of this implementation has been tested by comparing benchmark results on code generated by the C-backend to TAIL 
-and the generated Futhark source code by using Futhark's backend.
+and the generated Futhark source code by using Futhark's back-end.
 The project is open source and the source code can be found at:\\ https://github.com/henrikurms/tail2futhark.
-Both Futhark and TAIL are ongoing research projects and are therefore subject to change. Thus the references cited may not be up to date (the versions of the languages used in this project was the versions available on github from Februar 2015 until early May 2015). For a up to date version of the languages and their compilers we refer to their recepctive github repositories (links for these repositories can be seen below): \\
+Both Futhark and TAIL are ongoing research projects and are therefore subject to change. Thus the references cited may not be up to date (the versions of the languages used in this project was the versions available on github from Februar 2015 until early May 2015). For a up to date version of the languages and their compilers we refer to their resepctive github repositories (links for these repositories can be seen below): \\
 
 TAIL: https://github.com/melsman/apltail
 
 Futhark: https://github.com/HIPERFIT/futhark
 
 The reader of this report is assumed to have understanding of computer science concepts of the bachelor level and therefore general computer science concepts (e.g. parser and compiler) will not be explained. 
-
-% \section{Outline}
-%The compilation scheme presented later in this section is written in a form of short hand notation to be able to have the entire compilation written in a short and very detailed was that is implem
 
 \begin{figure}
 \begin{center}
@@ -207,7 +203,7 @@ The reader of this report is assumed to have understanding of computer science c
 \subsection{Scope}
 In this project we create an implementation independent compilation scheme showing a compilation between TAIL and Futhark as well as a Haskell implementation of the compilation scheme, creating the TAIL2Futhark compiler. We also test the implementation of the compiler. 
 
-We have used selected benchmarks that we will adabt to work with our project and present their results in section \ref{sec:benchmarks}. We will use benchmarks to see if the compiled Futhark code is more efficient than the original code. 
+We have used selected benchmarks that we will adapt to work with our project and present their results in section \ref{sec:benchmarks}. We will use benchmarks to see if the compiled Futhark code is more efficient than the original code. 
 
 We implement a subset of the TAIL language so not all TAIL operators are supported by us. Also we have worked with  the version of TAIL that was published before February 2015 and up until early May 2015. 
 
@@ -217,10 +213,10 @@ We will not present an overview of APL but only refer to \cite{APLbook} and \cit
 
 \subsection{Report outline}
 The following sections of this report is structured as follows. 
-Section \ref{intro} includes the introductioin containing the scope and methods and tools used in this project. 
+Section \ref{intro} includes the introduction containing the scope and methods and tools used in this project. 
 Section \ref{sec:tail} and Section \ref{sec:futhark} gives an introduction to the source and the target language respectively. 
 Section \ref{sec:strategy} presents the overall strategy for compiling TAIL to Futhark is given.
-Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the Haskell implementation and tests. Section \ref{sec:benchmarks} describes the benchmarks used to measure the efficiency of the generated Futhark code by comparing it to the TAIL backend.
+Section \ref{sec:scheme} describes the compilation scheme in detail. Section \ref{sec:impl} is an overview of the Haskell implementation and tests. Section \ref{sec:benchmarks} describes the benchmarks used to measure the efficiency of the generated Futhark code by comparing it to the TAIL back-end.
 Finally, Section \ref{sec:discussion} and Section \ref{sec:conclusion} provide a discussion and a conclusion of the results and contain ideas to possible future work. 
 
 \subsection{Methods and tools}
@@ -229,7 +225,7 @@ In this section we will describe and explain the reasoning behind the methods an
 
 \subsubsection{Compilation scheme and the notation}
 In this report, a compilation scheme done in a form of mathematical notation is presented. 
-The reason for using a mathematical notation is to be able to express the compilation of the different components of the compilation separately and in a detailed precise manner. We call the compilation of a specfic component a conversion rule. 
+The reason for using a mathematical notation is to be able to express the compilation of the different components of the compilation separately and in a detailed precise manner. We call the compilation of a specific component a conversion rule. 
 The notation should also help the reader getting an overview of the entire main part of the compiler as well as create a way of talking about specific conversions.
 The notation is inspired by similar notation used in other projects \cite{TorbenMogensen}\cite{MartinElsmanNotation} to describe compilation schemes but is not built on a specific standard as no such standard is known to us.
 Instead, we have invented our own notation.
@@ -247,7 +243,7 @@ One reason is that we would like the compiler to always output a valid (runnable
 Furthermore, since Futhark is a statically typed language with no polymorphism, we would like to be able to
 generate functions with the same implementations but different types from a template.
 That way we can be sure the different versions have the same implementation.
-Finally, because we expect future versions of  Funthark to feature polymorphism and a module system, we would like the solution to be easy to remove once it is no longer needed \cite{TroelsHenriksen}. 
+Finally, because we expect future versions of  Futhark to feature polymorphism and a module system, we would like the solution to be easy to remove once it is no longer needed \cite{TroelsHenriksen}. 
 
 \subsubsection{Choice of language for implementation}
 The implementation described in this project is written in the functional programming language Haskell.
@@ -261,14 +257,14 @@ We have created a Makefile for building our benchmarks. This made it much easier
 as a reference of how to build them manually.
 
 We have used the Linux command-line tool {\tt time} for measuring the runtime of our benchmarks. 
-It is not nessesarily the best way but because of time constraints we have not looked for another solution.
+It is not necessarily the best way but because of time constraints we have not looked for another solution.
 One reason it is not ideal is because it also includes the time spend on reading data from files.
 We have however tried to create benchmarks where the execution of the computations overshadow any overhead introduced by input and output.
 In particular only, one of our benchmarks read
 input from files and the measured difference between {\tt time} and a built-in timing function of the program only differed by 1 ms. 
 
 \subsubsection{Modifying an existing parser}
-The parser we used for this project is not done by us but was created in a paper that also worked with compiling TAIL to a parallel backend\cite{APLACC}. 
+The parser we used for this project is not done by us but was created in a paper that also worked with compiling TAIL to a parallel back-end\cite{APLACC}. 
 The latest version of the parser can be found in the github repository: https://github.com/mbudde/aplacc.
 We did therefore not create the parser our selves,
 instead we modified the existing parser where needed which enabled us to focus our work on the core of our project.
@@ -286,7 +282,9 @@ $\sigma$ ::= $\forall\vec{\alpha}\vec{\gamma}$.$\tau$
 \end{lstlisting}
 The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the rank of the array in its type.
 The integer scalar in the array's shape type denotes the rank of the array and must be a non-negative integer.
-The type system also supports vector types ($\langle \kappa \rangle^\rho$), which are used specifically to denote vectors of a specific length. For example, {\tt <int>8} denotes a vector of ints of known length 8. If a vector's length is not staticallly known, it can instead be expressed as an array of rank 1.
+The type system also supports vector types ($\langle \kappa \rangle^\rho$), which are used specifically to denote vectors of a specific length.
+For example, {\tt <int>8} denotes a vector of ints of known length 8.
+If a vector's length is not statically known, it can instead be expressed as an array of rank 1.
 Scalar values that are statically known can be given the type (S$_{\kappa}$($\rho$)), which represents integers, and booleans,
 for which the value is contained in the type.
 In addition, there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$)) for singleton vectors where the element is statically known.
@@ -346,7 +344,7 @@ that is, the function is applied on the inner most dimension of the array, or se
 
 The {\tt eachV} function is a special case of {\tt each} and is used on vector types.
 
-The function {\tt reduce} works similarily to fold known from functional languages. The type scheme for {\tt reduce} is:
+The function {\tt reduce} works similarly to fold known from functional languages. The type scheme for {\tt reduce} is:
 \begin{lstlisting}[numbers=none,frame=none]
 reduce : $\forall\alpha\gamma.(\alpha \rightarrow \alpha \rightarrow \alpha)\rightarrow \alpha \rightarrow [\alpha]^{1 +\gamma} \rightarrow [\alpha]^{\gamma}$
 \end{lstlisting}
@@ -367,12 +365,12 @@ There are other important operators besides the parallel ones. One of them is th
 Given two arrays, it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array thus 
 $reshape([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
-If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$. Note that this is not how arrays are represented in TAIL. Instead of using nested brackets to represent the dimentions, arrays in TAIL are represented with a shape (i.e. $[1,2,3,4,5,6]^{[2,3]}$). However, using this representation can make what happens less obvius so we use the nested brackets representation insted. 
+If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$. Note that this is not how arrays are represented in TAIL. Instead of using nested brackets to represent the dimensions, arrays in TAIL are represented with a shape (i.e. $[1,2,3,4,5,6]^{[2,3]}$). However, using this representation can make what happens less obvious so we use the nested brackets representation instead. 
 
 Other important operator expressions are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
 They return an array containing the 1st to $i$'th element of $a$,
 and the array containing the $i$'th to n'th element of $a$, respectively.
-If the array is multi-dimensional, the operators work on the outermost dimesion of the array. That is $take(2,[[1,2],[3,4],[5,6]])$ evaluates to $[[1,2],[3,4]]$.
+If the array is multi-dimensional, the operators work on the outermost dimension of the array. That is $take(2,[[1,2],[3,4],[5,6]])$ evaluates to $[[1,2],[3,4]]$.
 If the array contains too few elements the array is padded with zeros,
 whereas the {\tt drop} operator returns the empty array in the case that more elements are dropped that than $a$ contains. 
 
@@ -461,7 +459,7 @@ $k$ ::= $n$				(Integer)
     | $d$				(Decimal number)
     | $b$				(Boolean) 		
     | $c$ 				(Character)
-    | {$v_1$,...,$v_n$} 		(Tuble)
+    | {$v_1$,...,$v_n$} 		(Tuple)
     | [v$_1$,...,$v_n$] 		(Array)
 \end{lstlisting}
 
@@ -505,7 +503,7 @@ $prog$ ::= $\epsilon$ | $fun$ $prog$
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none,frame=none]
-$l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$			(Anonymus function)
+$l$ ::=  fn $t$ ($t_1$ $v_1,..., t_n$ $v_n$) => $e$			(Anonymous function)
     | $id$ ($e_1,...,e_n$)					   (Curried function)
     | op $\odot$ ($e_1,..., e_n$)			   	   (Curried operator)
 \end{lstlisting}
@@ -526,7 +524,7 @@ The functions {\tt map }, {\tt filter }, {\tt reduce } and {\tt scan } are secon
 The SOACs operate on arrays with first-order functions given as arguments.
 Functional arguments used can be function names of first-order functions (either user-defined or built-in), 
 binary operators, or lambda expressions.
-Futhermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
+Furthermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
 the return type and argument types, and argument bindings follow the normal shadowing rules.
 
 We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and we will therefore not discuss them in detail here.
@@ -589,36 +587,20 @@ depend upon even though it does make optimization more difficult \cite{TroelsHen
 
 \section{The compilation strategy}
 \label{sec:strategy}
-In this section we will present our general stragegy for compiling TAIL to Futhark. 
+In this section we will present our general strategy for compiling TAIL to Futhark. 
 
 Where possible, TAIL primitives have been mapped directly to their corresponding versions in the Futhark language.
-Where direct translation is not possible the approach has been to use exisiting operations as much
+Where direct translation is not possible the approach has been to use existing operations as much
 as possible and generate code to bridge the gap.
 
-%map -> map
-% use map
-% don't use loops
-% no optimizations (rely of futhark optmizations)
-% library functions to simplify compilation
-
-%The first case is for example seen in the compilation of let-expressions and many of the basic scalar operators (e.g. plus).
-%The second case is seen in for example the compilation of the iota operator.
-
 The general strategy for compiling TAIL expressions was to aim for the simplest conversion and use as much as possible 
-the built-in functions of Futhark to make it easy for the Futhark compiler to optimise away the overhead that the compilation from TAIL to Futhark may have created.
-This means we have not directly focused on optimization in the compilation as it was futhermore not in the scope of this project.
+the built-in functions of Futhark to make it easy for the Futhark compiler to optimize away the overhead that the compilation from TAIL to Futhark may have created.
+This means we have not directly focused on optimization in the compilation as it was furhermore not in the scope of this project.
 Still we have tried as much as possible to not introduce any unecessary inefficiencies.
- %(et eller andet med det overhead eller sådan noget som vi potentielt kan have skabt kva at vi stort set ikke har tænkt på hvad der er optimalt.)
 
-In the cases where it was not posible to use built-in Futhark functions library functions was created instead. 
-%There are several reasons for making libary functions. One was to keep our compilation scheme simple.
-%By having a small library of Furhark functions which is inlined in each compiled program we... % ja hvad får vi egentlig ud af det??? :)
+In the cases where it was not possible to use built-in Futhark functions library functions was created instead. 
 
 Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.
-
-% Er der flere fordele ved biblioteksfunktionerne??
-% Hvad er det negative ved biblioteksfuntionerne
-% Hvad var alternativet 
 
 \section{Library functions}
 \label{sec:library}
@@ -627,9 +609,9 @@ In this section explain some of the nontrivial library functions we have defined
 \subsection{The take1, drop1 and reshape1 functions}
 The {\tt take1}, {\tt drop1} and {\tt reshape1} functions implement the TAIL operators {\tt take}, {\tt drop} and {\tt reshape} in the one-dimensional case. In Section \ref{sec:scheme}, we see how they can be used to implement the multi-dimensional cases. It is advantageous to use a library function for only the one-dimensional case as we would otherwise need a separate library function for each 
 rank and basic type combination which we then needed to call since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
-We have implemeted the functions (take1, drop1, and reduce1) as templates written in Haskell. 
+We have implemented the functions (take1, drop1, and reduce1) as templates written in Haskell. 
 A template is a function that given a type returns Futhark code for that function with the given type.
-We have done this so we can use the same template for making all four functions (one for each base type) and can thereby be sure to have the same function code for each type and make maintaning the functions easier. 
+We have done this so we can use the same template for making all four functions (one for each base type) and can thereby be sure to have the same function code for each type and make maintaining the functions easier. 
 
 \subsubsection{The take1 functions}
 The {\tt take1} functions is defined as follow: 
@@ -643,13 +625,11 @@ fun [int] take1_int(int l,[int] x) =
        then let {_,v2} = split(((l + size(0,x))),x) in v2
        else concat(replicate((l - size(0,x)),0),x)
 \end{lstlisting}
-Notice that this is the {\tt int} version. The template is as menstioned used to make a boolean, char, and double version as well but we have chosen only to show one for space reasoons. 
+Notice that this is the {\tt int} version. The template is as mentioned used to make a boolean, char, and double version as well but we have chosen only to show one for space reasons. 
 
 The function first checks if it should perform a positive of negative take and then checks whether it should split so it can return
 part of the argument or pad the argument with zeros based on whether the take size was smaller or bigger than the array.
 
-%TODO what details are we missing?
-%TODO discuss how it knows what to pad with
 \subsubsection{The drop1 functions}
 The {\tt drop1} functions is defined as follows: 
 \begin{lstlisting}[language=Futhark]
@@ -678,10 +658,6 @@ fun [int] reshape1_int(int l,[int] x) =
 When we replicate an array in Futhark the rank of the array increases by one so we have to reshape the array back to rank 1 before we split it.
 The number of times we should replicate the array is the target size divided by the array size rounded up.
 This is computed in the variable roundUp, we add denominator plus one to the enumerator to round up as normal integer division round down.
-
-%Nevertheless we inline the flattening and reshaping code so we only need reshape functions written in Futhark
-%for the one dimensional cases. If we wanted to simply call a function instead we would need a separate library function for each
-%rank and basic type combination which we needed to call reshape on since Futhark only allows declaration of monomorphic functions \cite{TroelsHenriksen}.
 
 \subsection{Bool equality}
 
@@ -830,15 +806,6 @@ $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & 
     \label{fig:lambdas}
 \end{figure}
 
-%\begin{tabu} to \linewidth { l X}
-%$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
-%lti, ltd, andi, andd, ori, shli, shri\\
-%$funs$ =& i2d, catV, b2i, b2iV, ln, exod, notb, negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb,
-%nandb, norb, neqi, neqd
-%\end{tabu}
-%\end{flushleft}
-%\restoregeometry
-
 \begin{figure}
 The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
@@ -853,7 +820,7 @@ $\evals{notb}_{fun}$ & $=$ & !\\
 
 
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
-\caption{Conversion rules for functions names and functions with a 1:1 correspondance}
+\caption{Conversion rules for functions names and functions with a 1:1 correspondence}
 \label{fig:funs}
 \end{figure}
 
@@ -897,7 +864,7 @@ Each line in the scheme consists of a TAIL expression in double brackets $\evals
 equals sign in the middle and a Futhark expression on the right side. This means that the TAIL expression on the left
 side should be compiled to the Futhark expression on the right side. We call such a line a conversion rule. Some rules have side
 conditions after a comma which means some conditions must be met before that rule can be executed, otherwise another
-rule must be chosen. This can be thought of as similiar to pattern matching in functional languages where side conditions
+rule must be chosen. This can be thought of as similar to pattern matching in functional languages where side conditions
 are guards. The rules are exhaustive and non-overlapping.
 In practice the compilation can be easily implemented using pattern matching by choosing the right ordering of patterns
 and it is indeed how our compiler is implemented.
@@ -911,7 +878,7 @@ The type information can be either just a type $t$ or a combination of both type
 The type consist of a type that are one of the TAIL types described in Section 2. The rank is the number of dimensions.
 
 Some of the rules are subscripted with either $op$, $fun$ of $fn$.
-These are seperate sets of rules which are invoked on the right hand side of regular rules.
+These are separate sets of rules which are invoked on the right hand side of regular rules.
 We also call such a set a rule.
 From context it will be clear what we mean when we say rule, for example when talking about the set of rules subscripted by
 $fn$ we will just say: the $\evals{\cdot}_{fn}$ rule. The $\evals{\cdot}$ rule is also called the default rule.
@@ -924,16 +891,15 @@ so the rule will usually be written $\evals{\cdot}_{fn}^{\tau}$.
 The parameter $\tau$ represents the return type of the lambda the rule compiles,
 and must be passed by the caller when the rule is used.
 
-The set $binops$ is the defined as the set of operators that have an $op$ rule, similarily the set $funs$ is the set of
+The set $binops$ is the defined as the set of operators that have an $op$ rule, similarly the set $funs$ is the set of
 operators that have a $fun$ rule.
 
 \subsection{Explanation of the compilation of selected parts of TAIL}
-Below is the motiativation and explanation for the nontrivial conversion rules from the compilation scheme. 
+Below is the motivation and explanation for the nontrivial conversion rules from the compilation scheme. 
 
 \subsubsection{Basic structural constructs} 
-Basic structual constructs are translated to their Futhark counterparts directly.
-In let-expresions the type annotations that exist in TAIL variable bindings are ignored in Futhark \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
-% var, literals/constants, let, array litterals, neg
+Basic structural constructs are translated to their Futhark counterparts directly.
+In let-expressions the type annotations that exist in TAIL variable bindings are ignored in Futhark \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
 
 The letters $x$, $i$, $d$, and $c$ denote variables, integers, doubles, booleans and chars respectively.
 They are all translated to their Futhark equivalents.
@@ -1002,15 +968,15 @@ To adjust the size we operate on the flat representation of the array, this is e
 To adjust the size of the array we use the previously defined library function {\tt reshape1}. Actually we use the variant with
 the correct type, this type is conveniently available in the instance list.
 
-In this rule we wanted to make use of the already existing reshape operation in Futhark because we assume this appoach has the best
+In this rule we wanted to make use of the already existing reshape operation in Futhark because we assume this approach has the best
 chance of optimization by the Futhark compiler\cite{TroelsHenriksen} \cite{T2graph}, \cite{Hybrid}.
 
 \subsubsection{The transp operator} 
 There exists a {\tt transpose(a)} function in Futhark which does not have the same semantics as the {\tt transp} operator from TAIL \cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}.
 The Futhark transpose on a three dimensional array for example produces a (2,0,1) permutation of the dimensions, whereas we are
 looking for a (2,1,0) or more generally the reverse permutation of the dimensions.
-By inspection the Futhark IL (internal language) generated from a call to transpose we discovered that internally a function called {\tt rearrange} is bieng called with an explicit permutation parameter.
-This function is also available in the exeternal language and simply needed to be called with the correct parameters to match the behavior of the {\tt transp} operator.
+By inspection the Futhark IL (internal language) generated from a call to transpose we discovered that internally a function called {\tt rearrange} is being called with an explicit permutation parameter.
+This function is also available in the external language and simply needed to be called with the correct parameters to match the behavior of the {\tt transp} operator.
 
 This conversion is as direct as we could hope.
 
@@ -1023,9 +989,11 @@ such restriction on {\tt transp2}. In practice the TAIL compiler will have inlin
 The operator {\tt transp2} has thus a very direct conversion.
 
 \subsubsection{The cat operator} 
-Futhark has a concatinate function {\tt concat} that we wanted to use but it concatinate the outermost arrays while in TAIL the {\tt cat} operator concatinates the innermost arrays\cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}. To solve this we lifted the concatinate operation to the innermost dimension with map. This is the same idea used to compile the {\tt reduce}, {\tt each}, and {\tt zipWith} operators. 
+Futhark has a concatenate function {\tt concat} that we wanted to use but it concatenate the outermost arrays while in TAIL the {\tt cat} operator concatinates the innermost arrays\cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}.
+To solve this we lifted the concatenate operation to the innermost dimension with map. This is the same idea used to compile the {\tt reduce}, {\tt each}, and {\tt zipWith} operators. 
 
-Alternativly we could have compiled the {\tt cat} operator using transpose instead like we have done in {\tt snoc} and {\tt cons}. We did not have any particular reason to choose one over the other. Both solutions accomplish our goal of being simple and using Futhark built-in functions. 
+Alternatively we could have compiled the {\tt cat} operator using transpose instead like we have done in {\tt snoc} and {\tt cons}.
+We did not have any particular reason to choose one over the other. Both solutions accomplish our goal of being simple and using Futhark built-in functions. 
 
 \subsubsection{The take/drop operators} 
 In a similar fashion to the TAIL {\tt reshape} function we have used library functions to do most of the work.
@@ -1050,7 +1018,8 @@ conversion rules marked with the $fn$ subscript.
 In Futhark lambda expressions need type annotations both for the argument and the return type\cite{TroelsHenriksen}.
 This return type is provided by the context in which the lambda is used.
 Namely the type informations is present in the instance lists of the enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}.
-Arguments are already annotatated with types in TAIL so those are simply compiled to Futhark types and passed to the resulting lambda. Althougn the syntax of TAIL permits lambda expressions anywhere a  expression could be used (as long as the type is correct),
+Arguments are already annotated with types in TAIL so those are simply compiled to Futhark types and passed to the resulting lambda.
+Althougn the syntax of TAIL permits lambda expressions anywhere a  expression could be used (as long as the type is correct),
 when compiled from APL, lambda expressions will only be present in higher-order operator calls after the compilation, due to inlining.
 
 This means that lambda expressions can only occur directly inside of the aforementioned operator call or another lambda.
@@ -1062,19 +1031,14 @@ restricted the compiler to this special case which simplifies the compilation.
 The actual body of the function is compiled using the expression rule.
 If the function argument is an identifier we use the $op$ and $fun$ rules to compile them.
 Lambda expressions with one argument are mapped to the same in Futhark.
-%They need return type
-%Curried lambdas are mapped to multi-argument lambdas 
-%We only need two arguments at most
-%We compile the bodies using the regular scheme
-%If the kernel is an identifier the fun or op translations are used.
-
 
 \subsubsection{Binary scalar first-order operators} 
 The binary scalar first-order operators are mapped to their natural Futhark counterparts.
 
 \section{Implementation}
 \label{sec:impl}
-In this section a Haskell implementation of the compilation scheme is presented. This compiler is devided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
+In this section a Haskell implementation of the compilation scheme is presented.
+This compiler is divided into three parts: a parser, a compiler that transforms the TAIL abstract syntax three (AST) returned by the parser to a Futhark AST and pretty printer that given the Futhark AST prints the Futhark source code. 
 
 Because we have only implemented a subset of TAIL not all TAIL programs can be compiled. 
 
@@ -1085,21 +1049,22 @@ Because we have only implemented a subset of TAIL not all TAIL programs can be c
 As mentioned earlier the parser used in this project was made previously by someone else in another project \cite{APLACC}. We did not create the parser ourselves. 
 Because of the ongoing development of the TAIL language however, we modified the parser to work on the latest version of the language. 
 We have forked the original repository to work on the modifications of the parser.
-The original parser has since been adapted to work with the new version of TAIL by its auther. 
+The original parser has since been adapted to work with the new version of TAIL by its author. 
 For the latest version of the parser see the github repository: https://github.com/mbudde/aplacc. 
 
-Below we discuss some of the changes we had to make to the parser and the abstract sytax tree representation of TAIL.
+Below we discuss some of the changes we had to make to the parser and the abstract syntax tree representation of TAIL.
 
 We had to extend the abstract syntax three to include booleans and chars. 
 The original parser had type constructors ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank.
-We have changed these type constrctors to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank.
+We have changed these type constructors to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank.
 This meant updating the parser to read angles ($< >$) since this is the new syntax of vectors.
 
 The parser with our modifications is located in the {\tt aplacc/ } directory of our project. 
 The updated code for the parser can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
-The main part of the compiler is (placed in {\tt src/Tail2Futhark/Compile.hs}) transforms the TAIL AST (abstract sybtax three) that are returned by the {\tt aplacc} parser to a Futhark AST. The definition of the Futhark AST is placed in {\tt src/Tail2Futhark/Futhark/AST.hs}.
+The main part of the compiler is (placed in {\tt src/Tail2Futhark/Compile.hs}) transforms the TAIL AST (abstract syntax three) that are returned by the {\tt aplacc} parser to a Futhark AST.
+The definition of the Futhark AST is placed in {\tt src/Tail2Futhark/Futhark/AST.hs}.
 The implementation of the compiler is very close to the conversion rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:impl}.
 
 The module defined in the {\tt Compile.hs} file exports one function:
@@ -1110,7 +1075,9 @@ compile :: Options -> T.Program -> F.Program
 The {\tt compile} function produces a Futhark program given options and a TAIL program. 
 Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. 
 
-Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression. The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names. Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
+Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression.
+The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names.
+Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
 The resulting Futhark expression is then made the body of the main
 function in the Futhark program. 
 In our representation of the Futhark AST a Futhark program consists of a list of function declarations that are represented by the type FunDecl. 
@@ -1122,42 +1089,50 @@ type Program = [FunDecl]
 Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
 Library functions are added to the beginning of every file (except if the {\tt --no-include-lib-funs} option is used). 
 Some of the functions are created from our templates. First the function body is created as a Futhark expression.
-Then we make a Futhark function that is parametrised over a Futhark type. We represent such a function with the Haskell type {\tt F.Type -> FunDecl}.
-We can even parametrise the bodies of the functions by giving them the Haskell type {\tt F.Type -> F.Exp}, this type is simply passed from the parametrised function when it is instantiated.
+Then we make a Futhark function that is parametrized over a Futhark type. We represent such a function with the Haskell type {\tt F.Type -> FunDecl}.
+We can even parametrize the bodies of the functions by giving them the Haskell type {\tt F.Type -> F.Exp},
+this type is simply passed from the parametrized function when it is instantiated.
 We use this for example in the body of {\tt drop} where the empty list of the argument Futhark type has to be returned.
 Also the body of {\tt take} is paramtrized over the expression with which the input should be padded, so it has the Haskell type {\tt F.Exp -> F.Exp}.
-To produce all the functions we simply map the parametrised versions over the basic Futhark types. 
+To produce all the functions we simply map the parametrized versions over the basic Futhark types. 
 
 We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. 
 
-In TAIL there is a function called {\tt readIntVecFile} for reading input in from a file. This functionality does not exist in Futhark making it difficult to implement\cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. However, we needed the functionality in order to implement some of our benchmarks so to get arround this problem we used the fact that Futhark can take input in a program as arguments to the main function by reading the output in from StadIn\cite{TroelsHenriksen}. We therefore added a check to see if the first expressions in a TAIL program is {\tt readIntVecFile}. If it is we compile the expressions to arguments in the Futhark main function. That means that if the TAIL program reads an input so does the Futhark program. 
-We do not take into account that the syntax of the data the prorams read are different from TAIL and Futhark. Futharmore, it is the responsibility of the programmer to ensure that if a TAIL program reads a file to a pipe the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
+In TAIL there is a function called {\tt readIntVecFile} for reading input in from a file.
+This functionality does not exist in Futhark making it difficult to implement\cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}.
+However, we needed the functionality in order to implement some of our benchmarks so to get around this problem we used the fact
+that Futhark can take input in a program as arguments to the main function by reading the output in from StadIn\cite{TroelsHenriksen}.
+We therefore added a check to see if the first expressions in a TAIL program is {\tt readIntVecFile}.
+If it is we compile the expressions to arguments in the Futhark main function. That means that if the TAIL program reads an input so does the Futhark program. 
+We do not take into account that the syntax of the data the programs read are different from TAIL and Futhark.
+Furthermore, it is the responsibility of the programmer to ensure that if a TAIL program reads a file to a pipe the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
 
 \subsection{Pretty print}
 The final part of the compiler is the pretty printer located at {\tt src/
 Tail2Futhark/Futhark/Pretty.hs}. 
-The pretty printer takes a Futhark AST and transforms the abstract representation of the componants of the AST to correct Futhark source code. 
+The pretty printer takes a Futhark AST and transforms the abstract representation of the components of the AST to correct Futhark source code. 
 
 \subsection{Test of implementation}
 
 In this sections we discuss the test suite of our implementation.
 
 Both the APLTAIL compiler and the Futhark compiler has an interpreter option \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}.
-To test the correctness of our implementation we compare the output of the APLTAIL interpreter with the output og the Futhark interpreter.
+To test the correctness of our implementation we compare the output of the APLTAIL interpreter with the output of the Futhark interpreter.
 The tests can be found in the {\tt tests/our\_tests/} directory in our project.
 The test framework compiles each file with a {\tt tail} extension in the directory to a {\tt fut} file of the same name.
 Then the Futhark program is executed with the Futhark interpreter and the output is written to a file with the {\tt out} extension.
 Finally this file is compared to a file with the same name and the {\tt ok} extension, if the files match the test passed.
 The {\tt ok} files were to running the test suite produced with the APLTAIL interpreter.
 
-All tests are originaly written in APL code to ensure that the programs we tested up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves. Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
+All tests are originally written in APL code to ensure that the programs we tested up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves.
+Also, TAIL was designed as an intermidiate language and this approch comes closer to real world use.
 
 In order to run the tests use '{\tt cabal test}' instruction in the root directory of the repo after cloning it. 
 You need the {\tt tail2futhark} and {\tt futhark} executables in your \$PATH to do this or the tests will fail. 
 You can also run `{\tt ghc tests/Test \&\& tests/Test}' to see the test results in colored output instead for easier readability.
 
 The above mentioned framework enabled us to run the tests whenever new functionality was added and thereby check to see that the new functionality had not introduced bugs that impacted the exixting functionality. 
-Whenever a function was implemented during the development process, test cases would be added to the framework along with the alredy existing ones. These tests are all run using our implementation and compaired to the correct output.
+Whenever a function was implemented during the development process, test cases would be added to the framework along with the already existing ones. These tests are all run using our implementation and compared to the correct output.
 
 We use the tasty package \cite{tasty} which provides a test framework that we use to implement our tests. Furthermore we have used the
 package tasty-golden \cite{tasty-golden} which is a plug-in for the tasty framework that allows to test against "golden" files.
@@ -1172,22 +1147,23 @@ In order to thoroughly test the compiler all functions should be have specific t
 that meaningfully apply to the function. 
 \begin{itemize}
 \item works on different data types (both base types and rank)
-\item work on edgecases
+\item work on edge-cases
 \item works on positive and negative input
 \item function correct in all branches in if-then-else expressions
 \end{itemize}
 However, due to time restraints we have chosen to focus on doing this on a smaller subset. 
 
-We have not testet for or taken into account the possibility of TAIL code that is incorrect as it is generated by a compiler and only used as an intermidiate language \cite{ElsmanDybdal:Array:2014}. 
+We have not tested for or taken into account the possibility of TAIL code that is incorrect as it is generated by a compiler and only used as an intermediate language \cite{ElsmanDybdal:Array:2014}. 
 
 All tests returns the expected results. 
-As we have not done exhaustive testing we cannot be sure that all functionality work as expected only that the one we have testet for does. 
+As we have not done exhaustive testing we cannot be sure that all functionality work as expected only that the one we have tested for does. 
 
 \section{Benchmarks}
 \label{sec:benchmarks}
-We used a number of benchmarks to mesure the performance of the code generated by our compiler. 
+We used a number of benchmarks to measure the performance of the code generated by our compiler. 
 All benchmarks can be found in the {\tt tests/benchmarks} directory in our project. 
-The benchmarks are written i APL code and then compiled to C-code using the APLTAIL compiler to create the TAIL version and the APLTAIL compiler, our compiler, and the Futhark compiler to make the Futhark version. The path from APL code to executable file can be seen in Figure \ref{fig:code}.
+The benchmarks are written in APL code and then compiled to C-code using the APLTAIL compiler to create the TAIL version and the APLTAIL compiler, our compiler, and the Futhark compiler to make the Futhark version.
+The path from APL code to executable file can be seen in Figure \ref{fig:code}.
 
 \begin{figure}[h]
 \begin{center}
@@ -1197,8 +1173,8 @@ The benchmarks are written i APL code and then compiled to C-code using the APLT
 \end{center}
 \end{figure}
 
-Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
-The C-code is then compiled using {\tt gcc} with the flags {\tt -lm -std=c99 -O3} and the comandline tool {\tt time} is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
+Because no parallel back-end was finished for either TAIL or Futhark when we did the benchmarks we use a sequential back-end for both languages \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
+The C-code is then compiled using {\tt gcc} with the flags {\tt -lm -std=c99 -O3} and the command-line tool {\tt time} is used to measure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
 
 The benchmarks is run on a Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz. 
 
@@ -1212,7 +1188,7 @@ Black sholes             & - 			     & 1           & 1 \\
 Easter                   & 400 		         & 639.1       & 665.6 \\
 Primes                   & 10 000            & 652.8       & 480.1 \\
 \end{tabular}
-\caption{Benchmark timing in miliseconds.}
+\caption{Benchmark timing in milliseconds.}
 \label{tbl:benchmark}
 \end{center}
 \end{table}
@@ -1223,7 +1199,7 @@ We made a Makefile to manage the building of the benchmarks. The Makefile is als
 \subsection{Matrix multiplication}
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
 It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
-The impementation is in the file {\tt matmul.apl}
+The implementation is in the file {\tt matmul.apl}
 
 \subsection{Pi}
 The pi benchmark approximates pi by computing the ratio of points in the range $[0,1] \times [0,1]$ that have a distance to $(0,0)$ of less than 1.
@@ -1236,19 +1212,19 @@ where all the entries with points with distance less than one from 0 are set to 
 the square root of the sums since that square root will be less that 1 only if the original sum is less that 1.
 Finally the matrix is reduced with plus two times to get the number of points, the amount is divided by the total number of points and
 this number is multiplied by 4 to get pi.
-The impementation is in the file {\tt pi.apl}
+The implementation is in the file {\tt pi.apl}
 
 \subsection{Black-scholes}
-The black-scholes benchmark is taken directly from the bechmark suite of the APLTAIL compiler repository and computes the price of european style options. We have not modified this benchamark and while it doesn't give any insight into performance it demonstrates
+The black-scholes benchmark is taken directly from the benchmark suite of the APLTAIL compiler repository and computes the price of european style options. We have not modified this benchamark and while it doesn't give any insight into performance it demonstrates
 that it is possible to compile this benchmark. 
-The impementation is in the file {\tt blackscholes.apl}
+The implementation is in the file {\tt blackscholes.apl}
 
 \subsection{Easter}
 The easter benchmark computes the date of easter and is found in the apltail project as {\tt tests/easter3000.apl}, the only
 modification we have done is to make the date the result from the program instead of printing it and changed a parameter to scale
 the program up.
 
-The impementation is in the file {\tt easter3000.apl}
+The implementation is in the file {\tt easter3000.apl}
 
 \subsection{Primes}
 The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
@@ -1287,13 +1263,13 @@ fun real main() =
 Notice that the definition of the library functions are omitted from this example to save space.
 They are included above the main function in the file containing the code. The entire Futhark file can be found in Appendix \ref{app:fut}.
 
-This example ilustrates that the parallel operators of TAIL ({\tt zipWith}, {\tt each} and {\tt reduce}) are compiled to parallel  second order functions in Futhark ({\tt map} and {\tt reduce}). 
+This example illustrates that the parallel operators of TAIL ({\tt zipWith}, {\tt each} and {\tt reduce}) are compiled to parallel  second order functions in Futhark ({\tt map} and {\tt reduce}). 
 We also see that library functions are used ({\tt drop1\_int} and {\tt reshape1\_int}) on the one-dimensional case.
 
-The impementation can also be seen in the file {\tt primes0.apl}.
+The implementation can also be seen in the file {\tt primes0.apl}.
 
 \subsection{Results}
-As mentioned previously the results can be seen Tabel \ref{tbl:benchmark}.
+As mentioned previously the results can be seen Table \ref{tbl:benchmark}.
 In two benhamarks TAIL and Futhark perform almost the same, in one Futhark is somewhat faster than TAIL and in one we get
 a significant speed-up from Futhark.
 In the pi benchmark Futhark performs much better than TAIL, this is due to the fact that the APLTAIL compiler ends up fusing too much and duplicates work.
@@ -1302,9 +1278,9 @@ This is a limitation the authors are aware of and describe in their publication 
 
 \section{Discussion}
 \label{sec:discussion}
-In this section we discuss the viability of the approch we have used, what we have learned in the project and ideas for future work. 
+In this section we discuss the viability of the approach we have used, what we have learned in the project and ideas for future work. 
 
-Our main goal has been to see if it is possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
+Our main goal has been to see if it is possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimization and the possibility for targeting parallel hardware.
 
 We have been able to compile TAIL to Futhark code using parallel constructs in Futhark whenever we encountered parallel constructs in TAIL.
 Because of this we have reason to believe that no parallelism has been eliminated during the compilation.
@@ -1313,52 +1289,49 @@ that compiling to Futhark can in some cases speed up the sequential execution of
 We feel these sequentially executed benchmarks are relevant because they are parallel in their structure and should therefore execute efficiently on parallel
  hardware.
  
-During this project we have gotten a greater understanding of data-parallalism and some of the things that can influence the effiency of the parallel code, such as memory constrains in the case of general computing on the GPUs. 
+During this project we have gotten a greater understanding of data-parallelism and some of the things that can influence the efficiency of the parallel code, such as memory constrains in the case of general computing on the GPUs. 
 
 During this project we have learned the value of using a mathematical notation to work from and to present and reason about in the form of our compilation scheme. 
 Without our compilation scheme it is not clear how to present the work, either we would have to argue based on the
-implementation which muddles the picuture with implementation details, or we would have to argue in prose which
+implementation which muddles the picture with implementation details, or we would have to argue in prose which
 makes it difficult to precisely explain the concepts without being very verbose.
 The notation is also a good tool for communicating during the development of the ideas for compilation, because it is programming language independent.
 
 Also we have learned that the type systems means a lot when compiling between languages. 
 In our concrete example we had an issue with polymorphism.
-This made the compilation a lot less simple since we had to make design desisions on how to handle this in the best way and what the best way was. 
+This made the compilation a lot less simple since we had to make design decisions on how to handle this in the best way and what the best way was. 
 We decided to create library functions for each basic type and create our compilation so that we only used library functions in the one-dimensional case.
 Otherwise we could have made a function for each version of basic type and array shape for a limited set of combinations.
 But this means we could not have supported a significant portion of TAIL.
 
-If we had to redo this project we would have focused more on the benchnarks from the beginning as soon as we
+If we had to redo this project we would have focused more on the benchmarks from the beginning as soon as we
 started implementing. This makes for a more goal oriented work-flow instead of the check-list like work-flow we had.
 Maybe we would have implemented fewer operators and instead focused on analyzing the code generated by the compilers (APLTAIL and Futhark) and
 from that argue about the soundness of our conversion rules.
 
-As we began our project no parallel backends for either languages were available, however towards the end of the project a
-parallel backend for TAIL using Accelerate had been published \cite{Array:2015} and a parralel backend for Futhark using OpenCL
+As we began our project no parallel back-ends for either languages were available, however towards the end of the project a
+parallel back-end for TAIL using Accelerate had been published \cite{Array:2015} and a parallel back-end for Futhark using OpenCL
 was in development.
 
-It would be interesting to test the bechmarks with the parallel backends to compare TAIL and Futhark on parallel hardware.
+It would be interesting to test the benchmarks with the parallel back-ends to compare TAIL and Futhark on parallel hardware.
 Depending on the results it could be interesting to look at the generated C code to see the cause of the differences in the
 runtime of the benchmarks.
 
-Finaly, it could also be interesting to try out bigger and more comprehensive benchmarks and compare the runtimes.
+Finally, it could also be interesting to try out bigger and more comprehensive benchmarks and compare the running times.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
- % forklar kort hvad der var i rapporten
-% Hvad var det vi ville i forhold til projektet/ hvad var vores tese
-% Svar paa om vi har opnaaet det. 
-
-In this report we have desribed relevant part of the two languages TAIL and Futhark. 
+In this report we have described relevant part of the two languages TAIL and Futhark. 
 We have also presented a compilation between the two languages shown in an implementation independent mathematical notation as well as an implementation of this scheme in Haskell and test of this implementation. 
-Finaly, we have compaired the execution time of selected benchmarks. 
+Finally, we have compared the execution time of selected benchmarks. 
 
-In this project we wanted to examine if it was possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimisation and the possibility for targeting parallel hardware.
+In this project we wanted to examine if it was possible, effectively to compile TAIL programs, into Futhark programs and thereby make use of the Futhark infrastructure for optimization and the possibility for targeting parallel hardware.
 
-We have shown that it is possible to effectivly compile TAIL to Futhark by expressing this compilation in a compilation scheme done in a mathematical notation that is language independent and also implement this compilation scheme in Haskell. We have used the Haskell implementation to test the correctness of the compilation scheme. 
+We have shown that it is possible to effectively compile TAIL to Futhark by expressing this compilation in a compilation scheme done in a mathematical notation that is language independent and also implement this compilation scheme in Haskell. We have used the Haskell implementation to test the correctness of the compilation scheme. 
 
-We have argued that the parallalism in the code is preserved by ensuring that all parallel operators in TAIL are mapped to parallel functions in Futhark. This parallelism in the resulting code means that the Futhark infarstructure for optimization can be used to optimize the code as well as the create a posibility for targeting parallel hardware. 
+We have argued that the parallelism in the code is preserved by ensuring that all parallel operators in TAIL are mapped to parallel functions in Futhark.
+This parallelism in the resulting code means that the Futhark infrastructure for optimization can be used to optimize the code as well as the create a possibility for targeting parallel hardware. 
 
 We have shown that compiling the code with the Futhark compiler has the benefit of optimizing the code as we have measured speed-ups from utilizing the Futhark compiler in our benchmarks.
 
@@ -1372,8 +1345,9 @@ We have shown that compiling the code with the Futhark compiler has the benefit 
 \section{Parser source code}
 \label{app:parser}
 
-In this appendix is the source code for the APLACC parser \cite{APLACC} with the motifications we added.
-We did not develop the code presentet in this appendix but only made small alterations to the existing code. A describtion of the alterations we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for our project. 
+In this appendix is the source code for the APLACC parser \cite{APLACC} with the modifications we added.
+We did not develop the code presented in this appendix but only made small alterations to the existing code.
+A description of the alterations we did add can be found in Section \ref{sec:parser} and can also be seen in the commits in the github repository for our project. 
 
 \lstset{breaklines=true}
 
