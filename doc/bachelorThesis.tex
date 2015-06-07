@@ -9,7 +9,15 @@
 \usepackage{fixltx2e}
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
 %\usepackage{fontspec}
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\rhead{Anna Sofie Kiehn, Henrik Urms}
+\lhead{Compiling TAIL to Futhark}
+
 \lstset{
   mathescape
   %moredelim=[is][\underbar]{_}{_}
@@ -736,7 +744,6 @@ When $e$ is some TAIL expression, and $e'$ is some Futhark expression we specify
 % Walkthrough of some of the more interesting compilations. Explain WHY we did what we did. 
 %\newgeometry{top=15pt,left=30pt,bottom=70pt}
 %\begin{flushleft}
-
 \begin{figure}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
@@ -841,7 +848,6 @@ $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & 
     \caption{Conversion rules for lambda expressions}
     \label{fig:lambdas}
 \end{figure}
-
 
 %\begin{tabu} to \linewidth { l X}
 %$binops$ =& addi, addd, subi, subd, multi, multd, ltei, lted, eqi, eqd, gti,gtd, gtei, gted, andb, orb, divi, divd, powi, powd,
