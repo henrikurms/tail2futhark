@@ -367,16 +367,16 @@ $reshape([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$.
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
 If $a_2$ is shorter than needed the elements of $a_2$ are repeated.
 That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.
-Note that this is not how arrays are represented in TAIL.
+Notice that this is not how arrays are represented in TAIL.
 Instead of using nested brackets to represent the dimensions, arrays in TAIL are represented with a shape 
 (i.e. $[1,2,3,4,5,6]^{[2,3]}$).
 However, using this representation can make what happens less obvious so we use the nested brackets representation instead. 
 
 Other important operator expressions are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
-They return an array containing the 1st to $i$'th element of $a$,
-and the array containing the $i$'th to n'th element of $a$, respectively.
-If the array is multi-dimensional, the operators work on the outermost dimension of the array. That is $take(2,[[1,2],[3,4],[5,6]])$ evaluates to $[[1,2],[3,4]]$.
-If the array contains too few elements the array is padded with zeros,
+They return an array containing the 1st to $i$th element of $a$,
+and the array containing the $i$'th to nth element of $a$, respectively.
+If the array is multi-dimensional, the operators work on the outermost dimension of the array. That is, $take(2,[[1,2],[3,4],[5,6]])$ evaluates to $[[1,2],[3,4]]$.
+If the array contains too few elements, the array is padded with zeros,
 whereas the {\tt drop} operator returns the empty array in the case that more elements are dropped that than $a$ contains. 
 
 The operator {\tt snoc(a,e)} takes two arrays $a$ and $e$ and returns an array where the i'th element of $e$ is appended onto the end of the i'th row of $a$.
@@ -387,28 +387,28 @@ is appended onto each row of $a$.
 The operator {\tt cons(e,a)} has very similar semantics as the {\tt snoc} operator.
 The only difference is that it appends the contents of $e$ not on the end but at the beginning of each row.
 
-The operator {\tt cat($a_1$,$a_2$)} takes two arrays that have to have the same outer dimension and returns an array where the i'th element (for instance a row if the array is two-dimensional) of $a_2$ is appended onto the end of the i'th element of $a_1$.
+The operator {\tt cat($a_1$,$a_2$)} takes two arrays that have to have the same outer dimension and returns an array where the i'th element (i.e., a row if the array is two-dimensional) of $a_2$ is appended onto the end of the i'th element of $a_1$.
 
 The {\tt transp} operator takes an array and returns the transposed array. For instance,
  $transp([[1,2,3],[4,5,6]])$ evaluates to $[[1,4],[2,5],[3,6]]$.
-If the array is multi-dimensional (i.e. a three-dimensional array with the shape $2\times3\times4$) the function returns an array with the shape $4\times3\times2$.
+If the array is multi-dimensional (i.e., a three-dimensional array with the shape $2\times3\times4$), the function returns an array with the shape $4\times3\times2$.
 
 TAIL was designed with the purpose of targeting parallel architectures such as GPUs and allows parallel programs to be
 expressed in a highly abstract manner.
 The TAIL compiler can also efficiently compile TAIL code into sequential code in a C-like language.
 The subset of APL operators that TAIL support are shown earlier in this section.
-The TAIL compiler infers types for the values in the APL program and can annotate bindings with
-instance declarations. An instance list provides the base type and rank of the array. Or in
-the case of vectors the size of the vector.
+
 The language TAIL is statically typed and supports polymorphism. 
-Most of the operators in TAIL are very general that is, they are polymorphic with respect to array ranks and base types.
+Most of the operators in TAIL are very general. That is, they are polymorphic with respect to array ranks and base types.
 Although for some operations a specific type is needed.
 An example is the {\tt take} function. It takes as argument a number (of type int) and an array of type $[\alpha]^\gamma$.
+The TAIL compiler infers types for the values in the APL program and can annotate polymorphic bindings with
+instance declarations. Instance lists provide the base types and ranks of arrays involved in operations. 
 
 TAIL's type system takes the dynamic types of APL and transforms it to a more manageable form adding explicit type
 information to the constructs.
-Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators which
-are primitive in APL using simpler operators, one such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. 
+Another benefit of the expressiveness of TAILs type system is that it allows the (TAIL) compiler to express some operators that
+are primitive in APL using simpler operators. One such operator is that of the inner product \cite{ElsmanDybdal:Array:2014}. 
 
 The aplacc parser for TAIL represents the TAIL expressions in the abstract syntax tree as variables, constants, infinity, the negative representation of 
 the expression, let expressions, operators and lambda expressions. 
@@ -421,8 +421,10 @@ the expression, let expressions, operators and lambda expressions.
 
 Generally it is not possible to define higher-order lambda expressions in TAIL, however higher-order operators
 may use currying of lambda expressions to express multi-argument functional arguments.
-This means lambda expressions that evaluate to lambda expressions can occur as arguments in higher-order operator
+This means that lambda expressions that return lambda expressions can occur as arguments in higher-order operator
 applications and nowhere else.
+
+For details about the TAIL types system, see \cite{ElsmanDybdal:Array:2014}. 
 
 % In APL indexing are done with 1-indexing but it is possible to change the indexing to 0-indexing on the fly. 
 
@@ -432,7 +434,7 @@ applications and nowhere else.
 \label{sec:futhark}
 
 In this section we give a short introduction to the Futhark language. We will only cover the parts necessary to understand
-the reasoning behind our compilation approach. For the full language reference please refer to \cite{TroelsHenriksen}.
+the reasoning behind our compilation approach. For the full language reference please consult  \cite{TroelsHenriksen}.
 
 The syntax of Futhark types can be seen below.
 \begin{lstlisting}[numbers=none,frame=none]
@@ -445,17 +447,18 @@ $t$   $::=$   int          (Integers)
     | *[t]         (Unique arrays)
 \end{lstlisting}
 
-The types in Futhark consist of: integers, floating points, booleans, and chars, tuples (\lstinline |{t$_1$,...,t$_n$}|), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
-Tuple types are written as a comma separated list of types or values surrounded by braces.
+The types in Futhark consist of: integers, floating points, booleans, chars, tuples (\lstinline |{t$_1$,...,t$_n$}|), arrays ({\tt [t]}), and unique arrays ({\tt *[t]}).
+Tuple types are written as a comma separated list of types surrounded by braces.
 For example \lstinline|{int,bool}| represents pairs of integers and booleans.
-Unlike TAIL, Futhark allows nesting of arrays and indeed nested arrays are how multi-dimensional arrays are expressed in Futhark.
+Unlike TAIL, Futhark allows nesting of arrays. 
+Indeed, nested array types are how multi-dimensional arrays are expressed in Futhark.
 Array types are denoted by the elements (base) type enclosed by brackets.
 The layer of brackets indicates the dimensionality of the array type.
 For instance {\tt [int]} is a one-dimensional array of integers, and {\tt [[[bool]]]} is a tree-dimensional array of booleans.
-Arrays must be regular, that is, all arrays in an array must have the same number of elements.
+Arrays must be regular. That is, all sub arrays in an array must have the same number of elements.
 
 The Futhark language is statically typed but does not use type inference.
-Also, the type system of Futhark is not able to express polymorphism, which means that it is not possible to make polymorphic functions in Futhark.
+Also, the type system of Futhark is not able to express polymorphism. This means that it is not possible to make polymorphic functions in Futhark.
 The exception to this rule is that a lot of the built-in functions can be used on multiple types.
 
 The syntax of Futhark expressions is show below as follows:
@@ -495,7 +498,7 @@ $e$ ::=  $k$								(Constant)
              $e_3$ in $e_4$
 \end{lstlisting}
 \begin{lstlisting}[numbers=none,frame=none]
-$p$ ::= $id$ 
+$p$ ::= $id$ 						   (Patterns)
     | {$p_1$,...,$p_n$}
 \end{lstlisting}
 
@@ -523,13 +526,13 @@ $e$ ::=  map($l$, $e$)
 
 
 
-Note that the syntactical construct denoted by $l$ can only occur in {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
-The functions {\tt map }, {\tt filter }, {\tt reduce } and {\tt scan } are second-order array combinators, or SOACs for short.
+Notice that the syntactical construct denoted by $l$ can only occur in {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan}.
+The functions {\tt map}, {\tt filter}, {\tt reduce} and {\tt scan} are second-order array combinators, or SOACs for short.
 
 The SOACs operate on arrays with first-order functions given as arguments.
 Functional arguments used can be function names of first-order functions (either user-defined or built-in), 
 binary operators, or lambda expressions.
-Furthermore in a SOAC expression operators and functions can be curried. Lambda expressions require explicit type annotations for
+Furthermore, in a SOAC expression, operators and functions can be curried. Lambda expressions require explicit type annotations for
 the return type and argument types, and argument bindings follow the normal shadowing rules.
 
 We do not target the SOACs {\tt filter} and {\tt scan} in our compilation, and we will therefore not discuss them in detail here.
@@ -542,37 +545,37 @@ The function {\tt map} has the following type:
 map : $\forall\alpha\beta.(\alpha \rightarrow \beta) \rightarrow [\alpha] \rightarrow [\beta]$
 \end{lstlisting}
 The function {\tt map($l$,$a$)} takes a function $l$ and an array $a$ and evaluates to the array consisting of $l$ applied to each element of $a$.
-In contrast to TAIL, if the array is multi-dimensional the function is applied to the outer most dimension.
-This means that if the function $l$ is mapped into a 2-dimensional array the function would be applied to an array not the elements
-of the array. This makes sense considering that Futhark represents multi-dimensional arrays using nested arrays.
+In contrast to TAIL, if the array is multi-dimensional the function is applied to the outer-most dimension.
+This means that if the function $l$ is mapped onto a 2-dimensional array, the function would be applied to an array not the elements
+of the array. 
 
 The type of the function {\tt reduce} is: 
 \begin{lstlisting}[numbers=none,frame=none]
 reduce : $\forall\alpha.(\alpha \rightarrow \alpha \rightarrow \alpha)\rightarrow \alpha \rightarrow [\alpha] \rightarrow \alpha$
 \end{lstlisting}
-Given a binary operator/function $l$, the neutral element $e$ of $l$ and an array $a$,
-{\tt reduce } evaluates to the result of applying $l$ to combine all the elements of $a$, that is,
+Given a binary operator/function $f$, the neutral element $e$ of $f$ and an array $a$,
+{\tt reduce } evaluates to the result of applying $f$ to combine all the elements of $a$, that is,
 \begin{lstlisting}[numbers=none,frame=none]
-$e \odot a[0] \odot \ldots \odot a[n]$ where $x \odot y = l (x,y)$
+$e \odot a[0] \odot \ldots \odot a[n]$ where $x \odot y = f (x,y)$
 \end{lstlisting}
 Like {\tt map}, {\tt reduce} applies the function on the outer-most dimension of the array \cite{TroelsHenriksen}.
 
-The first-order segment of Futhark has many of the typical language features like constants, variables, many of the usual binary operators, branching, array indexing and some additional features like in-place updates and looping which we do not use.
+The first-order segment of Futhark has many of the typical language features like constants, variables, many of the usual binary operators, branching, array indexing and some additional features like in-place updates and looping, which we do not use.
 
-Futhark features array zipping with the built-in {\tt zip} which produces an array of pairs from a pair of arrays.
+Futhark features array zipping with the built-in {\tt zip}, which produces an array of pairs from a pair of arrays.
 The resulting arrays can then be mapped over with binary operators such as +.
 
-The {\tt iota} function given an integer $n$ produces an array with integer values ranging from 0 to $n-1$.
-The {\tt replicate} function given an integer $n$ and an array $a$ returns an array consisting of $n$ copies of $a$.
-The {\tt size} primitive will given a positive integer $i$ and an array $a$ return the i'th dimension, or put in another way
-the length of the arrays nested with depth $i$ in $a$. Remember that these arrays will all have the same length.
+The {\tt iota} function, given an integer $n$, produces an array with integer values ranging from 0 to $n-1$.
+The {\tt replicate} function, given an integer $n$ and an array $a$, returns an array consisting of $n$ copies of $a$.
+The {\tt size} primitive will, given a positive integer $i$ and an array $a$, return the i'th dimension, or put in another way
+the length of the arrays nested with depth $i$ in $a$. Recall that these arrays will all have the same length.
 The {\tt reshape} function takes a number of dimensions $(dim_1,..., dim_n)$ and an array $a$ and returns an array where the elements of $a$ is reshaped into the shape specified by the list of dimensions.
-The number of elements in $a$ must be equal to the product of the dimensions i.e. $elements$ $of$ $a$ $=$ $dim_1 * ... * dim_n$.
+The number of elements in $a$ must be equal to the product of the dimensions (i.e. $elements$ $of$ $a$ $=$ $dim_1 * ... * dim_n$).
 
-The function {\tt transpose} take an array $a$ and return the transposed $a$.
+The function {\tt transpose} takes an array $a$ and returns the transposed $a$.
 Transposing a three-dimensional array with dimensions $2 \times 3 \times 4$ is not like in TAIL an array with dimensions $4\times3\times2$ but instead an array with dimensions $3\times4\times2$.
 
-The function {\tt split} given an integer $n$ and an array $a$ partitions $a$ into two arrays $a[0,..,n]$ and $a[n+1,...]$ and returns them as a tuple. 
+The function {\tt split}, given an integer $n$ and an array $a$, partitions $a$ into two arrays $a[0,..,n]$ and $a[n+1,...]$ and returns them as a tuple. 
 The function {\tt concat} takes two arrays and concatenates them by concatenating the row/elements of one array with another. The shape of the two arrays have to be the same except in the first dimension. 
 
 The undocumented {\tt rearrange} function takes as arguments a comma separated list of dimensions (surrounded in parentheses) and an array. It then rearranges the shape of the array to the by the list specified.
@@ -581,7 +584,7 @@ The aim of Futhark is to be an attractive choice for expressing complex parallel
 This goal is pursued by featuring high expressive power without
 losing the ability to do aggressive optimization and managing parallelism.
 This is a challenge because higher expressive power means optimizations become more difficult. 
-However Futhark does support nested parallelism as this is a feature many programs 
+However, Futhark does support nested parallelism as this is a feature many programs 
 depend upon even though it does make optimization more difficult \cite{TroelsHenriksen}.
 
 % funktioner bliver inlinet
@@ -595,15 +598,15 @@ depend upon even though it does make optimization more difficult \cite{TroelsHen
 In this section we will present our general strategy for compiling TAIL to Futhark. 
 
 Where possible, TAIL primitives have been mapped directly to their corresponding versions in the Futhark language.
-Where direct translation is not possible the approach has been to use existing operations as much
+Where direct translation is not possible, the approach has been to use existing operations as much
 as possible and generate code to bridge the gap.
 
 The general strategy for compiling TAIL expressions was to aim for the simplest conversion and use as much as possible 
-the built-in functions of Futhark to make it easy for the Futhark compiler to optimize away the overhead that the compilation from TAIL to Futhark may have created.
-This means we have not directly focused on optimization in the compilation as it was furhermore not in the scope of this project.
-Still we have tried as much as possible to not introduce any unecessary inefficiencies.
+the built-in functions of Futhark to make it easy for the Futhark compiler to optimize away the overhead that the compilation from TAIL to Futhark creates.
+This means that we have not directly focused on optimization in the compilation. Also,  as it was not in the scope of this project.
+Still, we have tried as much as possible not to introduce any unecessary inefficiencies.
 
-In the cases where it was not possible to use built-in Futhark functions library functions was created instead. 
+In the cases where it was not possible to use built-in Futhark functions, library functions was created instead. 
 
 Many of the monomorphic first-order functions of TAIL are mapped directly to a library function of the same name. This also allows us to use the same mapping when the functions occur as arguments in SOAC applications.
 
@@ -630,7 +633,7 @@ fun [int] take1_int(int l,[int] x) =
        then let {_,v2} = split(((l + size(0,x))),x) in v2
        else concat(replicate((l - size(0,x)),0),x)
 \end{lstlisting}
-Notice that this is the {\tt int} version. The template is as mentioned used to make a boolean, char, and double version as well but we have chosen only to show one for space reasons. 
+Notice that this is the {\tt int} version. The template, is as mentioned used to make a boolean, char, and double version as well.  See Appendix \ref{app:impl} for the template function. 
 
 The function first checks if it should perform a positive of negative take and then checks whether it should split so it can return
 part of the argument or pad the argument with zeros based on whether the take size was smaller or bigger than the array.
@@ -650,7 +653,7 @@ Again we show only the int version.
 \subsubsection{The reshape1 functions}
 The {\tt reshape1} function's int version can be seen below.
 
-To adjust the array we first make sure it is long enough by extending it using the function replicate and then
+To adjust the array, we first make sure it is long enough by extending it using the function replicate and then
 truncate it to the correct length with split.
 
 \begin{lstlisting}[language=Futhark]
@@ -660,9 +663,9 @@ fun [int] reshape1_int(int l,[int] x) =
   let {v1,_} = split((l),extend) in v1
 \end{lstlisting}
 
-When we replicate an array in Futhark the rank of the array increases by one so we have to reshape the array back to rank 1 before we split it.
+When we replicate an array in Futhark, the rank of the array increases by one, thus, we have to reshape the array back to rank 1 before we split it.
 The number of times we should replicate the array is the target size divided by the array size rounded up.
-This is computed in the variable roundUp, we add denominator plus one to the enumerator to round up as normal integer division round down.
+This is computed in the variable roundUp. We add denominator plus one to the enumerator to round up as normal integer division rounds down.
 
 \subsection{Bool equality}
 
@@ -685,20 +688,20 @@ fun bool xorb(bool x,bool y) =
 The Xor of two booleans is true if one but not both of them are true.
 
 \subsection{All other library functions}
-The rest of the library functions are implemented very straight forward and are therefore only mentioned as a list here:
+The rest of the library functions are implemented very straightforward and are therefore only mentioned as a list here:
 
 \begin{lstlisting}[numbers=none,frame=none]
 boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,
 nandb,norb,neqi,neqd,resi
 \end{lstlisting}
-The implementation of these functions can be found the compiler source code in Appendix \ref{app:impl}
+The implementation of these functions can be found the compiler source code in Appendix \ref{app:impl}.
 
 \section{The compilation scheme}
 \label{sec:scheme}
 
-There main contribution with this work as mentioned earlier is the compilation scheme presented in this section.
+The main contribution of this work as mentioned earlier is the compilation scheme presented in this section.
 It shows a set of conversion rules of a subset of TAIL's syntax to Futhark source code.
-Also in this section the notation is explained and the compilation of some of the nontrivial operators or expressions of TAIL is described in detail. 
+Also in this section the notation and the compilation of some of the nontrivial operators or expressions of TAIL is described in detail. 
 
 The main part of the compilation scheme that contains the expressions can be seen in Figure
 \ref{fig:compilationscheme}.
@@ -797,7 +800,7 @@ $\evals{\text{shape}_{[t,r]}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{s
 
 $\evals{\text{shapeV}_{[t,r]}(a)}$ & $=$ & $[r]$\\
 \end{tabular}
-    \caption{Conversion rules for expressions}
+    \caption{Conversion rules for expressions.}
     \label{fig:compilationscheme}
 \end{figure}
 
@@ -807,12 +810,11 @@ $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau 
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
-    \caption{Conversion rules for lambda expressions}
+    \caption{Conversion rules for lambda expressions.}
     \label{fig:lambdas}
 \end{figure}
 
 \begin{figure}
-The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
 $\evals{catV}_{fun}$ & $=$ & concat\\ 
@@ -825,12 +827,11 @@ $\evals{notb}_{fun}$ & $=$ & !\\
 
 
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
-\caption{Conversion rules for functions names and functions with a 1:1 correspondence}
+\caption{Conversion rules for functions names and functions with a 1:1 correspondence.}
 \label{fig:funs}
 \end{figure}
 
 \begin{figure}
-The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
 $\evals{$addd$}_{op}$ & $=$  & $+$   \\ 
@@ -860,22 +861,22 @@ $\evals{$ori$}_{op}$ & $=$   & $|$   \\
 $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 \end{tabular}
-\caption{Conversion rules for binary operators}
+\caption{Conversion rules for binary operators.}
 \label{fig:binops}
 \end{figure}
 
 \subsection{The notation}
-Each line in the scheme consists of a TAIL expression in double brackets $\evals{\cdot}$ on the left, followed by a
+Each line in the scheme consists of a TAIL expression in double brackets $\evals{\cdot}$ on the left, followed by an
 equals sign in the middle and a Futhark expression on the right side. This means that the TAIL expression on the left
 side should be compiled to the Futhark expression on the right side. We call such a line a conversion rule. Some rules have side
-conditions after a comma which means some conditions must be met before that rule can be executed, otherwise another
+conditions after a comma which means some conditions must be met before that rule is legal; otherwise another
 rule must be chosen. This can be thought of as similar to pattern matching in functional languages where side conditions
 are guards. The rules are exhaustive and non-overlapping.
-In practice the compilation can be easily implemented using pattern matching by choosing the right ordering of patterns
+In practice, the compilation can be implemented using pattern matching by choosing the right ordering of patterns
 and it is indeed how our compiler is implemented.
 We have tried to use such an ordering of rules in our presentation.
-An expression wrapped in double brackets can also occur on the right side of the equal sign at means that this expression
-should be compiled recursively as part the compilation of the parent expression.
+An expression wrapped in double brackets can also occur on the right side of the equal sign, means that this expression
+should be compiled recursively as part of the compilation of the parent expression.
 
 Some TAIL expressions have type information as part of their declaration in their instance lists.
 This type information is expressed in the compilation scheme as subscript to the expression.
@@ -883,7 +884,7 @@ The type information can be either just a type $t$ or a combination of both type
 The type consist of a type that are one of the TAIL types described in Section 2. The rank is the number of dimensions.
 
 Some of the rules are subscripted with either $op$, $fun$ of $fn$.
-These are separate sets of rules which are invoked on the right hand side of regular rules.
+These are separate sets of rules that are invoked on the right hand side of regular rules.
 We also call such a set a rule.
 From context it will be clear what we mean when we say rule, for example when talking about the set of rules subscripted by
 $fn$ we will just say: the $\evals{\cdot}_{fn}$ rule. The $\evals{\cdot}$ rule is also called the default rule.
@@ -891,9 +892,9 @@ $fn$ we will just say: the $\evals{\cdot}_{fn}$ rule. The $\evals{\cdot}$ rule i
 Apart from the $\evals{\cdot}$ rule, there are also the $\evals{\cdot}_{op}$, $\evals{\cdot}_{fun}$,  and $\evals{\cdot}_{fn}^{\tau}$ rules.
 The first two are simple lookup rules that map to Futhark operators and functions respectively.
 The third is used to compile lambda expressions.
-Unlike the other rules $\evals{fn}$ is parametrized by a Futhark type variable $\tau$ which we denote with a superscript
+Unlike the other rules the $fn$ rule is parametrized by a Futhark type variable $\tau$ which we denote with a superscript
 so the rule will usually be written $\evals{\cdot}_{fn}^{\tau}$.
-The parameter $\tau$ represents the return type of the lambda the rule compiles,
+The parameter $\tau$ represents the return type of the lambda expression the rule compiles,
 and must be passed by the caller when the rule is used.
 
 The set $binops$ is the defined as the set of operators that have an $op$ rule, similarly the set $funs$ is the set of
@@ -906,21 +907,20 @@ Below is the motivation and explanation for the nontrivial conversion rules from
 Basic structural constructs are translated to their Futhark counterparts directly.
 In let-expressions the type annotations that exist in TAIL variable bindings are ignored in Futhark \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
 
-The letters $x$, $i$, $d$, and $c$ denote variables, integers, doubles, booleans and chars respectively.
+The letters $x$, $i$, $d$, and $c$ denote variables, integers, doubles, booleans, and chars respectively.
 They are all translated to their Futhark equivalents.
 
-This part of the language was straight-forward to compile and there was no reason to do it any other way.
+This part of the language was easy to compile. 
 
 \subsubsection{The each operator} 
 
-In TAIL applying the {\tt each} operator produces an array where the argument function is applied to each basic element in the
+In TAIL, applying the {\tt each} operator produces an array where the argument function is applied to each basic element in the
 argument array, regardless of the rank of the array \cite{ElsmanDybdal:Array:2014}.
-Since Futhark views a multidimensional array as nested simple arrays it applies the function to every array in the array.
+Since Futhark views a multidimensional array as nested simple arrays, it applies the function to every array in the array.
 That is, it maps the function into the outer-most dimension of the array\cite{TroelsHenriksen}.
  
-To solve this problem we have nested {\tt map}s to the depth of the array with the required function,
-for example, an {\tt each} operation over an array of rank 2 would have two {\tt map}s nested in each other so the kernel is
-mapped on each element of basic type.
+To solve this problem we introduce nested {\tt map}s to the depth of the array with the required function. For example, an {\tt each} operation over an array of rank 2 would have two {\tt map}s nested in each other so that the function is
+mapped on each element of the basic type.
  
 For example an each operation on an array of rank 2 will look like:
 \begin{lstlisting}[numbers=none,frame=none]
@@ -933,7 +933,7 @@ This rule targets the Futhark {\tt map} SOAC as directly as possible.
 
 The {\tt reduce} operator in TAIL uses an associative binary operator to reduce an array of rank
 $\gamma+1$ to an array of rank $\gamma$ by reducing along the inner-most dimension\cite{ElsmanDybdal:Array:2014}.
-The Futhark {\tt reduce}, on the other hand, reduces each array in the outer array, that is it reduces along the outer-most dimension\cite{TroelsHenriksen}.
+The Futhark {\tt reduce}, on the other hand, reduces each array in the outer array, (i.e. it reduces along the outer-most dimension\cite{TroelsHenriksen}).
  
 We have adopted the same approach as with each by using nested maps to map the reduce on the innermost dimension.
  
@@ -943,13 +943,13 @@ For example reducing an array of rank 2 emits the following code:
 reduce(+,a)     =>      map(fn x => reduce(+,x), a)
 \end{lstlisting}
 
-Lifting the reduce operation with maps into the inner-most array was the simplest solution, it utilizes only parallel operations.
+Lifting the reduce operation with maps into the inner-most array was the simplest solution. It utilizes only parallel operations.
 
 \subsubsection{The zipWith operator}
 The {\tt zipWith} operator applies a scalar binary operator on pairs of elements from two arrays of the same shape to
 produce a third array of the same shape as the input arrays \cite{ElsmanDybdal:Array:2014}.
  
-To do this in Futhark we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples \cite{TroelsHenriksen}.
+To do this in Futhark, we use the zip function to convert two arrays to an array of tuples and map the binary operator on that array of tuples \cite{TroelsHenriksen}.
 
 The rationale behind this rule was the same as in {\tt each}.
 
@@ -960,67 +960,65 @@ which seems harder to compile to lower-level parallel code, since the compiler m
 We rely here on the flattening analysis of the Futhark compiler to rediscover this information and we believe it will be able to do so.
 
 \subsubsection{The reshape operator} 
-%reshape gets as argument the return type.\\
-%It is not possible to reshape something that has length 0. It is possible in aplt but we do not support it in our implementation. \\
-%The reshape operator also has quite unique semantics in TAIL, if the dimensions of reshape don't match the dimensions of the array, the array is either truncated or the elements are repeated until the array is long enough \cite{ElsmanDybdal:Array:2014}.
+
 Futhark has a reshape function that only works for arrays of the correct dimensions \cite{TroelsHenriksen}.
 
 To actually change the rank of the array we first ensure that the array is the correct size and then use the Futhark reshape
 function to do the final step.
 
-To adjust the size we operate on the flat representation of the array, this is easy to produce using Futhark reshape.
+To adjust the size we operate on the flat representation of the array, which is easy to produce using Futhark reshape.
 
 To adjust the size of the array we use the previously defined library function {\tt reshape1}. Actually we use the variant with
 the correct type, this type is conveniently available in the instance list.
 
-In this rule we wanted to make use of the already existing reshape operation in Futhark because we assume this approach has the best
+We make use of the existing reshape operation in Futhark because we assume this approach has the best
 chance of optimization by the Futhark compiler\cite{TroelsHenriksen} \cite{T2graph}, \cite{Hybrid}.
 
 \subsubsection{The transp operator} 
 There exists a {\tt transpose(a)} function in Futhark which does not have the same semantics as the {\tt transp} operator from TAIL \cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}.
-The Futhark transpose on a three dimensional array for example produces a (2,0,1) permutation of the dimensions, whereas we are
+The Futhark transpose on a three dimensional array, for example, produces a (2,0,1) permutation of the dimensions whereas we are
 looking for a (2,1,0) or more generally the reverse permutation of the dimensions.
-By inspection the Futhark IL (internal language) generated from a call to transpose we discovered that internally a function called {\tt rearrange} is being called with an explicit permutation parameter.
+By inspecting the Futhark IL (internal language) generated from a call to transpose, we discovered that, internally, a function called {\tt rearrange} is being called with an explicit permutation parameter.
 This function is also available in the external language and simply needed to be called with the correct parameters to match the behavior of the {\tt transp} operator.
 
 This conversion is as direct as we could hope.
 
 \subsubsection{The transp2 operator} 
-Like we did for the {\tt transp} operator, we have also converted the operator {\tt transp2} to a {\tt rearrange} application, the only thing we needed to change was to substract
+Like we did for the {\tt transp} operator, we have also converted the operator {\tt transp2} to a {\tt rearrange} application. The only thing we needed to change was to substract
 one from each number in the first argument since Futhark indexes dimensions from zero\cite{TroelsHenriksen}.
-A thing of note is that {\tt rearrange} only supports a list of integer literals in it's first argument while TAIL has no
-such restriction on {\tt transp2}. In practice the TAIL compiler will have inlined the arguments to {\tt transp2}\cite{ElsmanDybdal:Array:2014}.
+Notice that {\tt rearrange} only supports a list of integer literals in its first argument while TAIL has no
+such restriction on {\tt transp2}. In practice the TAIL compiler will often have inlined the arguments to {\tt transp2}\cite{ElsmanDybdal:Array:2014}.
 
 The operator {\tt transp2} has thus a very direct conversion.
 
 \subsubsection{The cat operator} 
-Futhark has a concatenate function {\tt concat} that we wanted to use but it concatenate the outermost arrays while in TAIL the {\tt cat} operator concatinates the innermost arrays\cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}.
+Futhark has a concatenate function {\tt concat} that we wanted to use but it concatenate the outermost arrays while in TAIL the {\tt cat} operator concatenates the innermost arrays\cite{TroelsHenriksen}\cite{ElsmanDybdal:Array:2014}.
 To solve this we lifted the concatenate operation to the innermost dimension with map. This is the same idea used to compile the {\tt reduce}, {\tt each}, and {\tt zipWith} operators. 
 
 Alternatively we could have compiled the {\tt cat} operator using transpose instead like we have done in {\tt snoc} and {\tt cons}.
 We did not have any particular reason to choose one over the other. Both solutions accomplish our goal of being simple and using Futhark built-in functions. 
 
 \subsubsection{The take/drop operators} 
-In a similar fashion to the TAIL {\tt reshape} function we have used library functions to do most of the work.
+In a similar fashion to the TAIL {\tt reshape} function, we have used library functions to do most of the work.
 We flatten the array, let the library function work on the flat representation and finally reshape it to the desired shape.
 This approach has all the benefits mentioned in the {\tt cat} operator section.
 
-We use completely the same approach to implement the {\tt drop} operator as the take operator.
+We use the same approach to implement the {\tt drop} operator as the take operator.
 
 \subsubsection{The cons/snoc operator}
 The idea behind the compilation of the {\tt cons} operator was to transpose the two arrays,
 then concatenate the arrays and then transpose the resulting array back again.
 That way we would get the desired result of the nth elements from the first array added to the nth element of the second array.
 
-The cons operator is completely the same except the elements are added behind instead in front.
+The {\tt snoc} operator is compiled similarly the same except the elements are added behind instead in front.
 
 \subsubsection{The iota operator} 
-Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
+Due to the fact that the 1-indexing is used in TAIL and 0-indexing is used in Futhark, the curried $+1$ is mapped onto the elements of the array created by using the {\tt iota} function of Futhark. 
 
 \subsubsection{Lambda expressions} 
-The higher order operators {\tt each, eachV, reduce, zipWith} all take functions as arguments and these functions are handled by the
+The higher order operators {\tt each, eachV, reduce, and zipWith} all take functions as arguments and these functions are handled by the
 conversion rules marked with the $fn$ subscript. 
-In Futhark lambda expressions need type annotations both for the argument and the return type\cite{TroelsHenriksen}.
+In Futhark, lambda expressions need type annotations both for the argument and the return type\cite{TroelsHenriksen}.
 This return type is provided by the context in which the lambda is used.
 Namely the type informations is present in the instance lists of the enclosing operator call, be it {\tt each}, {\tt reduce} or {\tt zipWith}.
 Arguments are already annotated with types in TAIL so those are simply compiled to Futhark types and passed to the resulting lambda.
@@ -1029,13 +1027,13 @@ when compiled from APL, lambda expressions will only be present in higher-order 
 
 This means that lambda expressions can only occur directly inside of the aforementioned operator call or another lambda.
 
-In TAIL currying is used if lambda expressions are to take more than one argument while Futhark does not support currying but
+In TAIL ,currying is used if lambda expressions are to take more than one argument while Futhark does not support currying but
 supports multi-argument lambdas instead \cite{ElsmanDybdal:Array:2014}.
 Since the highest number of arguments that can be used is two (in {\tt zipWith}) we have
 restricted the compiler to this special case which simplifies the compilation.
 The actual body of the function is compiled using the expression rule.
-If the function argument is an identifier we use the $op$ and $fun$ rules to compile them.
-Lambda expressions with one argument are mapped to the same in Futhark.
+If the function argument is an identifier, we use the $op$ and $fun$ rules to compile them.
+Lambda expressions with one argument are mapped to lambda expressions with one argument in Futhark.
 
 \subsubsection{Binary scalar first-order operators} 
 The binary scalar first-order operators are mapped to their natural Futhark counterparts.
@@ -1049,10 +1047,9 @@ Because we have only implemented a subset of TAIL not all TAIL programs can be c
 
 \subsection{The parser}
 \label{sec:parser}
-%How we adapted the parser
-%The parser that we make use of was created in a precious project \cite{APLACC}.
-As mentioned earlier the parser used in this project was made previously by someone else in another project \cite{APLACC}. We did not create the parser ourselves. 
-Because of the ongoing development of the TAIL language however, we modified the parser to work on the latest version of the language. 
+
+As mentioned earlier the parser used in this project was made by someone else in another project \cite{APLACC}. We did not create the parser ourselves. 
+Because of the ongoing development of the TAIL language, however, we modified the parser to work on the latest version of the language. 
 We have forked the original repository to work on the modifications of the parser.
 The original parser has since been adapted to work with the new version of TAIL by its author. 
 For the latest version of the parser see the github repository: https://github.com/mbudde/aplacc. 
@@ -1060,15 +1057,15 @@ For the latest version of the parser see the github repository: https://github.c
 Below we discuss some of the changes we had to make to the parser and the abstract syntax tree representation of TAIL.
 
 We had to extend the abstract syntax three to include booleans and chars. 
-The original parser had type constructors ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took rank.
+The original parser had type constructors ShT (shape type), SiT (singleton integer type), and ViT (single element vector type) that all just took a rank.
 We have changed these type constructors to VecT (vector type) that takes basic type and rank, S (singleton integers and booleans), and SV (single element vectors) that take rank.
 This meant updating the parser to read angles ($< >$) since this is the new syntax of vectors.
 
-The parser with our modifications is located in the {\tt aplacc/ } directory of our project. 
+The parser with our modifications is located in the {\tt aplacc/} directory of our project. 
 The updated code for the parser can be found in Appendix \ref{app:parser}.
 
 \subsection{The compiler}
-The main part of the compiler is (placed in {\tt src/Tail2Futhark/Compile.hs}) transforms the TAIL AST (abstract syntax three) that are returned by the {\tt aplacc} parser to a Futhark AST.
+The main part of the compiler is (placed in {\tt src/Tail2Futhark/Compile.hs}) transforms the TAIL AST (abstract syntax three) that is returned by the {\tt aplacc} parser to a Futhark AST.
 The definition of the Futhark AST is placed in {\tt src/Tail2Futhark/Futhark/AST.hs}.
 The implementation of the compiler is very close to the conversion rules presented in the compilation scheme in Section \ref{sec:scheme}. The source code of the compiler can be found in its entirety in Appendix \ref{app:impl}.
 
@@ -1080,12 +1077,12 @@ compile :: Options -> T.Program -> F.Program
 The {\tt compile} function produces a Futhark program given options and a TAIL program. 
 Right now the only options provided is {\tt --no-include-lib-funs} that when used makes the compiler not include library functions in the output file. 
 
-Since a TAIL program is an expression the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression.
-The most difficult case being an operator application. In the case of an operator application the {\tt compileOperator} function is called which matches on the operator names.
+Since a TAIL program is an expression, the {\tt compile} function calls another function called {\tt compileExpression} on the TAIL program. The {\tt compileExpression} function pattern matches on the TAIL AST to compile the expression.
+The most difficult case being an operator application. In the case of an operator application, the {\tt compileOperator} function is called, which matches on the operator names.
 Notice that the structure of the compiler is very similar to the compilation scheme with rules being cases in pattern matching.
 The resulting Futhark expression is then made the body of the main
 function in the Futhark program. 
-In our representation of the Futhark AST a Futhark program consists of a list of function declarations that are represented by the type FunDecl. 
+In our representation of the Futhark AST, a Futhark program consists of a list of function declarations that are represented by the type FunDecl. 
 
 \begin{lstlisting}[language=haskell]
 type Program = [FunDecl]
@@ -1093,24 +1090,24 @@ type Program = [FunDecl]
 
 Our library functions are then represented as instances of type FunDecl in the compiler (in the {\tt Compile.hs} file).
 Library functions are added to the beginning of every file (except if the {\tt --no-include-lib-funs} option is used). 
-Some of the functions are created from our templates. First the function body is created as a Futhark expression.
-Then we make a Futhark function that is parametrized over a Futhark type. We represent such a function with the Haskell type {\tt F.Type -> FunDecl}.
-We can even parametrize the bodies of the functions by giving them the Haskell type {\tt F.Type -> F.Exp},
-this type is simply passed from the parametrized function when it is instantiated.
+Some of the functions are created from our templates. First, the function body is created as a Futhark expression.
+Then we make a Futhark function that is parameterized over a Futhark type. We represent such a function with the Haskell type {\tt F.Type -> FunDecl}.
+We can even parametrize the bodies of the functions by giving them the Haskell type {\tt F.Type -> F.Exp}.
+This type is simply passed from the parametrized function when it is instantiated.
 We use this for example in the body of {\tt drop} where the empty list of the argument Futhark type has to be returned.
-Also the body of {\tt take} is paramtrized over the expression with which the input should be padded, so it has the Haskell type {\tt F.Exp -> F.Exp}.
+Also the body of {\tt take} is paramterized over the expression with which the input should be padded, so it has the Haskell type {\tt F.Exp -> F.Exp}.
 To produce all the functions we simply map the parametrized versions over the basic Futhark types. 
 
 We add {\tt t\_} in front of existing variable names when we compile the expression. That way when we need to introduce fresh variable names we can use any variable name not starting with {\tt t\_} and not worry about clashing with names in the source code. This was much easier than including a monad to produce fresh names. 
 
-In TAIL there is a function called {\tt readIntVecFile} for reading input in from a file.
+In TAIL there is a function called {\tt readIntVecFile} for reading input from a file.
 This functionality does not exist in Futhark making it difficult to implement\cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}.
 However, we needed the functionality in order to implement some of our benchmarks so to get around this problem we used the fact
-that Futhark can take input in a program as arguments to the main function by reading the output in from StadIn\cite{TroelsHenriksen}.
+that Futhark can take input in a program as arguments to the main function by reading from StdIn\cite{TroelsHenriksen}.
 We therefore added a check to see if the first expressions in a TAIL program is {\tt readIntVecFile}.
 If it is we compile the expressions to arguments in the Futhark main function. That means that if the TAIL program reads an input so does the Futhark program. 
 We do not take into account that the syntax of the data the programs read are different from TAIL and Futhark.
-Furthermore, it is the responsibility of the programmer to ensure that if a TAIL program reads a file to a pipe the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
+Furthermore, it is the responsibility of the programmer to ensure that if a TAIL program reads a file, that the programmer  pipes the content of the file (maybe in a different format) to StdIn when Futhark programs are read. 
 
 \subsection{Pretty print}
 The final part of the compiler is the pretty printer located at {\tt src/
@@ -1127,7 +1124,7 @@ The tests can be found in the {\tt tests/our\_tests/} directory in our project.
 The test framework compiles each file with a {\tt tail} extension in the directory to a {\tt fut} file of the same name.
 Then the Futhark program is executed with the Futhark interpreter and the output is written to a file with the {\tt out} extension.
 Finally this file is compared to a file with the same name and the {\tt ok} extension, if the files match the test passed.
-The {\tt ok} files were to running the test suite produced with the APLTAIL interpreter.
+The {\tt ok} files were produced by running the test suite programs with the APLTAIL interpreter.
 
 All tests are originally written in APL code to ensure that the programs we tested up against was indeed correct TAIL and that no error was introduced by writing TAIL code ourselves.
 Also, TAIL was designed as an intermediate language and this approach comes closer to real world use.
