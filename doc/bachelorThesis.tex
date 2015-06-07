@@ -186,7 +186,7 @@ Both Futhark and TAIL are ongoing research projects and are therefore subject to
 
 TAIL: https://github.com/melsman/apltail
 
-Futhark: https://github.com/HIPERFIT/futhark
+Futhark: https://github.com/HIPERFIT/futhark\\
 
 The reader of this report is assumed to have understanding of computer science concepts of the bachelor level and therefore general computer science concepts (e.g. parser and compiler) will not be explained. 
 
@@ -362,10 +362,15 @@ Given a function $f$ that works on a pair $(x,y)$ and two arrays $a$ and $b$, {\
 Like the other three operators, it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.
 
 There are other important operators besides the parallel ones. One of them is the operator {\tt reshape($a_1$,$a_2$)}.
-Given two arrays, it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array thus 
+Given two arrays, it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array, thus $reshape([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
 $reshape([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
-If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$. Note that this is not how arrays are represented in TAIL. Instead of using nested brackets to represent the dimensions, arrays in TAIL are represented with a shape (i.e. $[1,2,3,4,5,6]^{[2,3]}$). However, using this representation can make what happens less obvious so we use the nested brackets representation instead. 
+If $a_2$ is shorter than needed the elements of $a_2$ are repeated.
+That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$.
+Note that this is not how arrays are represented in TAIL.
+Instead of using nested brackets to represent the dimensions, arrays in TAIL are represented with a shape 
+(i.e. $[1,2,3,4,5,6]^{[2,3]}$).
+However, using this representation can make what happens less obvious so we use the nested brackets representation instead. 
 
 Other important operator expressions are {\tt take($i$,$a$)} and {\tt drop($i$,$a$)}.
 They return an array containing the 1st to $i$'th element of $a$,
