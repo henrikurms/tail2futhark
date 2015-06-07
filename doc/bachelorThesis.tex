@@ -201,10 +201,10 @@ The reader of this paper is assumed to have understanding of computer science co
 %The compilation scheme presented later in this section is written in a form of short hand notation to be able to have the entire compilation written in a short and very detailed was that is implem
 
 \begin{figure}
-\label{fig:compilers}
 \begin{center}
     \includegraphics[width=4cm]{compilers.png}
     \caption{The three compilers used in this project and the code they produce }
+    \label{fig:compilers}
 \end{center}
 \end{figure}
 
@@ -740,7 +740,6 @@ When $e$ is some TAIL expression, and $e'$ is some Futhark expression we specify
 %\begin{flushleft}
 
 \begin{figure}
-\label{fig:compilationscheme}
 \begin{tabular}{@{}l c l}% to \linewidth {l c X}
 $\evals{x}$ & $=$ & $x$ \\
 $\evals{i}$ & $=$ & $i$ \\
@@ -832,16 +831,17 @@ $\evals{\text{shape}_{t,r}(a)}$ & $=$ & $[\text{size}(0,\evals{a}),...,\text{siz
 $\evals{\text{shapeV}_{t,r}(a)}$ & $=$ & $[r]$\\
 \end{tabular}
     \caption{Conversion rules for expressions}
+    \label{fig:compilationscheme}
 \end{figure}
 
 \begin{figure}
-\label{fig:lambdas}
 \begin{tabular}{l c l}
 $\evals{ \text{fn } x:t $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t}\; x) $ {\tt =>} $ \evals{e}$\\
 $\evals{ \text{fn } x:t_1$ {\tt =>} $\text{fn } y:t_2 $ {\tt =>} $ e}^{\tau}_{fn} $ & $=$ & $ \text{fn } \tau (\evals{t_1}\; x, \evals{t_2} \; y) $ {\tt =>} $ \evals{e}$\\
 $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & op \in funs \\ \evals{\text{op}}_{op} & op \in binops \end{cases}$
 \end{tabular}
     \caption{Conversion rules for lambda expressions}
+    \label{fig:lambdas}
 \end{figure}
 
 
@@ -855,7 +855,6 @@ $\evals{\text{op}}^{\tau}_{fn}$ & = & $ \begin{cases} \evals{\text{op}}_{fun} & 
 %\restoregeometry
 
 \begin{figure}
-\label{fig:funs}
 The $funs$ are compiled as follows:\\
 \begin{tabular}{l c l}
 $\evals{i2d}_{fun}$ & $=$ & toReal\\ 
@@ -870,10 +869,10 @@ $\evals{notb}_{fun}$ & $=$ & !\\
 
 idFuns = negi, negd, absi, absd, mini, mind, signd, signi, maxi, maxd, eqb, xorb, nandb, norb, neqi, neqd, resi.
 \caption{Conversion rules for functions names and functions with a 1:1 correspondance}
+\label{fig:funs}
 \end{figure}
 
 \begin{figure}
-\label{fig:binops}
 The $binops$ are compiled as follows: \\
 \begin{tabular}{l c l}
 $\evals{$addi$}_{op}$ & $=$  & $+$   \\
@@ -905,6 +904,7 @@ $\evals{$shli$}_{op}$ & $=$  & $<<$  \\
 $\evals{$shri$}_{op}$ & $=$  & $>>$  \\
 \end{tabular}
 \caption{Conversion rules for binary operators}
+\label{fig:binops}
 \end{figure}
 
 \subsection{The notation}
@@ -1201,7 +1201,6 @@ All tests returns the expected results.
 As we have not done exhaustive testing we cannot be sure that all functionality work as expected only that the one we have testet for does. 
 
 \section{Benchmarks}
-\label{sec:benchmarks}
 
 \begin{table}[h]
 \begin{center}
@@ -1215,6 +1214,7 @@ Easter                         & 400 		    & 1650,2      & 677,1 \\
 Primes                        & 10.000                & 2294,1      & 489,3 \\
 \end{tabular}
 \caption{Benchmark timing in miliseconds.}
+\label{sec:benchmarks}
 \end{center}
 \end{table}
 
