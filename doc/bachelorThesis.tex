@@ -1275,7 +1275,9 @@ The impementation is in the file {\tt easter3000.apl}
 \subsection{Primes}
 The primes benchmark computes the number of primes below $n$ and is found in the apltail project as {\tt tests/primes0.apl}.
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
-The APL program can be seen below:\\
+To show a bigger example we have chosen to show the code in the primes benchmark. Below is the original code in APL as well as the generated TAIL and Futhark code.
+The TAIL code is as follows:
+
 \fbox{\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes.pdf}}
 The APLTAIL compiler compiles the code to the following TAIL program:
 \begin{lstlisting}[breaklines=true,language=TAIL]
@@ -1289,7 +1291,8 @@ let v20:[bool]1 = each{[int,bool],[1]}(fn v19:[int]0 => eqi(1,v19),v18) in
 let v24:[int]0 = reduce{[int],[0]}(addi,0,each{[bool,int],[1]}(b2i,v20)) in
 i2d(v24)
 \end{lstlisting}
-The tail2futhark compiler then produces this result where the library functions are omitted:
+
+The Futhark code is as follows:
 \begin{lstlisting}[language=Futhark,breaklines=true]
 fun real main() =
   let t_v1 = drop1_int(1,map(fn int (int x) => (x + 1),iota(9))) in
@@ -1303,10 +1306,9 @@ fun real main() =
   toFloat(t_v24)
 \end{lstlisting}
 
-% For at vise et større eksempel har vi medtaget det her benchmark
-% Man kan se parallel operatorer bliver oversat til andre parallele operatorer
-% Man kan se transformation af curried lambdaer
-% Biblioteksfunktioner bliver brugt
+Note that the definition of the library functions are omitted from this example to save space. They are included above the main function in the file containing the code. 
+This example ilustrates that the parallel operators of TAIL ({\tt zipWith}, {\tt each} and {\tt reduce}) are compiled to parallel  second order functions in Futhark ({\tt map} and {\tt reduce}). 
+We also see that library functions are used ({\tt drop1\_int} and {\tt reshape1\_int}) on the one-dimentional case.
 
 The impementation can also be seen in the file {\tt primes0.apl}\\
 \subsection{Results}
