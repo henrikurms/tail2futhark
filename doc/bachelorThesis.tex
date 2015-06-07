@@ -191,7 +191,7 @@ TAIL: https://github.com/melsman/apltail
 
 Futhark: https://github.com/HIPERFIT/futhark
 
-The reader of this paper is assumed to have understanding of computer science consepts of the bachelor level and therefore general computer science terms (e.g. parser and compiler) will not be explained. 
+The reader of this paper is assumed to have understanding of computer science concepts of the bachelor level and therefore general computer science terms (e.g. parser and compiler) will not be explained. 
 
 % \section{Outline}
 %The compilation scheme presented later in this section is written in a form of short hand notation to be able to have the entire compilation written in a short and very detailed was that is implem
@@ -754,6 +754,9 @@ $\evals{\text{vrotate}_{[t,r]}(i,a)}$ & $=$ & map(fn x {\tt =>} a[x + i {\tt \%}
 
 $\evals{\text{vreverse}_{[t,r]}(a)}$ & $=$ & map(fn x {\tt =>} a[\text{size}(0,a)$-$x$-$1], $\text{iota}(\text{size}(0,a))$ \space\space , x is fresh\\
 
+$\evals{\text{reverse}_{[t,r]}(a)}$ & $=$ & rearrange$((r-1,\ldots,0),\evals{\text{vreverse}_{[t,r]}(\text{transp}_{[t,r]}(a))})$\\
+$\evals{\text{rotate}_{[t,r]}(i,a)}$ & $=$ & rearrange$((r-1,\ldots,0),\evals{\text{vrotate}_{[t,r]}(i,\text{transp}_{[t,r]}(a))})$\\
+
 $\evals{\text{reshape}_{[t,r_1,r]}(a_1,a_2)}$ & $=$ & reshape$(\evals{a_1},(\text{reshape1}_{\evals{t}}(
 \text{osize}
 , \text{reshape}(
@@ -791,13 +794,9 @@ $\evals{\text{transp}_{[t,r]}(a)}$ & $=$ & rearrange$((r-1,\cdots,0),\evals{a})$
 $\evals{\text{transp2}_{[t,r]}([a_1,\cdots,a_n],b)}$ & $=$ & rearrange(($a_1 - 1,\cdots,a_n - 1$),$\evals{a_2}),$ $ 
 a_1,\ldots,a_n$ literals\\
 
-$\evals{\text{cons}_{[t,r]}(e,a)}$ & $=$ & rearrange$((r,\cdots,0), \text{concat(exp,arr)})$\\
-&& \hspace{4ex} where exp = rearrange((r$-$1,\ldots,0),$\evals{e}$)\\
-&& \hspace{4ex} \phantom{where} arr = rearrange((r$-$1,\ldots,0),$\evals{a}$)\\
+$\evals{\text{cons}_{[t,r]}(e,a)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat}(\evals{\text{transp}_{[t,r+1]}(e)},\evals{\text{transp}_{[t,r+1]}(a)}))$\\
   
-$\evals{\text{snoc}_{[t,r]}(a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat(arr,exp)})$\\
-&& \hspace{4ex} where exp = rearrange((r$-$1,\ldots,0),$\evals{e}$)\\
-&& \hspace{4ex} \phantom{where} arr = rearrange((r$-$1,\ldots,0),$\evals{a}$)\\
+$\evals{\text{snoc}_{[t,r]}(a,e)}$ & $=$ & rearrange$((r,\ldots,0), \text{concat}(\evals{\text{transp}_{[t,r+1]}(a)},\evals{\text{transp}_{[t,r+1]}(e)}))$\\
 
 $\evals{\text{iota}(a)}$ & $=$ & map$(+ \; (1), \text{iota}(\evals{a})$\\
 
@@ -1248,7 +1247,6 @@ The primes benchmark computes the number of primes below $n$ and is found in the
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 To show a bigger example we have chosen to show the code in the primes benchmark. Below is the original code in APL as well as the generated TAIL and Futhark code.
 The TAIL code is as follows:
-
 \fbox{\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes.pdf}}
 The APLTAIL compiler compiles the code to the following TAIL program:
 \begin{lstlisting}[breaklines=true,language=TAIL]
@@ -1277,9 +1275,12 @@ fun real main() =
   toFloat(t_v24)
 \end{lstlisting}
 
-Note that the definition of the library functions are omitted from this example to save space. They are included above the main function in the file containing the code. The entire Futhark file can be found in Appendix \ref{app:fut}.
+
+Notice that the definition of the library functions are omitted from this example to save space.
+They are included above the main function in the file containing the code. The entire Futhark file can be found in Appendix \ref{app:fut}.
+
 This example ilustrates that the parallel operators of TAIL ({\tt zipWith}, {\tt each} and {\tt reduce}) are compiled to parallel  second order functions in Futhark ({\tt map} and {\tt reduce}). 
-We also see that library functions are used ({\tt drop1\_int} and {\tt reshape1\_int}) on the one-dimentional case.
+We also see that library functions are used ({\tt drop1\_int} and {\tt reshape1\_int}) on the one-dimensional case.
 
 The impementation can also be seen in the file {\tt primes0.apl}.
 

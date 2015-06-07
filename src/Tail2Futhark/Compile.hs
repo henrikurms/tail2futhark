@@ -112,7 +112,6 @@ takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
 -- AUX FUNCTIONS FOR SPECIFIC FUNCTIONS --
 ------------------------------------------
 
-
 -- AUX shape --
 makeShape rank args
   | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
@@ -123,17 +122,6 @@ makeTransp r e = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) e
 
 -- AUX transp2 --
 makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
-
--- AUX vreverse --
-makeVReverse tp r a = F.Let Inline (Ident "a") (compileExp a) $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0) ,compileExp a]])
-  where
-    kernelExp = F.Fn (mkType (tp,r-1)) [(F.IntT,"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
-    sizeCall = F.FunCall "size" [zero, compileExp a] 
-    minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
-    zero = F.Constant (F.Int 0)
-    one = F.Constant (F.Int 1)
-    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
-
 
 ---------------------------
 -- GENERAL AUX FUNCTIONS --
@@ -319,6 +307,8 @@ compileOpExp ident instDecl args = case ident of
   "takeV" -> compileTakeV instDecl args
   "zipWith" -> compileZipWith instDecl args
   "cat" -> compileCat instDecl args
+  "reverse" -> compileReverse instDecl args
+  "reverseV" -> compileVReverseV instDecl args
   "vreverse" -> compileVReverse instDecl args
   "vreverseV" -> compileVReverseV instDecl args
   "transp" -> compileTransp instDecl args
@@ -381,9 +371,19 @@ compileIota _ [a] = Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") 
 compileIota _ _ = error "Iota take one argument"
 
 -- vreverse --
-compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r a
-compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 a
+compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r (compileExp a)
+compileReverse :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileReverse (Just([tp],[r])) [a] = makeTransp r $ makeVReverse tp r $ makeTransp r $ compileExp a
+compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 (compileExp a)
 
+makeVReverse tp r a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0), a]])
+  where
+    kernelExp = F.Fn (mkType (tp,r-1)) [(F.IntT,"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
+    sizeCall = F.FunCall "size" [zero, a] 
+    minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
+    zero = F.Constant (F.Int 0)
+    one = F.Constant (F.Int 1)
+    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 -- rotate --
 compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i (compileExp a)
