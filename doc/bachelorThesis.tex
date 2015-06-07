@@ -24,7 +24,7 @@
 }
 
 \lstdefinelanguage{Futhark}{
-  keywords={fun,fn,int,bool,char,if,then,else,let,in},
+  keywords={fun,fn,int,bool,char,real,if,then,else,let,in},
   keywordstyle=\color{blue!40!black}\bfseries,
   identifierstyle=\color{green!40!black},
 }
@@ -1191,19 +1191,20 @@ The benchmarks are written i APL code and then compiled to C-code using the APLT
 \end{center}
 \end{figure}
 
-Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages \cite{ElsmanDybdal:Array:2014}\cite{TroelsHenriksen}. 
-The C-code is then compiled using a C compiler and the comandline tool {\tt time} is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
+Because no parallel backend was finished for either TAIL or Futhark when we did the benchmarks we use a sequential backend for both languages \cite{ElsmanDybdal:Array:2014} \cite{TroelsHenriksen}. 
+The C-code is then compiled using {\tt gcc} with the flags {\tt -lm -std=c99 -O3} and the comandline tool {\tt time} is used to mesure the execution time. Each benchmark is run 10 times each and then the average is reported. The benchmarks and the results of the benchmarks are listed in Table \ref{tbl:benchmark}.
+
 The benchmarks is run on a Intel(R) Core(TM) i7-4500U CPU @ 1.80GHz. 
 
 \begin{table}[h]
 \begin{center}
 \begin{tabular}{l c c c}
 Benchmark & Problem size & TAIL C & Futhark C \\ \hline \\
-Matrix multiplication    & 512$\times$512 &  5478,4     & 2706,5  \\
-Pi		     	         & 40.000 points     &  34381,4   & 638,9 \\
-Black sholes               & - 			    & 1               & 1 \\
-Easter                         & 400 		    & 1650,2      & 677,1 \\
-Primes                        & 10.000                & 2294,1      & 489,3 \\
+Matrix multiplication    & 512$\times$512    & 2663.4      & 2634.2  \\
+Pi		     	         & 40.000 points     & 8190        & 663.4 \\
+Black sholes             & - 			     & 1           & 1 \\
+Easter                   & 400 		         & 639.1       & 665.6 \\
+Primes                   & 10.000            & 652.8       & 480.1 \\
 \end{tabular}
 \caption{Benchmark timing in miliseconds.}
 \label{tbl:benchmark}
@@ -1249,7 +1250,7 @@ The primes benchmark computes the number of primes below $n$ and is found in the
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 To show a bigger example we have chosen to show the code in the primes benchmark. Below is the original code in APL as well as the generated TAIL and Futhark code.
 The TAIL code is as follows:
-\fbox{\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes.pdf}}
+\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes.pdf}
 The APLTAIL compiler compiles the code to the following TAIL program:
 \begin{lstlisting}[breaklines=true,language=TAIL]
 let v1:<int>8 = dropV{[int],[8]}(1,iotaV(9)) in
@@ -1354,9 +1355,6 @@ We have shown that it is possible to effectivly compile TAIL to Futhark by expre
 We have argued that the parallalism in the code is preserved by ensuring that all parallel operators in TAIL are mapped to parallel functions in Futhark. This parallelism in the resulting code means that the Futhark infarstructure for optimization can be used to optimize the code as well as the create a posibility for targeting parallel hardware. 
 
 We have shown that compiling the code with the Futhark compiler has the benefit of optimizing the code as we have measured significant speed-ups from utilizing the Futhark compiler in our benchmarks.
-
-We therefore beleve we have mead our goal. 
-
 
 %%%%% references %%%%%
 \bibliography{references}{} 
