@@ -124,16 +124,11 @@ GPUs while still being the target of more programmer-productivity oriented langu
 performs several optimizations, such as fusion, which enhance the degree of 
 parallelism \cite{T.Henriksen&C.Oancea} \cite{T2graph} \cite{Hybrid}.
 
-APL (short for A Programming Language) \cite{APLbook} is an array language and includes various operations that are central to the language and are good candidates 
-for parallel execution. 
-
-APL is an older language created in the 1960's by Kenneth E. Iverson.
-APL is an array programming language, its main type is the multi-dimensional array 
-and most of the built-in functions in the language are array operators that work on this type. 
+APL was created in the 1960's by Kenneth E. Iverson, and is an array programming language.
+Its main type is the multi-dimensional array and most of the built-in functions in the language are array operators that work on this type. 
 Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
-The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type. 
-Even though it is an old language it is still used in the financial world 
-where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014} \cite{Array:2015}.
+The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type.
+APL features a large set of built-in operations, which, through 50 years of history, have shown to be suitable for a large range of applications for example in the financial world where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014} \cite{Array:2015}.
 
 Efforts in compiling APL to parallel backends already exist in the form of the language 
 TAIL (Typed array intermediate language) and it’s compiler \cite{ElsmanDybdal:Array:2014} that compiles a subset of APL.
@@ -1214,7 +1209,6 @@ We made a Makefile to manage the building of the benchmarks. The Makefile is als
 \subsection{Matrix multiplication}
 The matrix multiplication benchmark takes a matrix and multiplies it with itself transposed.
 It then reduces the resulting matrix twice, once by using times and once by using plus (times is used on the outer dimension).
-The multiplication is done using reshape and then the arguments is transposed so they can be zipped with plus.
 The impementation is in the file {\tt matmul.apl}
 
 \subsection{Pi}
