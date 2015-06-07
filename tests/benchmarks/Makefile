@@ -16,7 +16,7 @@ tail_%.c: %.apl
 	$(APLT) -silent -c -O2 -opt_hoist -oc $@ $(PRELUDE) $<
 
 tail_%: tail_%.c
-	cc -lm -std=c99 -o $@ -I $(INCLUDE) $<
+	gcc -lm -std=c99 -O3 -o $@ -I $(INCLUDE) $<
 
 %.tail: %.apl
 	$(APLT) -p_types -p_tail -silent -c -o $@ $(PRELUDE) $< 
