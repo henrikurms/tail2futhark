@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage{fancyhdr}
+\usepackage{caption}
 %\usepackage{fontspec}
 
 \pagestyle{fancy}
@@ -18,6 +19,7 @@
 \rhead{Anna Sofie Kiehn, Henrik Urms}
 \lhead{Compiling TAIL to Futhark}
 
+\captionsetup[lstlisting]{font={footnotesize}}
 \lstset{
   mathescape
   %moredelim=[is][\underbar]{_}{_}
@@ -128,7 +130,7 @@ parallelism \cite{T.Henriksen&C.Oancea} \cite{T2graph} \cite{Hybrid}.
 APL was created in the 1960's by Kenneth E. Iverson, and is an array programming language.
 Its main type is the multi-dimensional array and most of the built-in functions in the language are array operators that work on this type. 
 Most of its built-in functions or operators are represented by unicode symbols allowing for very concise code.
-The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any type.
+The APL language is dynamically typed. It supports first and second order functions and these functions work on arrays of any rank and base type.
 APL features a large set of built-in operations, which, through 50 years of history, have shown to be suitable for a large range of applications for example in the financial world where large code bases are still operational and actively developed \cite{ElsmanDybdal:Array:2014} \cite{Array:2015}.
 
 Efforts in compiling APL to parallel backends already exist in for example the form of the language 
@@ -214,11 +216,12 @@ We will not do a detailed analysis of the results of the benchmarks or discuss t
 We will not present an overview of APL but only refer to \cite{APLbook} and \cite{APLDyalog}.
 
 \subsection{Report outline}
-The follwing sections of this report is structured as follows. 
+The following sections of this report is structured as follows. 
 Section \ref{intro} includes the introductioin containing the scope and methods and tools used in this project. 
-Section \ref{sec:tail} and Section \ref{sec:futhark} gives an introduction to the source and the target language. 
-In Section \ref{sec:strategy} is a short presentation of the overall strategy for compiling TAIL to Futhark is given.
-Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the Haskell implementation and tests. Section \ref{sec:benchmarks} describes the benchmarks used to messure the efficiency of the generated Futhark code by comparing it to the TAIL backend. Finaly Section \ref{sec:discussion} and Section \ref{sec:conclusion} is a discussion and conclusion of the results and contain ideas to possible future work. 
+Section \ref{sec:tail} and Section \ref{sec:futhark} gives an introduction to the source and the target language respectively. 
+Section \ref{sec:strategy} presents the overall strategy for compiling TAIL to Futhark is given.
+Section \ref{sec:scheme} describes the compilation scheme in detail. Secion \ref{sec:impl} is an overview of the Haskell implementation and tests. Section \ref{sec:benchmarks} describes the benchmarks used to measure the efficiency of the generated Futhark code by comparing it to the TAIL backend.
+Finally, Section \ref{sec:discussion} and Section \ref{sec:conclusion} provide a discussion and a conclusion of the results and contain ideas to possible future work. 
 
 \subsection{Methods and tools}
 \label{methods}
@@ -226,10 +229,10 @@ In this section we will describe and explain the reasoning behind the methods an
 
 \subsubsection{Compilation scheme and the notation}
 In this report, a compilation scheme done in a form of mathematical notation is presented. 
-The reason for using a mathematical notation is to be able to express the compilation of the different components of the compilation separately and in a very detailed precise manner. We call the compilation of a specfic component a conversion rule. 
-The notation should also be help the reader getting an overview of the entire main part of the compiler as well as create a way of talking about specific conversion.
+The reason for using a mathematical notation is to be able to express the compilation of the different components of the compilation separately and in a detailed precise manner. We call the compilation of a specfic component a conversion rule. 
+The notation should also help the reader getting an overview of the entire main part of the compiler as well as create a way of talking about specific conversions.
 The notation is inspired by similar notation used in other projects \cite{TorbenMogensen}\cite{MartinElsmanNotation} to describe compilation schemes but is not built on a specific standard as no such standard is known to us.
-Instead we have invented our own notation.
+Instead, we have invented our own notation.
 
 The scheme gives a conceptual understanding of the compilation that are not cluttered by implementation details.
 The scheme simply illustrates the concepts of the compilation and is implementation independent.
@@ -238,10 +241,9 @@ It should therefore be possible to use the scheme to create another implementati
 Having the compilation scheme also make the implementation easier because it helps to structure the implementation. 
 
 \subsubsection{Library functions}
-To keep the implementation scheme simple, we have made a small library of functions which we present in Section \ref{sec:library}.
+To keep the implementation scheme simple, we have made a small library of functions, which we present in Section \ref{sec:library}.
 We have coded the library functions in the compiler itself for several reasons.
-One reason is that we would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to
-be able to include the library in the output when we run the compiler.
+One reason is that we would like the compiler to always output a valid (runnable) Futhark program given a valid TAIL input program, so we would like to be able to include the library in the output when we run the compiler.
 Furthermore, since Futhark is a statically typed language with no polymorphism, we would like to be able to
 generate functions with the same implementations but different types from a template.
 That way we can be sure the different versions have the same implementation.
@@ -249,22 +251,24 @@ Finally, because we expect future versions of  Funthark to feature polymorphism 
 
 \subsubsection{Choice of language for implementation}
 The implementation described in this project is written in the functional programming language Haskell.
-The language constructs in Haskell are smiliar to our mathematical notation and functional languages are good for developing compilers in general.\cite{TorbenMogensen}
+The language constructs in Haskell are similar to our mathematical notation and functional languages are good for developing compilers in general\cite{TorbenMogensen}.
 
 \subsubsection{Other tools}
-For building our project and managing external libraries we have used the cabal packaging system \cite{cabal}.
-This is because cabal is the standard build architecture for Haskell and should make it easy to build our code.
+For building our project and managing external libraries, we have used the cabal packaging system \cite{cabal}.
+The cabal packaging system is the standard build architecture for Haskell and should make it easy to build our code.
 
 We have created a Makefile for building our benchmarks. This made it much easier for us to rebuild the benchmarks and can also be used
 as a reference of how to build them manually.
 
-We have used the linux commandline tool {\tt time} for measuring the runtime of our benchmarks. 
-It is not nessesary the best way but because of time constraints we have not looked for another solution.
-One reason it is not ideal is because it also includes the time spend on reading data from files. We have however tried to create benchmarks where the execution of the computations overshadow any overhead created by this. In particular only one of our benchmarks read
-data from files and the mesured difference between {\tt time} and a built-in timing function of the program only differed by 1 ms. 
+We have used the Linux command-line tool {\tt time} for measuring the runtime of our benchmarks. 
+It is not nessesarily the best way but because of time constraints we have not looked for another solution.
+One reason it is not ideal is because it also includes the time spend on reading data from files.
+We have however tried to create benchmarks where the execution of the computations overshadow any overhead introduced by input and output.
+In particular only, one of our benchmarks read
+input from files and the measured difference between {\tt time} and a built-in timing function of the program only differed by 1 ms. 
 
 \subsubsection{Modifying an existing parser}
-The parser we used for this project is not done by us but was created in a previous project that also worked with compiling TAIL to a parallel backend \cite{APLACC}. 
+The parser we used for this project is not done by us but was created in a paper that also worked with compiling TAIL to a parallel backend\cite{APLACC}. 
 The latest version of the parser can be found in the github repository: https://github.com/mbudde/aplacc.
 We did therefore not create the parser our selves,
 instead we modified the existing parser where needed which enabled us to focus our work on the core of our project.
@@ -283,10 +287,10 @@ $\sigma$ ::= $\forall\vec{\alpha}\vec{\gamma}$.$\tau$
 The type system of TAIL supports array types ($[\kappa]^{\rho}$) that keeps track of the rank of the array in its type.
 The integer scalar in the array's shape type denotes the rank of the array and must be a non-negative integer.
 The type system also supports vector types ($\langle \kappa \rangle^\rho$), which are used specifically to denote vectors of a specific length. For example, {\tt <int>8} denotes a vector of ints of known length 8. If a vector's length is not staticallly known, it can instead be expressed as an array of rank 1.
-Scalar values that are statically known have a separate type (S$_{\kappa}$($\rho$)), that is integers, and booleans,
-for which their value is contained in the type.
+Scalar values that are statically known can be given the type (S$_{\kappa}$($\rho$)), which represents integers, and booleans,
+for which the value is contained in the type.
 In addition, there also exists single-element integer, double, and boolean vector types (SV$_{\kappa}$($\rho$)) for singleton vectors where the element is statically known.
-Finally there exists function types ($\tau \rightarrow \tau$').
+Finally there exists function types ($\tau \rightarrow \tau'$).
 
 %The types schemes ($\sigma$) are expressed through substitution...
 The type system makes use of substitution in order to express instances of type schemes ($\sigma$).
@@ -295,8 +299,10 @@ A general substitution ($S$) is a pair ($S_t$,$S_s$) of a type substitution and 
 Using the substitution $S$ on an object $B$ means applying both $S_t$ and $S_s$ on objects in $B$.
 A type $\tau'$ is an instance of a type scheme $\sigma$ = $\forall\vec{\alpha}\vec{\gamma}$.$\tau$ (written $\sigma$ $\geq$ $\tau'$) if a substitution $S$ exists such that $S(\tau)$ = $\tau'$. All type schemes are assumed closed.
 
-The syntax of operators and expressions is given below. The letter $v$ is used to denote values and the letter $x$ is used to denote program variables. 
+The syntax of operators and expressions is given below.
+The letter $x$ is used to denote program variables. 
 \begin{lstlisting}[numbers=none,frame=none]
+// operators
 $op$ ::= addi | subi | multi | mini | maxi | addd | subd | 
        muld | mind | maxd | andb | orb | xorb |  nanb | 
        norb | notb | lti | ltei | gti | gtei | eqi | neqi |
@@ -306,6 +312,7 @@ $op$ ::= addi | subi | multi | mini | maxi | addd | subd |
        first | cat | cons | snoc | shapeV | catV | consV | 
        snocV | iotaV | rotateV | takeV | dropV | firstV 
 
+//expressions
 $e$ ::= $v$ 
     | $x$ 
     | $[\vec{e}]$ 
@@ -313,11 +320,13 @@ $e$ ::= $v$
     | let $x$ = $e_1$ in $e_2$ 
     | $op(\vec{e})$
 
+// values
 $v$ ::= $[\vec{a}]^{\delta}$
     | $\lambda x.e$
 \end{lstlisting}
-A TAIL program always consists of a single expression. An expression can then be a value, a variable, 
-a list of expressions, a let expression or an operator. Each TAIL operator has a unique type scheme.
+A TAIL program always consists of a single expression.
+An expression $e$ can then be a value, a variable, a list of expressions, a let expression or an operator.
+Each TAIL operator has a unique type scheme.
 
 One of the operators with a simple type scheme is the binary operator maxi that takes two arguments $a$ and $b$ and evaluates to the argument with the highest value. Its type scheme is as follows:
 \begin{lstlisting}[numbers=none,frame=none]
@@ -331,20 +340,21 @@ The type scheme for the function {\tt each} is:
 \begin{lstlisting}[numbers=none,frame=none]
 each : $\forall\alpha\beta\gamma.(\alpha \rightarrow \beta)\rightarrow [\alpha]^{\gamma} \rightarrow [\beta]^{\gamma}$
 \end{lstlisting}
-Given a function $f$ and an array $a$, the application {\tt each(f,a)} evaluates to an array where $f$ is applied to each element of $a$ given the value $[f(a_1),..,f(a_n)]$.
+Given a function $f$ and an array $a$, the application {\tt each(f,a)} evaluates to an array where $f$ is applied to each element of $a$ giving the value $[f(a_1),..,f(a_n)]$.
 If the rank of the array is greater than 1 the {\tt each} function works as a map on the fattened representation of the array,
 that is, the function is applied on the inner most dimension of the array, or seen in another way, on each basic value.
 
 The {\tt eachV} function is a special case of {\tt each} and is used on vector types.
 
-The function {\tt reduce} works similaly to fold known from functional languages. The type scheme for {\tt reduce} is:
+The function {\tt reduce} works similarily to fold known from functional languages. The type scheme for {\tt reduce} is:
 \begin{lstlisting}[numbers=none,frame=none]
 reduce : $\forall\alpha\gamma.(\alpha \rightarrow \alpha \rightarrow \alpha)\rightarrow \alpha \rightarrow [\alpha]^{1 +\gamma} \rightarrow [\alpha]^{\gamma}$
 \end{lstlisting}
-The function takes as arguments an associative binary operator $op$ (for instance $+$), a neutral element $n$, (for instance 0) and an array $a$.
+The function takes as arguments an associative binary operator $op$ (for instance {\tt addi}), a neutral element $n$, (for instance 0) and an array $a$.
 The function application evaluates to the reduction of the elements using the operator.
 An array of rank $\gamma+1$ is reduced to an array of rank $\gamma$ along the inner-most dimension.
-Unlike fold, reduce makes no guarantees as to the order of application of the operator, therefore the operator has to be associative and the element has to be neutral, this is of course necessary for parallel execution.
+Unlike fold, reduce makes no guarantees as to the order of application of the operator.
+Therefore, the operator has to be associative and the provided element has to be neutral, which is of course necessary for parallel execution.
 
 The {\tt zipWith} function's type scheme is given as follows: 
 \begin{lstlisting}[numbers=none,frame=none]
@@ -354,7 +364,8 @@ Given a function $f$ that works on a pair $(x,y)$ and two arrays $a$ and $b$, {\
 Like the other three operators, it works on the inner-most dimension of the array\cite{ElsmanDybdal:Array:2014}.
 
 There are other important operators besides the parallel ones. One of them is the operator {\tt reshape($a_1$,$a_2$)}.
-Given two arrays it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array so $([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
+Given two arrays, it reshapes the flattened representation of the second array $a_2$ to the shape given by the first array thus 
+$reshape([2,3],[1,2,3,4,5,6])$ evaluates to $[[1,2,3],[4,5,6]]$. 
 If $a_2$ is too long the elements not needed are dropped. That is, $reshape([2,3],[1,2,3,4,5,6,7,8])$ would evaluate to the same as the first example.
 If $a_2$ is shorter than needed the elements of $a_2$ are repeated. That is $reshape([2,3],[1,2,3])$ evaluates to $[[1,2,3],[1,2,3]]$. Note that this is not how arrays are represented in TAIL. Instead of using nested brackets to represent the dimentions, arrays in TAIL are represented with a shape (i.e. $[1,2,3,4,5,6]^{[2,3]}$). However, using this representation can make what happens less obvius so we use the nested brackets representation insted. 
 
@@ -1244,7 +1255,7 @@ The primes benchmark computes the number of primes below $n$ and is found in the
 Again we have only made the program return the result instead of printing it and scaled up the parameter $n$.
 To show a bigger example we have chosen to show the code in the primes benchmark. Below is the original code in APL as well as the generated TAIL and Futhark code.
 The TAIL code is as follows:
-\includegraphics[scale=0.7,trim=6em 40em 10em 6em,clip=true]{primes.pdf}
+\includegraphics[scale=0.7,trim=6em 36em 10em 6em,clip=true]{primes.pdf}
 The APLTAIL compiler compiles the code to the following TAIL program:
 \begin{lstlisting}[breaklines=true,language=TAIL]
 let v1:<int>8 = dropV{[int],[8]}(1,iotaV(9)) in
