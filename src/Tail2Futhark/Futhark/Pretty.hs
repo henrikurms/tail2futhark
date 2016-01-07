@@ -66,7 +66,7 @@ ppOp op = text $ case op of
   GreaterEq -> ">="
   LogicAnd -> "&&"
   LogicOr -> "||"
-  Pow -> "pow"
+  Pow -> "**"
   Or -> "|"
   And -> "&"
   Shl -> ">>"
