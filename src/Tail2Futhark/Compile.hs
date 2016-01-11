@@ -22,6 +22,8 @@ compile opts e = includes ++ [(RealT, "main", signature, compileExp rootExp)]
 
 compileReads (T.Let id  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ id):sig,e')
   where (sig,e') = compileReads e2
+compileReads (T.Let id  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.RealT , "t_" ++ id):sig,e')
+  where (sig,e') = compileReads e2
 compileReads e = ([],e)
 
 ----------------------------------------
@@ -326,6 +328,8 @@ compileOpExp ident instDecl args = case ident of
   "cons" -> compileCons instDecl args
   "consV" -> compileConsV instDecl args
   "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) -- | otherwise -> error "only bool literals supported in b2iV"
+  "idxS" | [T.I 1, i, arr] <- args ->
+           F.Index (compileExp arr) [compileExp i]
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
@@ -554,6 +558,7 @@ convertFun fun = case fun of
   "expd"   -> Just "exp"
   "notb"   -> Just "!"
   "floor"  -> Just "trunc"
+  "mem"    -> Just "copy"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
@@ -584,6 +589,7 @@ convertBinOp op = case op of
   "ltd"  -> Just F.Less
   "andi" -> Just F.And
   "andd" -> Just F.And
+  "xori" -> Just F.Xor
   "ori"  -> Just F.Or
   "shli" -> Just F.Shl
   "shri" -> Just F.Shr
