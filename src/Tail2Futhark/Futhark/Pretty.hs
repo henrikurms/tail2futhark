@@ -68,6 +68,7 @@ ppOp op = text $ case op of
   LogicOr -> "||"
   Pow -> "**"
   Or -> "|"
+  Xor -> "^"
   And -> "&"
   Shl -> ">>"
   Shr -> "<<"
