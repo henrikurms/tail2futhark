@@ -554,6 +554,7 @@ convertFun fun = case fun of
   "expd"   -> Just "exp"
   "notb"   -> Just "!"
   "floor"  -> Just "trunc"
+  "mem"    -> Just "copy"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
