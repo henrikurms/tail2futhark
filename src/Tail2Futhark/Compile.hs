@@ -22,6 +22,8 @@ compile opts e = includes ++ [(RealT, "main", signature, compileExp rootExp)]
 
 compileReads (T.Let id  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ id):sig,e')
   where (sig,e') = compileReads e2
+compileReads (T.Let id  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.RealT , "t_" ++ id):sig,e')
+  where (sig,e') = compileReads e2
 compileReads e = ([],e)
 
 ----------------------------------------
