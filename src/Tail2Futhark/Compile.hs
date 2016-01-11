@@ -328,6 +328,8 @@ compileOpExp ident instDecl args = case ident of
   "cons" -> compileCons instDecl args
   "consV" -> compileConsV instDecl args
   "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) -- | otherwise -> error "only bool literals supported in b2iV"
+  "idxS" | [T.I 1, i, arr] <- args ->
+           F.Index (compileExp arr) [compileExp i]
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident
