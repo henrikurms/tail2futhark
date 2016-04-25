@@ -135,7 +135,6 @@ showTp tp  = case baseType tp of
   F.F32T -> "f32"
   F.F64T -> "f64"
   F.BoolT -> "bool"
-  F.CharT -> "char"
 
 -- make Futhark basic type from string representation --
 readBType tp = case tp of
@@ -143,7 +142,7 @@ readBType tp = case tp of
   "f32" -> F.F32T
   "f64" -> F.F64T
   "bool" -> F.BoolT
-  "char" -> F.CharT
+  "char" -> F.IntT
   _ -> error $ "readBType: unhandled " ++ show tp
 
 -- make Futhark type from string representation --
@@ -157,7 +156,7 @@ getType s
              | otherwise = Just (read prefix :: Integer)
 
 -- make list of Futhark basic types --
-btypes = map readBType ["int","f32","f64","bool","char"]
+btypes = map readBType ["int","f32","f64","bool"]
 
 -- return zero expression of basic type --
 zero :: F.Type -> F.Exp
@@ -165,7 +164,6 @@ zero F.IntT = Constant (Int 0)
 zero F.F32T = Constant (F32 0)
 zero F.F64T = Constant (F64 0)
 zero F.BoolT = Constant (Bool False)
-zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
 
 -- make Futhark function expression from ident
@@ -178,7 +176,6 @@ makeKernel ident
 makeBTp T.IntT = F.IntT
 makeBTp T.DoubleT = F.F32T -- XXX - we turn doubles into singles!
 makeBTp T.BoolT = F.BoolT
-makeBTp T.CharT = F.CharT
 
 -- make Futhark array type from Futhark basic type --
 mkType (tp,rank) = makeArrTp (makeBTp tp) rank

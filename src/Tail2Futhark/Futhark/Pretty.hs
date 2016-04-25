@@ -24,7 +24,6 @@ ppType IntT = text "int"
 ppType F32T = text "f32"
 ppType F64T = text "f64"
 ppType BoolT = text "bool"
-ppType CharT = text "char"
 ppType (ArrayT at) = brackets (ppType at)
 
 ppExp (Var ident) = text ident

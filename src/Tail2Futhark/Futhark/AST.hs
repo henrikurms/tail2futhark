@@ -8,7 +8,6 @@ data Type = IntT
           | F32T
           | F64T
           | BoolT
-          | CharT
          -- | ToupleT [Type]
           | ArrayT Type
          -- | UArrayT Type
