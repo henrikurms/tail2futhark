@@ -21,7 +21,8 @@ brackExps = brackList . map ppExp
 
 ppType :: Type -> Doc
 ppType IntT = text "int"
-ppType RealT = text "real"
+ppType F32T = text "f32"
+ppType F64T = text "f64"
 ppType BoolT = text "bool"
 ppType CharT = text "char"
 ppType (ArrayT at) = brackets (ppType at)
@@ -75,7 +76,8 @@ ppOp op = text $ case op of
   --XOr -> "^"
 
 ppConstant (Int int) = integer int
-ppConstant (Real f) = double f
+ppConstant (F32 f) = text (show f) <> text "f32"
+ppConstant (F64 f) = text (show f) <> text "f64"
 ppConstant (Char c) = quotes $ char c
 ppConstant (Bool b) = text (if b then "True" else "False")
 ppConstant (ArrayConstant arr) = braces . hcat . punctuate comma . map ppConstant $ arr

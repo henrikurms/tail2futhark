@@ -12,7 +12,7 @@ import Options (Options(..))
 --------------------------
 
 compile :: Options -> T.Program -> F.Program
-compile opts e = includes ++ [(RealT, "main", signature, compileExp rootExp)]
+compile opts e = includes ++ [(F32T, "main", signature, compileExp rootExp)]
   where includes = (if includeLibs opts then builtins else [])
         (signature, rootExp) = compileReads e
 
@@ -22,7 +22,7 @@ compile opts e = includes ++ [(RealT, "main", signature, compileExp rootExp)]
 
 compileReads (T.Let id  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ id):sig,e')
   where (sig,e') = compileReads e2
-compileReads (T.Let id  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.RealT , "t_" ++ id):sig,e')
+compileReads (T.Let id  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.F32T , "t_" ++ id):sig,e')
   where (sig,e') = compileReads e2
 compileReads e = ([],e)
 
@@ -31,7 +31,7 @@ compileReads e = ([],e)
 ----------------------------------------
 
 absFloatExp :: F.Exp -> F.Exp
-absFloatExp e = IfThenElse Inline (BinApp LessEq e (Constant (Real 0))) (F.Neg e) e
+absFloatExp e = IfThenElse Inline (BinApp LessEq e (Constant (F32 0))) (F.Neg e) e
 
 absExp :: F.Exp -> F.Exp
 absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
@@ -41,8 +41,8 @@ maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
 minExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e1 e2
 
-signdExp e = IfThenElse Indent (BinApp Less (Constant (Real 0)) e) (Constant (Int 1)) elseBranch
-  where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Real 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
+signdExp e = IfThenElse Indent (BinApp Less (Constant (F32 0)) e) (Constant (Int 1)) elseBranch
+  where elseBranch = IfThenElse Indent (BinApp Eq (Constant (F32 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
 signiExp e = IfThenElse Indent (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
   where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
@@ -132,34 +132,38 @@ makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
 -- make string representation of Futhark type --
 showTp tp  = case baseType tp of 
   F.IntT -> "int"
-  F.RealT -> "real"
+  F.F32T -> "f32"
+  F.F64T -> "f64"
   F.BoolT -> "bool"
   F.CharT -> "char"
 
 -- make Futhark basic type from string representation --
 readBType tp = case tp of
   "int" -> F.IntT
-  "real" -> F.RealT
+  "f32" -> F.F32T
+  "f64" -> F.F64T
   "bool" -> F.BoolT
   "char" -> F.CharT
+  _ -> error $ "readBType: unhandled " ++ show tp
 
 -- make Futhark type from string representation --
 -- i.e., takes 2int and gives [[int]] --
 getType :: [Char] -> Maybe F.Type
 getType s 
-  | suffix `elem` ["int","real","bool","char"] = fmap (makeArrTp (readBType suffix)) $ rank
+  | suffix `elem` ["int","f32","f64","bool","char"] = fmap (makeArrTp (readBType suffix)) $ rank
   | otherwise = Nothing
   where (prefix,suffix) = span isDigit s
         rank | [] <- prefix = Nothing 
              | otherwise = Just (read prefix :: Integer)
 
 -- make list of Futhark basic types --
-btypes = map readBType ["int","real","bool","char"]
+btypes = map readBType ["int","f32","f64","bool","char"]
 
 -- return zero expression of basic type --
 zero :: F.Type -> F.Exp
 zero F.IntT = Constant (Int 0)
-zero F.RealT = Constant (Real 0)
+zero F.F32T = Constant (F32 0)
+zero F.F64T = Constant (F64 0)
 zero F.BoolT = Constant (Bool False)
 zero F.CharT = Constant (Char ' ')
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
@@ -172,7 +176,7 @@ makeKernel ident
 
 -- make Futhark basic type from Tail basic type --
 makeBTp T.IntT = F.IntT
-makeBTp T.DoubleT = F.RealT
+makeBTp T.DoubleT = F.F32T -- XXX - we turn doubles into singles!
 makeBTp T.BoolT = F.BoolT
 makeBTp T.CharT = F.CharT
 
@@ -218,19 +222,19 @@ negi :: FunDecl
 negi = (F.IntT, "negi", [(F.IntT,"x")], F.Neg (F.Var "x"))
 
 negd :: FunDecl
-negd = (F.RealT, "negd", [(F.RealT,"x")], F.Neg (F.Var "x"))
+negd = (F.F32T, "negd", [(F.F32T,"x")], F.Neg (F.Var "x"))
 
 absi :: FunDecl
 absi = (F.IntT, "absi", [(F.IntT,"x")], absExp (F.Var "x"))
 
 absd :: FunDecl
-absd = (F.RealT, "absd", [(F.RealT,"x")], absFloatExp (F.Var "x"))
+absd = (F.F32T, "absd", [(F.F32T,"x")], absFloatExp (F.Var "x"))
 
 mini :: FunDecl
 mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
-mind = (F.RealT, "mind", [(F.RealT, "x"), (F.RealT, "y")], minExp (F.Var "x") (F.Var "y"))
+mind = (F.F32T, "mind", [(F.F32T, "x"), (F.F32T, "y")], minExp (F.Var "x") (F.Var "y"))
 
-signd = (F.IntT, "signd", [(F.RealT, "x")], signdExp (F.Var "x"))
+signd = (F.IntT, "signd", [(F.F32T, "x")], signdExp (F.Var "x"))
 
 signi = (F.IntT, "signi", [(F.IntT, "x")], signiExp (F.Var "x"))
 
@@ -238,7 +242,7 @@ maxi :: FunDecl
 maxi = (F.IntT, "maxi", [(F.IntT, "x"), (F.IntT, "y")], maxExp (F.Var "x") (F.Var "y"))
 
 maxd :: FunDecl
-maxd = (F.RealT, "maxd", [(F.RealT, "x"), (F.RealT, "y")], maxExp (F.Var "x") (F.Var "y"))
+maxd = (F.F32T, "maxd", [(F.F32T, "x"), (F.F32T, "y")], maxExp (F.Var "x") (F.Var "y"))
 
 nandb :: FunDecl
 nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
@@ -254,7 +258,7 @@ xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (
 
 neqi = (F.BoolT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
 
-neqd = (F.BoolT, "neqd", [(F.RealT, "x"), (F.RealT, "y")], notEq (F.Var "x") (F.Var "y"))
+neqd = (F.BoolT, "neqd", [(F.F32T, "x"), (F.F32T, "y")], notEq (F.Var "x") (F.Var "y"))
 
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
@@ -282,12 +286,12 @@ dropFuns = map dropFun btypes
 
 -- general expressions --
 compileExp :: T.Exp -> F.Exp
-compileExp (T.Var ident) | ident == "pi" = Constant(Real 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
+compileExp (T.Var ident) | ident == "pi" = Constant(F32 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
 compileExp (I int) = Constant (Int int)
-compileExp (D double) = Constant (Real double)
+compileExp (D double) = Constant (F32 $ fromRational $ toRational double)
 compileExp (C char)   = Constant (Char char)
 compileExp (B bool)   = Constant (Bool bool)
-compileExp Inf = Constant (Real (read "Infinity"))
+compileExp Inf = Constant (F32 (read "Infinity"))
 compileExp (T.Neg exp) = F.Neg (compileExp exp)
 compileExp (T.Let id _ e1 e2) = F.Let Indent (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
@@ -457,7 +461,7 @@ compileDrop (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall f
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
     where dimsList | F.Array dimsList <- dimsExp = dimsList
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
-                   | otherwise = error "reshape needs literal or variable as shape argument"
+                   | otherwise = error $ "reshape needs literal or variable as shape argument, not " ++ show dimsExp
           dimsExp = compileExp dims
           fname = "reshape1_" ++ showTp (makeBTp tp)
           dimProd = multExp dimsList
@@ -550,12 +554,12 @@ idFuns = ["negi",
 
 -- operators that are 1:1 with Futhark functions -- 
 convertFun fun = case fun of
-  "i2d"    -> Just "toFloat"
+  "i2d"    -> Just "f32"
   "catV"   -> Just "concat"
   "b2i"    -> Just "boolToInt"
   "b2iV"   -> Just "boolToInt"
-  "ln"     -> Just "log"
-  "expd"   -> Just "exp"
+  "ln"     -> Just "log32"
+  "expd"   -> Just "exp32"
   "notb"   -> Just "!"
   "floor"  -> Just "trunc"
   "mem"    -> Just "copy"

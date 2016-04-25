@@ -5,7 +5,8 @@ type Program = [FunDecl]
 type FunDecl = (Type, Ident, [Arg], Exp)
 
 data Type = IntT
-          | RealT
+          | F32T
+          | F64T
           | BoolT
           | CharT
          -- | ToupleT [Type]
@@ -30,7 +31,8 @@ data Pattern = Ident Ident
   deriving (Show, Eq)
 
 data Constant = Int Integer
-              | Real Double
+              | F32 Float
+              | F64 Double
               | Char Char
               | Bool Bool
               | ArrayConstant [Constant]
