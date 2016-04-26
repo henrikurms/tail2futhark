@@ -5,6 +5,7 @@ type Program = [FunDecl]
 type FunDecl = (Type, Ident, [Arg], Exp)
 
 data Type = IntT
+          | Int8T
           | F32T
           | F64T
           | BoolT

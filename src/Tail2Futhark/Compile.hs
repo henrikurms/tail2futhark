@@ -2,6 +2,7 @@ module Tail2Futhark.Compile (compile, getType) where
 
 import APLAcc.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
+import Tail2Futhark.Futhark.Pretty as F -- the futhark AST
 
 import Prelude
 
@@ -142,15 +143,11 @@ makeTransp2 = F.FunCall2 "rearrange"
 ---------------------------
 
 -- make string representation of Futhark type --
-showTp :: F.Type -> [Char]
-showTp tp  = case baseType tp of 
-  F.IntT -> "int"
-  F.F32T -> "f32"
-  F.F64T -> "f64"
-  F.BoolT -> "bool"
+showTp :: F.Type -> String
+showTp  = render . F.ppType
 
 -- make Futhark basic type from string representation --
-readBType :: [Char] -> F.Type
+readBType :: String -> F.Type
 readBType tp = case tp of
   "int" -> F.IntT
   "f32" -> F.F32T
@@ -161,7 +158,7 @@ readBType tp = case tp of
 
 -- make Futhark type from string representation --
 -- i.e., takes 2int and gives [[int]] --
-getType :: [Char] -> Maybe F.Type
+getType :: String -> Maybe F.Type
 getType s 
   | suffix `elem` ["int","f32","f64","bool","char"] = fmap (makeArrTp (readBType suffix)) r
   | otherwise = Nothing
@@ -182,7 +179,7 @@ zero F.BoolT = Constant (Bool False)
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
 
 -- make Futhark function expression from ident
-makeKernel :: [Char] -> Kernel
+makeKernel :: String -> Kernel
 makeKernel ident
   | Just fun <- convertFun ident = F.Fun fun []
   | Just op  <- convertBinOp ident = F.Op op
@@ -193,6 +190,7 @@ makeBTp :: BType -> F.Type
 makeBTp T.IntT = F.IntT
 makeBTp T.DoubleT = F.F32T -- XXX - we turn doubles into singles!
 makeBTp T.BoolT = F.BoolT
+makeBTp T.CharT = F.Int8T
 
 -- make Futhark array type from Futhark basic type --
 mkType :: (BType, Integer) -> F.Type
@@ -280,7 +278,7 @@ resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Va
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
 makeFun args name body tp = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
 
-stdArgs :: F.Type -> [(F.Type, [Char])]
+stdArgs :: F.Type -> [(F.Type, String)]
 stdArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 
 reshapeFun :: F.Type -> FunDecl
@@ -314,7 +312,7 @@ compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
 
 -- operators --
-compileOpExp :: [Char] -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
+compileOpExp :: String -> Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
