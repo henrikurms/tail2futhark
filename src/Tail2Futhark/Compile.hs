@@ -1,9 +1,10 @@
-module Tail2Futhark.Compile (compile) where
+module Tail2Futhark.Compile (compile, getType) where
 
 import APLAcc.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
-import Data.List
-import Data.Maybe
+
+import Prelude
+
 import Data.Char
 import Options (Options(..))
 
@@ -20,9 +21,10 @@ compile opts e = includes ++ [(F32T, "main", signature, compileExp rootExp)]
 -- HELPER FUNCTIONS --
 -------------------------
 
-compileReads (T.Let id  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ id):sig,e')
+compileReads :: T.Exp -> ([(F.Type, [Char])], T.Exp)
+compileReads (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ v):sig,e')
   where (sig,e') = compileReads e2
-compileReads (T.Let id  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.F32T , "t_" ++ id):sig,e')
+compileReads (T.Let v  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.F32T , "t_" ++ v):sig,e')
   where (sig,e') = compileReads e2
 compileReads e = ([],e)
 
@@ -39,40 +41,47 @@ absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 maxExp :: F.Exp -> F.Exp -> F.Exp
 maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
 
+minExp :: F.Exp -> F.Exp -> F.Exp
 minExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e1 e2
 
+signiExp, signdExp :: F.Exp -> F.Exp
 signdExp e = IfThenElse Indent (BinApp Less (Constant (F32 0)) e) (Constant (Int 1)) elseBranch
   where elseBranch = IfThenElse Indent (BinApp Eq (Constant (F32 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
 signiExp e = IfThenElse Indent (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
   where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
+nandExp :: F.Exp -> F.Exp -> F.Exp
 nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2] 
 
+norExp :: F.Exp -> F.Exp -> F.Exp
 norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
 
 resiExp :: F.Exp -> F.Exp -> F.Exp
-resiExp y x = F.IfThenElse F.Indent (y `eq` zero) x $ F.IfThenElse F.Indent cond (x % y) (x % y `plus` y)
-  where cond = ((x % y) `eq` zero) `or` ((x `gr` zero) `and` (y `gr` zero)) `or` ((x `less` zero) `and` (y `less` zero))
+resiExp y x = F.IfThenElse F.Indent (y `eq` izero) x $ F.IfThenElse F.Indent cond (x % y) (x % y `plus` y)
+  where cond = ((x % y) `eq` izero) `lor` ((x `gr` izero) `land` (y `gr` izero)) `lor` ((x `less` izero) `land` (y `less` izero))
         infix 1 %; (%) = F.BinApp F.Mod
-        zero = Constant (Int 0)
+        izero = Constant (Int 0)
         plus = F.BinApp F.Plus
         gr = F.BinApp F.Greater
         less = F.BinApp F.Less
         eq = F.BinApp F.Eq
-        or = F.BinApp F.LogicOr
-        and = F.BinApp F.LogicAnd
+        lor = F.BinApp F.LogicOr
+        land = F.BinApp F.LogicAnd
 
 -- reshape1 --
 -- create split part of reshape1 function -- 
-mkSplit id1 id2 dims exp retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] exp) retExp
-makeLets ((id,exp) : rest) e = F.Let Indent (Ident id) exp (makeLets rest e)
-makeLets [] e = e
+mkSplit :: F.Ident -> F.Ident -> F.Exp -> F.Exp -> F.Exp -> F.Exp
+mkSplit id1 id2 dims e retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] e) retExp
+
+makeLets :: [(F.Ident, F.Exp)] -> F.Exp -> F.Exp
+makeLets ((v,e) : rest) body = F.Let Indent (Ident v) e (makeLets rest body)
+makeLets [] body = body
 
 reshape1Body :: F.Type -> F.Exp
-reshape1Body tp = makeLets (zip ["roundUp","extend"] [length,reshapeCall]) split 
+reshape1Body _ = makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split 
   where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
-        length = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
+        desired = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
         reshapeCall = F.FunCall2 "reshape" [BinApp Mult size len] (F.FunCall "replicate" [len,F.Var "x"])
         size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
         len = F.Var "roundUp"
@@ -84,30 +93,30 @@ reshape1Body tp = makeLets (zip ["roundUp","extend"] [length,reshapeCall]) split
 -- make body for drop1 function --
 dropBody :: F.Type -> F.Exp
 dropBody tp = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
-    where zero = Constant (Int 0)
+    where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
-          size = F.FunCall "size" [zero, F.Var "x"]
-          sum = BinApp Plus len size
+          size = F.FunCall "size" [izero, F.Var "x"]
+          plus = BinApp Plus len size
           emptArr = F.Empty tp
-          elseBranch = IfThenElse Indent (len `less` zero) negDrop posDrop
-          negDrop = mkSplit "v1" "_" sum (F.Var "x") (F.Var "v1")
+          elseBranch = IfThenElse Indent (len `less` izero) negDrop posDrop
+          negDrop = mkSplit "v1" "_" plus (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
 
 -- take1 --
 -- make body for take1 function --
 takeBody :: F.Exp -> F.Exp
-takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
+takeBody padElement = IfThenElse Indent (izero `less` len) posTake negTake
     where less = BinApp LessEq
-          zero = Constant (Int 0)
-          sum  = BinApp Plus len size
+          izero = Constant (Int 0)
+          plus  = BinApp Plus len size
           len  = F.Var "l"
-          size = F.FunCall "size" [zero, F.Var "x"]
+          size = F.FunCall "size" [izero, F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate" [(BinApp Minus len size), padElement]
           posTake = IfThenElse Indent (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
-          negTake = IfThenElse Indent (zero `less` sum) (mkSplit "_" "v2" sum (F.Var "x") (F.Var "v2")) padLeft 
+          negTake = IfThenElse Indent (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
 
 
 ------------------------------------------
@@ -115,21 +124,25 @@ takeBody padElement = IfThenElse Indent (zero `less` len) posTake negTake
 ------------------------------------------
 
 -- AUX shape --
-makeShape rank args
-  | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..rank-1]
+makeShape :: Integer -> [T.Exp] -> [F.Exp]
+makeShape r args
+  | [e] <- args = map (\x -> FunCall "size" [Constant (Int x), compileExp e]) [0..r-1]
   | otherwise = error "shape takes one argument"
 
 -- AUX transp --
-makeTransp r e = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) e
+makeTransp :: Integer -> F.Exp -> F.Exp
+makeTransp r = makeTransp2 (map (Constant . Int) (reverse [0..r-1]))
 
 -- AUX transp2 --
-makeTransp2 dims exp = F.FunCall2 "rearrange" dims exp
+makeTransp2 :: [F.Exp] -> F.Exp -> F.Exp
+makeTransp2 = F.FunCall2 "rearrange"
 
 ---------------------------
 -- GENERAL AUX FUNCTIONS --
 ---------------------------
 
 -- make string representation of Futhark type --
+showTp :: F.Type -> [Char]
 showTp tp  = case baseType tp of 
   F.IntT -> "int"
   F.F32T -> "f32"
@@ -137,6 +150,7 @@ showTp tp  = case baseType tp of
   F.BoolT -> "bool"
 
 -- make Futhark basic type from string representation --
+readBType :: [Char] -> F.Type
 readBType tp = case tp of
   "int" -> F.IntT
   "f32" -> F.F32T
@@ -149,13 +163,14 @@ readBType tp = case tp of
 -- i.e., takes 2int and gives [[int]] --
 getType :: [Char] -> Maybe F.Type
 getType s 
-  | suffix `elem` ["int","f32","f64","bool","char"] = fmap (makeArrTp (readBType suffix)) $ rank
+  | suffix `elem` ["int","f32","f64","bool","char"] = fmap (makeArrTp (readBType suffix)) r
   | otherwise = Nothing
   where (prefix,suffix) = span isDigit s
-        rank | [] <- prefix = Nothing 
-             | otherwise = Just (read prefix :: Integer)
+        r | [] <- prefix = Nothing 
+          | otherwise = Just (read prefix :: Integer)
 
 -- make list of Futhark basic types --
+btypes :: [F.Type]
 btypes = map readBType ["int","f32","f64","bool"]
 
 -- return zero expression of basic type --
@@ -167,18 +182,21 @@ zero F.BoolT = Constant (Bool False)
 zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
 
 -- make Futhark function expression from ident
+makeKernel :: [Char] -> Kernel
 makeKernel ident
   | Just fun <- convertFun ident = F.Fun fun []
   | Just op  <- convertBinOp ident = F.Op op
   | otherwise = error $ "not supported operation " ++ ident
 
 -- make Futhark basic type from Tail basic type --
+makeBTp :: BType -> F.Type
 makeBTp T.IntT = F.IntT
 makeBTp T.DoubleT = F.F32T -- XXX - we turn doubles into singles!
 makeBTp T.BoolT = F.BoolT
 
 -- make Futhark array type from Futhark basic type --
-mkType (tp,rank) = makeArrTp (makeBTp tp) rank
+mkType :: (BType, Integer) -> F.Type
+mkType (tp, r) = makeArrTp (makeBTp tp) r
 
 -- aux for mkType --
 makeArrTp :: F.Type -> Integer -> F.Type
@@ -191,14 +209,15 @@ multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 -- make Futhark kernel expression with type
 compileKernel :: T.Exp -> F.Type -> Kernel
-compileKernel (T.Var ident) rtp = makeKernel ident
-compileKernel (T.Fn ident tp (T.Fn ident2 tp2 exp)) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident),(compileTp tp2,"t_" ++ ident2)] (compileExp exp)
-compileKernel (T.Fn ident tp exp) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident)] (compileExp exp)
+compileKernel (T.Var ident) _ = makeKernel ident
+compileKernel (T.Fn ident tp (T.Fn ident2 tp2 e)) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident),(compileTp tp2,"t_" ++ ident2)] (compileExp e)
+compileKernel (T.Fn ident tp e) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident)] (compileExp e)
 
 -- AUX for compileKernel --
-compileTp (ArrT bt (R rank)) = makeArrTp (makeBTp bt) rank
-compileTp (VecT bt (R rank)) = makeArrTp (makeBTp bt) 1
-compileTp (SV bt (R rank)) = makeArrTp (makeBTp bt) 1
+compileTp :: T.Type -> F.Type
+compileTp (ArrT bt (R r)) = makeArrTp (makeBTp bt) r
+compileTp (VecT bt (R _)) = makeArrTp (makeBTp bt) 1
+compileTp (SV bt (R _)) = makeArrTp (makeBTp bt) 1
 compileTp (S bt _) = makeBTp bt
 
 -----------------------
@@ -215,48 +234,44 @@ builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xo
 boolToInt :: FunDecl
 boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0)))
 
-negi :: FunDecl
+negi, negd, absi, absd, mini, mind, signd, signi,
+  maxi, maxd, nandb, norb, eqb, xorb, neqi, neqd, resi :: FunDecl
+
 negi = (F.IntT, "negi", [(F.IntT,"x")], F.Neg (F.Var "x"))
 
-negd :: FunDecl
 negd = (F.F32T, "negd", [(F.F32T,"x")], F.Neg (F.Var "x"))
 
-absi :: FunDecl
 absi = (F.IntT, "absi", [(F.IntT,"x")], absExp (F.Var "x"))
 
-absd :: FunDecl
 absd = (F.F32T, "absd", [(F.F32T,"x")], absFloatExp (F.Var "x"))
 
-mini :: FunDecl
 mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
+
 mind = (F.F32T, "mind", [(F.F32T, "x"), (F.F32T, "y")], minExp (F.Var "x") (F.Var "y"))
 
 signd = (F.IntT, "signd", [(F.F32T, "x")], signdExp (F.Var "x"))
 
 signi = (F.IntT, "signi", [(F.IntT, "x")], signiExp (F.Var "x"))
 
-maxi :: FunDecl
 maxi = (F.IntT, "maxi", [(F.IntT, "x"), (F.IntT, "y")], maxExp (F.Var "x") (F.Var "y"))
 
-maxd :: FunDecl
 maxd = (F.F32T, "maxd", [(F.F32T, "x"), (F.F32T, "y")], maxExp (F.Var "x") (F.Var "y"))
 
-nandb :: FunDecl
 nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
 
-norb :: FunDecl
 norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], norExp (F.Var "x") (F.Var "y"))
 
 eqb = (F.BoolT, "eqb", [(F.BoolT, "x"), (F.BoolT, "y")], boolEquals (F.Var "x") (F.Var "y"))
-  where boolEquals e1 e2 = BinApp F.LogicOr (norExp (F.Var "x") (F.Var "y")) (BinApp F.LogicAnd (F.Var "x") (F.Var "y"))
+  where boolEquals e1 e2 = BinApp F.LogicOr (norExp e1 e2) (BinApp F.LogicAnd e1 e2)
 
 xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (F.Var "y"))
-  where boolXor e1 e2 = BinApp F.LogicAnd (nandExp (F.Var "x")(F.Var "y")) (BinApp F.LogicOr (F.Var "x") (F.Var "y"))
+  where boolXor e1 e2 = BinApp F.LogicAnd (nandExp e1 e2) (BinApp F.LogicOr e1 e2)
 
 neqi = (F.BoolT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
 
 neqd = (F.BoolT, "neqd", [(F.F32T, "x"), (F.F32T, "y")], notEq (F.Var "x") (F.Var "y"))
 
+notEq :: F.Exp -> F.Exp -> F.Exp
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Var "y"))
@@ -264,6 +279,8 @@ resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Va
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
 makeFun args name body tp = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
+
+stdArgs :: F.Type -> [(F.Type, [Char])]
 stdArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
 
 reshapeFun :: F.Type -> FunDecl
@@ -273,6 +290,7 @@ takeFun tp = makeFun (stdArgs tp) "take1" (takeBody (zero tp)) tp
 dropFun :: F.Type -> F.FunDecl
 dropFun tp = makeFun (stdArgs tp) "drop1" (dropBody tp) tp
 
+reshapeFuns, takeFuns, dropFuns :: [FunDecl]
 reshapeFuns = map reshapeFun btypes
 takeFuns = map takeFun btypes
 dropFuns = map dropFun btypes
@@ -284,13 +302,13 @@ dropFuns = map dropFun btypes
 -- general expressions --
 compileExp :: T.Exp -> F.Exp
 compileExp (T.Var ident) | ident == "pi" = Constant(F32 3.14159265359) | otherwise = F.Var ("t_" ++ ident)
-compileExp (I int) = Constant (Int int)
-compileExp (D double) = Constant (F32 $ fromRational $ toRational double)
+compileExp (I x) = Constant (Int x)
+compileExp (D d) = Constant (F32 $ fromRational $ toRational d)
 compileExp (C char)   = Constant (Char char)
 compileExp (B bool)   = Constant (Bool bool)
 compileExp Inf = Constant (F32 (read "Infinity"))
-compileExp (T.Neg exp) = F.Neg (compileExp exp)
-compileExp (T.Let id _ e1 e2) = F.Let Indent (Ident ("t_" ++ id)) (compileExp e1) (compileExp e2) -- Let
+compileExp (T.Neg e) = F.Neg (compileExp e)
+compileExp (T.Let v _ e1 e2) = F.Let Indent (Ident ("t_" ++ v)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (T.Fn _ _ _) = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
@@ -343,120 +361,130 @@ compileOpExp ident instDecl args = case ident of
 
 -- snocV --
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnocV (Just([tp],[r])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]
+compileSnocV (Just([_],[_])) [a,e] = F.FunCall "concat" [compileExp a, F.Array [compileExp e]]
 compileSnocV Nothing _ = error "snocV needs instance declaration"
 compileSnocV _ _ = error "snocV take two aguments"
 
 -- snoc --
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileSnoc (Just([tp],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,exp])
-  where exp = F.Array [makeTransp r (compileExp e)]
+compileSnoc (Just([_],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,e'])
+  where e' = F.Array [makeTransp r (compileExp e)]
         arr = makeTransp (r+1) (compileExp a)
 
 -- consV --
 compileConsV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileConsV (Just([tp],[r])) [e,a] = F.FunCall "concat" [F.Array [compileExp e], compileExp a]
+compileConsV (Just([_],[_])) [e,a] = F.FunCall "concat" [F.Array [compileExp e], compileExp a]
 compileConsV Nothing _ = error "consV needs instance declaration"
 compileConsV _ _ = error "consV take two aguments"
 
 -- cons --
 compileCons :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileCons (Just([tp],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [exp, arr])
-  where exp = F.Array [makeTransp r (compileExp e)]
+compileCons (Just([_],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [e', arr])
+  where e' = F.Array [makeTransp r (compileExp e)]
         arr = makeTransp (r+1) (compileExp a)
 
 -- first --
+compileFirst :: Maybe (t, [Integer]) -> [T.Exp] -> F.Exp
 compileFirst (Just(_,[r])) [a] = F.Let Inline (Ident "x") (compileExp a) $ F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
   where rInt = fromInteger r :: Int
 compileFirst Nothing _ = error "first needs instance declaration"
 compileFirst _ _ = error "first take one argument"
 
 -- iota --
+compileIota :: t -> [T.Exp] -> F.Exp
 compileIota _ [a] = Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1)))) (FunCall "iota" [compileExp a])
 compileIota _ _ = error "Iota take one argument"
 
 -- vreverse --
+compileVReverse :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r (compileExp a)
 compileReverse :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReverse (Just([tp],[r])) [a] = makeTransp r $ makeVReverse tp r $ makeTransp r $ compileExp a
-compileVReverseV (Just([tp],[l])) [a] = makeVReverse tp 1 (compileExp a)
+compileVReverseV :: Maybe ([BType], [t]) -> [T.Exp] -> F.Exp
+compileVReverseV (Just([tp],[_])) [a] = makeVReverse tp 1 (compileExp a)
 
+makeVReverse :: BType -> Integer -> F.Exp -> F.Exp
 makeVReverse tp r a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0), a]])
   where
-    kernelExp = F.Fn (mkType (tp,r-1)) [(F.IntT,"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex one])
-    sizeCall = F.FunCall "size" [zero, a] 
+    kernelExp = F.Fn (mkType (tp,r-1)) [(F.IntT,"x")] (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex ione])
+    sizeCall = F.FunCall "size" [izero, a]
     minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
-    zero = F.Constant (F.Int 0)
-    one = F.Constant (F.Int 1)
-    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
+    izero = F.Constant (F.Int 0)
+    ione = F.Constant (F.Int 1)
 
 -- rotate --
+compileVRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i (compileExp a)
 compileVRotate Nothing _ = error "Need instance declaration for vrotate"
 compileVRotate _ _ = error "vrotate needs 2 arguments"
 
+compileRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileRotate (Just([tp],[r])) [i,a] = makeTransp r $ makeVRotate tp r i $ makeTransp r $ compileExp a
 compileRotate Nothing _ = error "Need instance declaration for rotate"
 compileRotate _ _ = error "rotate needs 2 arguments"
 
 -- vrotateV --
-compileVRotateV (Just([tp],[r])) [i,a] = makeVRotate tp 1 i (compileExp a)
+compileVRotateV :: Maybe ([BType], [t]) -> [T.Exp] -> F.Exp
+compileVRotateV (Just([tp],[_])) [i,a] = makeVRotate tp 1 i (compileExp a)
 compileVRotateV Nothing _ = error "Need instance declaration for vrotateV"
 compileVRotateV _ _ = error "vrotateV needs 2 arguments"
 
 -- vrotate --
+makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> F.Exp
 makeVRotate tp r i a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota" [size])
   where
-    kernelExp = F.Fn (mkType (tp, r-1)) [(F.IntT, "x")] (F.Index (F.Var "a") [F.BinApp F.Mod sum size])
-    sum = F.BinApp F.Plus (F.Var "x") (compileExp i)
+    kernelExp = F.Fn (mkType (tp, r-1)) [(F.IntT, "x")] (F.Index (F.Var "a") [F.BinApp F.Mod add size])
+    add = F.BinApp F.Plus (F.Var "x") (compileExp i)
     size = FunCall "size" [F.Constant (F.Int 0), a]
 
 -- cat --
+compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
   where
-    makeCat tp 1 a1 a2 = FunCall "concat" [a1, a2]
-    makeCat tp r a1 a2 = Map kernelExp (FunCall "zip" [a1, a2])
+    makeCat _tp 1 a1' a2' = FunCall "concat" [a1', a2']
+    makeCat _tp _r a1' a2' = Map kernelExp (FunCall "zip" [a1', a2'])
       where
         kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1),"x"), (mkType(tp,r-1),"y")] recursiveCall
         recursiveCall = makeCat tp (r-1) (F.Var "x") (F.Var "y")
-    mkType (tp,rank) = makeArrTp (makeBTp tp) rank
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileTakeV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
+compileTakeV (Just([tp],_)) [len,e] = F.FunCall fname [compileExp len,compileExp e]
     where fname = "take1_" ++ showTp (makeBTp tp)
 compileTakeV Nothing _ = error "Need instance declaration for takeV"
 compileTakeV _ _ = error "TakeV needs 2 arguments"
 
 -- dropV --
 compileDropV :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileDropV (Just([tp],_)) [len,exp] = F.FunCall fname [compileExp len,compileExp exp]
+compileDropV (Just([tp],_)) [len,e] = F.FunCall fname [compileExp len,compileExp e]
     where fname = "drop1_" ++ showTp (makeBTp tp)
 compileDropV Nothing _ = error "Need instance declaration for dropV"
 compileDropV _ _ = error "DropV needs 2 arguments"
 
 -- take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileTake (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
+compileTake (Just([tp],[r])) [len,e] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
     where dims = absExp (compileExp len) : tail shape
           sizeProd = multExp $ compileExp len : tail shape
           fname = "take1_" ++ showTp (makeBTp tp)
-          resh = F.FunCall2 "reshape" [multExp shape] (compileExp exp) 
-          shape = makeShape r [exp]
-compileTake Nothing args = error "Need instance declaration for take"
+          resh = F.FunCall2 "reshape" [multExp shape] (compileExp e)
+          shape = makeShape r [e]
+compileTake Nothing _args = error "Need instance declaration for take"
 compileTake _ _ = error "Take needs 2 arguments"
 
 -- drop --
-compileDrop (Just([tp],[r])) [len,exp] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh] 
-    where dims = maxExp (Constant (Int 0)) (F.BinApp F.Minus (F.FunCall "size" [Constant (Int 0), compileExp exp])  (absExp (compileExp len))) : tail shape
-          resh = F.FunCall2 "reshape" [multExp shape] (compileExp exp)
+compileDrop :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
+compileDrop (Just([tp],[r])) [len,e] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
+    where dims = maxExp (Constant (Int 0)) (F.BinApp F.Minus (F.FunCall "size" [Constant (Int 0), compileExp e])  (absExp (compileExp len))) : tail shape
+          resh = F.FunCall2 "reshape" [multExp shape] (compileExp e)
           sizeProd = multExp $ compileExp len : tail shape
           fname = "drop1_" ++ showTp (makeBTp tp)
-          shape = makeShape r [exp]
+          shape = makeShape r [e]
 
 -- reshape --
+compileReshape :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
-    where dimsList | F.Array dimsList <- dimsExp = dimsList
+    where dimsList | F.Array l <- dimsExp = l
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
                    | otherwise = error $ "reshape needs literal or variable as shape argument, not " ++ show dimsExp
           dimsExp = compileExp dims
@@ -464,15 +492,17 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList
           dimProd = multExp dimsList
           resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
           shapeProd = multExp (makeShape r1 [array])
-compileReshape Nothing args = error "Need instance declaration for reshape"
+compileReshape Nothing _args = error "Need instance declaration for reshape"
 compileReshape _ _ = error "Reshape needs 2 arguments"
 
 -- transp --
-compileTransp (Just(_,[r])) [exp] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp exp)
-compileTransp Nothing args = error "Need instance declaration for transp"
+compileTransp :: Maybe (t, [Integer]) -> [T.Exp] -> F.Exp
+compileTransp (Just(_,[r])) [e] = makeTransp2 (map (Constant . Int) (reverse [0..r-1])) (compileExp e)
+compileTransp Nothing _args = error "Need instance declaration for transp"
 compileTransp _ _ = error "Transpose takes 1 argument"
 
 -- transp2 --
+compileTransp2 :: t -> [T.Exp] -> F.Exp
 compileTransp2 _ [Vc dims,e] = makeTransp2 (map compileExp dimsExps) (compileExp e)
     where dimsExps = map (I . (\x -> x - 1) . getInt) dims
           getInt (I i) = i
@@ -481,10 +511,12 @@ compileTransp2 _ e = case e of [_,_] -> error "transp2 needs litaral as first ar
                                _     -> error "transp2 takes 2 arguments"
 
 -- shape --
+compileShape :: Maybe (t, [Integer]) -> [T.Exp] -> F.Exp
 compileShape (Just(_,[len])) args = F.Array $ makeShape len args
-compileShape Nothing args = error "Need instance declaration for shape"
+compileShape Nothing _args = error "Need instance declaration for shape"
 
 -- firstV --
+compileFirstV :: t -> [T.Exp] -> F.Exp
 compileFirstV _ args
   | [e] <- args = F.Let Inline (Ident "x") (compileExp e) $ F.Index (F.Var "x")[F.Constant (F.Int 0)]
   | otherwise = error "firstV takes one argument"
@@ -492,12 +524,12 @@ compileFirstV _ args
 -- eachV --
 compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEachV Nothing _ = error "Need instance declaration for eachV"
-compileEachV (Just ([intp,outtp],[len])) [kernel,array] = Map kernelExp (compileExp array)
+compileEachV (Just ([_intp,outtp],[_len])) [kernel,array] = Map kernelExp (compileExp array)
    where kernelExp = compileKernel kernel (makeBTp outtp) 
 
 -- each --
 compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileEach (Just ([intp,outtp],[rank])) [kernel,array] = makeEach intp outtp rank kernel (compileExp array) 
+compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = makeEach intp outtp orig_r okernel (compileExp orig_array)
   where makeEach tp1 tp2 r kernel array
           | r == 1 = Map (compileKernel kernel (makeBTp tp2)) array
           | otherwise = Map (F.Fn (mkType (tp2,r-1)) [(mkType (tp1,r-1),"x")] (makeEach tp1 tp2 (r-1) kernel (F.Var "x"))) array
@@ -506,7 +538,7 @@ compileEach _ _ = error "each takes two arguments"
 
 -- zipWith --
 compileZipWith :: Maybe InstDecl -> [T.Exp] -> F.Exp
-compileZipWith (Just([tp1,tp2,rtp],[rk])) [kernel,a1,a2] = makeZipWith rk kernel (compileExp a1) (compileExp a2)
+compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = makeZipWith rk orig_kernel (compileExp orig_a1) (compileExp orig_a2)
   where
   makeZipWith r kernel a1 a2
     | r == 1 = Map (compileKernel kernel (makeBTp rtp)) (FunCall "zip" [a1,a2])
@@ -518,19 +550,20 @@ compileZipWith _ _ = error "zipWith takes 3 arguments"
 -- reduce --
 compileReduce :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReduce Nothing _ = error "Need instance declaration for reduce"
-compileReduce (Just ([tp],[rank]))[kernel,id,array] = makeReduce tp rank kernelExp (compileExp id) (compileExp array)
+compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] =
+  makeReduce orig_tp orig_rank kernelExp (compileExp v) (compileExp array)
   where
-  mkType (tp,rank) = makeArrTp (makeBTp tp) rank
-  kernelExp = compileKernel kernel (makeBTp tp)
+  kernelExp = compileKernel orig_kernel (makeBTp orig_tp)
   makeReduce :: BType -> Integer -> Kernel -> F.Exp -> F.Exp -> F.Exp
-  makeReduce tp rank kernel idExp arrayExp
-    | rank == 0 = Reduce kernel idExp arrayExp
-    | otherwise = Map (F.Fn (mkType(tp,rank-1)) [(mkType(tp,rank),"x")] (makeReduce tp (rank-1) kernel idExp (F.Var "x"))) arrayExp
+  makeReduce tp r kernel idExp arrayExp
+    | r == 0 = Reduce kernel idExp arrayExp
+    | otherwise = Map (F.Fn (mkType(tp,r-1)) [(mkType(tp,r),"x")] (makeReduce tp (r-1) kernel idExp (F.Var "x"))) arrayExp
 compileReduce _ _ = error "reduce needs 3 arguments"
 
 
 -- operators that are 1:1  --
 -- (library functions) --
+idFuns :: [String]
 idFuns = ["negi",
           "negd",
           "absi",
@@ -549,7 +582,8 @@ idFuns = ["negi",
           "neqd",
           "resi"]
 
--- operators that are 1:1 with Futhark functions -- 
+-- operators that are 1:1 with Futhark functions --
+convertFun :: String -> Maybe String
 convertFun fun = case fun of
   "i2d"    -> Just "f32"
   "catV"   -> Just "concat"
@@ -565,6 +599,7 @@ convertFun fun = case fun of
 
 
 -- binary operators --
+convertBinOp :: String -> Maybe Operator
 convertBinOp op = case op of
   "addi" -> Just F.Plus
   "addd" -> Just F.Plus

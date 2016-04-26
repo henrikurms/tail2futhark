@@ -29,6 +29,7 @@ data Type
 scalar :: BType -> Type
 scalar b = ArrT b (R 0)
 
+int, double :: Type
 int = scalar IntT
 double = scalar DoubleT
 
