@@ -1,9 +1,10 @@
 -- | Originally from APLAcc by Michael Budde
 module Tail2Futhark.TAIL.Parser (parseFile, parseString) where
 
+import Control.Applicative
 import System.IO (Handle, hGetContents)
-import Control.Monad (liftM, liftM2, void)
-import Text.Parsec hiding (Empty)
+import Control.Monad (void)
+import Text.Parsec hiding (Empty, (<|>))
 import Text.Parsec.String
 import qualified Text.Parsec.Token as Token
 
@@ -80,17 +81,17 @@ expr = opExpr
    <?> "expression"
 
 valueExpr :: Parser Exp
-valueExpr = try (liftM D $ lexeme float)
-         <|> liftM I (lexeme decimal)
+valueExpr = try (D <$> lexeme float)
+         <|> I <$> lexeme decimal
          <|> try (reserved "inf" >> return Inf)
-         <|> (char '-' >> liftM Neg valueExpr)
-         <|> liftM C charlit
-         <|> liftM B ((reserved "tt" >> return True) <|> (reserved "ff" >> return False))
-         <|> liftM Var identifier
+         <|> (char '-' >> Neg <$> valueExpr)
+         <|> C <$> charlit
+         <|> B <$> ((reserved "tt" >> return True) <|> (reserved "ff" >> return False))
+         <|> Var <$> identifier
          <?> "number or identifier"
 
 arrayExpr :: Parser Exp
-arrayExpr = liftM Vc $ brackets (sepBy (opExpr <|> valueExpr) comma)
+arrayExpr = Vc <$> brackets (sepBy (opExpr <|> valueExpr) comma)
 
 letExpr :: Parser Exp
 letExpr =
@@ -142,13 +143,13 @@ typeExpr = arrayType <|> vectorType <?> "type"
 --  sepBy1 (arrayType <|> vectorType <?> "type") (symbol "->")
 
 arrayType :: Parser Type
-arrayType = liftM2 ArrT (brackets basicType) rank
+arrayType = ArrT <$> brackets basicType <*> rank
 
 -- vectortype as replacement for shapeType 
 vectorType :: Parser Type
-vectorType = liftM2 VecT (angles basicType) rank
-         <|> (try (symbol "SV") >> parens (do {t <- basicType ; comma ; r <- rank ; return $ SV t r}))
-         <|> (try (symbol "S") >> parens (do {t <- basicType ; comma ; r <- rank ; return $ S t r }))
+vectorType = VecT <$> angles basicType <*> rank
+         <|> (try (symbol "SV") >> parens (SV <$> basicType <* comma <*> rank))
+         <|> (try (symbol "S") >> parens (S <$> basicType <* comma <*> rank))
          <?> "vector type"
 
 --shapeType :: Parser Type
@@ -159,7 +160,7 @@ vectorType = liftM2 VecT (angles basicType) rank
 --  where shape name con = try (symbol name) >> liftM con (parens rank)
 
 rank :: Parser Rank
-rank = liftM R (lexeme decimal)
+rank = R <$> lexeme decimal
    -- <|> (liftM Rv identifier)  Unsupported
    <?> "rank"
 
@@ -168,7 +169,7 @@ basicType = (reserved "int" >> return IntT)
         <|> (reserved "double" >> return DoubleT)
         <|> (reserved "bool" >> return BoolT)
         <|> (reserved "char" >> return CharT)
-        <|> (char '\'' >> many1 alphaNum  >>= return . Btyv)
+        <|> (char '\'' >> Btyv <$> many1 alphaNum)
         <?> "basic type"
 
 -------------------
