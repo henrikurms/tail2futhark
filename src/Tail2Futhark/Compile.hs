@@ -590,7 +590,7 @@ convertFun fun = case fun of
   "ln"     -> Just "log32"
   "expd"   -> Just "exp32"
   "notb"   -> Just "!"
-  "floor"  -> Just "trunc"
+  "floor"  -> Just "int"
   "mem"    -> Just "copy"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
