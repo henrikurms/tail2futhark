@@ -1,2 +1,0 @@
-let v0:<int>2 = [4,3] in
-i2d(reduce{[int],[0]}(addi,0,eachV{[int,int],[2]}(fn v1:[int]0 => addi(v1,8),v0)))

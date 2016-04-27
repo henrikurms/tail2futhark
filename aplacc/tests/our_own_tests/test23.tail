@@ -1,1 +1,0 @@
-reduce{[double],[0]}(addd,0.00,cat{[double],[1]}([3.20,i2d(4)],eachV{[int,double],[2]}(i2d,[8,3])))

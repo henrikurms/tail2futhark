@@ -1,3 +1,0 @@
-let v1:[double]2 = reshape{[double],[1,2]}([3,2],snoc{[double],[0]}(each{[int,double],[1]}(i2d,iotaSh(5)),3.20)) in
-let v2:[double]2 = transp{[double],[2]}(v1) in
-reduce{[double],[0]}(muld,1.00,reduce{[double],[1]}(addd,0.00,v2))

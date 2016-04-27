@@ -1,4 +1,0 @@
-let v0:Sh(15) = [9,8,6,8,7,4,4,3,2,2,1,2,4,5,6] in
-let v1:Sh(15) = v0 in
-let v4:Sh(16) = consSh(0,v1) in
-reduce{[double],[0]}(addd,0.00,each{[double,double],[1]}(fn v12:[double]0 => maxd(i2d(~50),v12),each{[double,double],[1]}(fn v11:[double]0 => mind(i2d(50),v11),each{[double,double],[1]}(fn v10:[double]0 => muld(i2d(50),v10),zipWith{[double,double,double],[1]}(divd,each{[int,double],[1]}(i2d,drop{[int],[1]}(1,zipWith{[int,int,int],[1]}(subi,v4,rotateSh(~1,v4)))),each{[double,double],[1]}(fn v3:[double]0 => addd(0.01,v3),each{[int,double],[1]}(i2d,v1)))))))

@@ -1,3 +1,0 @@
-let v0:<int>52 = catV{[int],[30,22]}(iotaV(30),iotaV(22)) in
-let v2:<int>63 = catV{[int],[11,52]}([b2iV(tt),2,23,3,4,5,344,6,7,7,5],eachV{[int,int],[52]}(fn v1:[int]0 => addi(5,v1),v0)) in
-i2d(reduce{[int],[0]}(fn v4:[int]0 => fn v5:[int]0 => maxi(v5,v4),0,dropV{[int],[60]}(3,eachV{[int,int],[63]}(fn v3:[int]0 => addi(5,v3),v2))))

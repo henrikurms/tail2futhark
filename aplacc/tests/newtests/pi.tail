@@ -1,3 +1,0 @@
-let v0:S(int,10000) = 10000 in
-let v10:[double]0 = muld(i2d(4),divd(i2d(reduce{[int],[0]}(addi,0,each{[bool,int],[1]}(b2i,each{[double,bool],[1]}(fn v6:[double]0 => gtd(i2d(b2iV(tt)),v6),each{[double,double],[1]}(fn v5:[double]0 => powd(v5,divd(1.00,i2d(2))),reduce{[double],[1]}(addd,0.00,each{[double,double],[2]}(fn v2:[double]0 => powd(v2,i2d(2)),each{[bool,double],[2]}(fn v1:[bool]0 => roll(b2i(v1)),reshape{[bool],[1,2]}([v0,2],[ff]))))))))),i2d(v0))) in
-i2d(b2i(gtd(0.10,absd(subd(v10,muld(i2d(b2iV(tt)),pi))))))

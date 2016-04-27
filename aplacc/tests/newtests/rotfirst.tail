@@ -1,5 +1,0 @@
-let v0:[int]2 = reshape{[int],[1,2]}([3,4],iotaV(12)) in
-let v1:[int]2 = transp{[int],[2]}(cat{[int],[2]}(transp{[int],[2]}(drop{[int],[2]}(b2iV(tt),v0)),transp{[int],[2]}(take{[int],[2]}(b2iV(tt),v0)))) in
-let v4:[int]2 = prArrI(each{[int,int],[2]}(fn v3:[int]0 => mini(9,v3),each{[int,int],[2]}(fn v2:[int]0 => subi(v2,b2iV(tt)),v1))) in
-let v7:[int]2 = prArrI(each{[int,int],[2]}(fn v6:[int]0 => mini(9,v6),each{[int,int],[2]}(fn v5:[int]0 => subi(v5,b2iV(tt)),vrotate{[int],[2]}(b2iV(tt),v0)))) in
-i2d(b2iV(ff))

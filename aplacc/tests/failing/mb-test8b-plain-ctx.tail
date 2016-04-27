@@ -1,3 +1,0 @@
-let a:[int]0 = firstSh(iotaSh(5)) in
-let b:[int]1 = [a] in
-i2d(firstSh(b))

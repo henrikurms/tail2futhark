@@ -1,8 +1,0 @@
-let v0:[int]1 = readIntVecFile(['r','e','a','d','i','n','t','v','e','c','f','i','l','e','.','t','x','t']) in
-let v1:[char]1 = prArrC(['N','u','m','b','e','r',' ','o','f',' ','i','n','t','e','g','e','r','s',' ','i','n',' ','f','i','l','e',':']) in
-let v2:[int]0 = prSclI(first{[int],[1]}(shape{[int],[1]}(v0))) in
-let v3:[char]1 = prArrC(['F','i','l','e',' ','c','o','n','t','e','n','t',':']) in
-let v4:[int]1 = prArrI(v0) in
-let v5:[char]1 = prArrC(['F','i','l','e',' ','c','o','n','t','e','n','t',' ','r','e','v','e','r','s','e','d',':']) in
-let v6:[int]1 = prArrI(transp{[int],[1]}(vreverse{[int],[1]}(transp{[int],[1]}(v0)))) in
-i2d(b2iV(ff))

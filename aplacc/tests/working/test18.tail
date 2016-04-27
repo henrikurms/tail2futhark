@@ -1,3 +1,0 @@
-let v0:[int]2 = reshape{[int],[1,2]}([3,2],iotaSh(5)) in
-let v3:[int]1 = reduce{[int],[1]}(muli,1,transp{[int],[2]}(v0)) in
-i2d(reduce{[int],[0]}(addi,0,v3))

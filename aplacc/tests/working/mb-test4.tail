@@ -1,2 +1,0 @@
-let v0:[int]0 = 5 in
-i2d(addi(v0, reduce{[int], [0]}(addi, v0, [v0])))

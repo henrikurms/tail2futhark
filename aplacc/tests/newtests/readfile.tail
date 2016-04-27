@@ -1,8 +1,0 @@
-let v0:[char]1 = readFile(['r','e','a','d','f','i','l','e','.','t','x','t']) in
-let v1:[char]1 = prArrC(['F','i','l','e',' ','s','i','z','e',':']) in
-let v2:[int]0 = prSclI(first{[int],[1]}(shape{[char],[1]}(v0))) in
-let v3:[char]1 = prArrC(['F','i','l','e',' ','c','o','n','t','e','n','t',':']) in
-let v4:[char]1 = prArrC(v0) in
-let v5:[char]1 = prArrC(['F','i','l','e',' ','c','o','n','t','e','n','t',' ','r','e','v','e','r','s','e','d',':']) in
-let v6:[char]1 = prArrC(transp{[char],[1]}(vreverse{[char],[1]}(transp{[char],[1]}(v0)))) in
-i2d(b2iV(ff))

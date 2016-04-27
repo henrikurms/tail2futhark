@@ -1,2 +1,0 @@
-let v0:[int]1 = [1,2,3] in
-reduce{[int], [0]}(addi, shape{[int],[1]}(v0), v0)

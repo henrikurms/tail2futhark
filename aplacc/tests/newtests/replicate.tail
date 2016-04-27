@@ -1,3 +1,0 @@
-let v0:<int>4 = iotaV(4) in
-let v1:[int]1 = replicate(0,v0,v0) in
-i2d(reduce{[int],[0]}(addi,0,v1))

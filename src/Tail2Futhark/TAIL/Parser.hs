@@ -1,16 +1,15 @@
-module APLAcc.TAIL.Parser (parseFile) where
+-- | Originally from APLAcc by Michael Budde
+module Tail2Futhark.TAIL.Parser (parseFile, parseString) where
 
 import System.IO (Handle, hGetContents)
-import Control.Monad (liftM, liftM2)
-import Data.Char (isSpace)
-import Data.Either (partitionEithers)
+import Control.Monad (liftM, liftM2, void)
 import Text.Parsec hiding (Empty)
 import Text.Parsec.String
-import Text.Parsec.Expr
-import Text.Parsec.Pos
 import qualified Text.Parsec.Token as Token
 
-import APLAcc.TAIL.AST
+import Prelude
+
+import Tail2Futhark.TAIL.AST
 
 
 parseFile :: Handle -> String -> IO Program
@@ -21,6 +20,7 @@ parseFile handle filename =
        Right r -> return r
 
 
+tailDef :: Token.LanguageDef u
 tailDef = Token.LanguageDef {
                 Token.commentStart     = "(*"
               , Token.commentEnd       = "*)"
@@ -35,34 +35,31 @@ tailDef = Token.LanguageDef {
               , Token.caseSensitive    = True
   }
 
+lexer :: Token.TokenParser u
 lexer = Token.makeTokenParser tailDef
+
+charlit :: Parser Char
+identifier :: Parser String
+reserved, symbol :: String -> Parser ()
+parens, brackets, angles, braces, lexeme :: Parser a -> Parser a
+decimal :: Parser Integer
+float :: Parser Double
+whitespace, comma, colon :: Parser ()
 
 identifier = Token.identifier lexer
 reserved   = Token.reserved   lexer
-reservedOp = Token.reservedOp lexer
-stringlit  = Token.stringLiteral lexer
 charlit    = Token.charLiteral lexer
 parens     = Token.parens     lexer
 brackets   = Token.brackets   lexer
 angles     = Token.angles     lexer
 braces     = Token.braces     lexer
-integer    = Token.integer    lexer
-semi       = Token.semi       lexer
-comma      = Token.comma      lexer
-colon      = Token.colon      lexer
-symbol     = Token.symbol     lexer
 whitespace = Token.whiteSpace lexer
 decimal    = Token.decimal    lexer
 float      = Token.float      lexer
 lexeme     = Token.lexeme     lexer
-
-withPrefix :: Parser a -> Parser b -> (a -> b -> b) -> Parser b
-withPrefix pre p f =
-  do x <- optionMaybe pre
-     y <- p
-     return $ case x of
-       Just x' -> f x' y
-       Nothing -> y
+comma      = void $ Token.comma  lexer
+colon      = void $ Token.colon  lexer
+symbol     = void . Token.symbol lexer
 
 program :: Parser Program
 program =
@@ -114,7 +111,9 @@ instanceDecl = braces $
 
 opExpr :: Parser Exp
 opExpr =
-  do ident <- try $ do { i <- identifier; lookAhead $ oneOf "({"; return i }
+  do ident <- try $ do i <- identifier
+                       void $ lookAhead $ oneOf "({"
+                       return i
      instDecl <- optionMaybe instanceDecl
      args <- parens $ sepBy expr comma
      return $ Op ident instDecl args

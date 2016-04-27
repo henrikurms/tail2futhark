@@ -1,4 +1,5 @@
-module APLAcc.TAIL.AST where
+-- | Originally from APLAcc by Michael Budde
+module Tail2Futhark.TAIL.AST where
 
 type Ident = String
 

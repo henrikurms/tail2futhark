@@ -1,6 +1,6 @@
 module Tail2Futhark.Compile (compile, getType) where
 
-import APLAcc.TAIL.AST as T -- the TAIL AST
+import Tail2Futhark.TAIL.AST as T -- the TAIL AST
 import Tail2Futhark.Futhark.AST as F -- the futhark AST
 import Tail2Futhark.Futhark.Pretty as F -- the futhark AST
 

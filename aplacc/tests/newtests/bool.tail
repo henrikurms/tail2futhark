@@ -1,2 +1,0 @@
-let v0:[bool]0 = lti(3,4) in
-i2d(b2i(v0))

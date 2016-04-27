@@ -1,2 +1,0 @@
-let v2:[int]0 = reduce{[int],[0]}(addi,0,[b2iV(tt),2,3]) in
-i2d(v2)

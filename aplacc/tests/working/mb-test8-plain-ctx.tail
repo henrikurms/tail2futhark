@@ -1,1 +1,0 @@
-i2d(reduce{[int],[0]}(addi,0,iota(addi(5,5))))

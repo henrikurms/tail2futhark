@@ -1,9 +1,0 @@
-let v0:[int]2 = reshape{[int],[1,2]}([3,2],iotaV(5)) in
-let v1:[int]2 = transp{[int],[2]}(v0) in
-let v2:<int>2 = shape{[int],[2]}(v1) in
-let v3:S(bool,1) = tt in
-let v4:<bool>2 = [v3,ff] in
-let v5:<int>1 = dropV{[int],[1]}(b2iV(v3),v2) in
-let v6:<int>2 = shape{[int],[2]}(v0) in
-let v7:<int>3 = catV{[int],[1,2]}(v5,v6) in
-i2d(reduce{[int],[0]}(addi,0,v7))

@@ -1,3 +1,0 @@
-let v10:[int]1 = prArrI(power(fn v6:[int]1 => let v7:[int]1 = v6 in
-                 snoc{[int],[0]}(rav(v7),reduce{[int],[0]}(addi,0,takeV{[int],[2]}(~2,rav(v7)))),10,eachV{[bool,int],[2]}(b2i,[ff,tt]))) in
-i2d(b2iV(ff))

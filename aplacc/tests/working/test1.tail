@@ -1,2 +1,0 @@
-let v0:Sh(3) = [1,2,3] in
-i2d(reduce{[int],[0]}(addi,0,v0))

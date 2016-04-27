@@ -4,7 +4,7 @@ import System.IO
 import System.Exit
 import System.Console.GetOpt
 import System.Environment
-import APLAcc.TAIL.Parser (parseFile)
+import Tail2Futhark.TAIL.Parser (parseFile)
 import Tail2Futhark.Futhark.Pretty (prettyPrint)
 import Tail2Futhark.Compile (compile)
 import Options

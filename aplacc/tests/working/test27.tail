@@ -1,2 +1,0 @@
-let v0:Sh(1) = takeSh(~1,[12,2,3,4,5]) in
-i2d(reduce{[int],[0]}(addi,0,v0))

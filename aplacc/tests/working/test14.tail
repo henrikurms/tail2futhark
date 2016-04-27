@@ -1,2 +1,0 @@
-let v0:[int]0 = subi(7,3) in
-i2d(v0)

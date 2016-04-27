@@ -1,4 +1,0 @@
-let v2:[int]1 = zipWith{[int,int,int],[1]}(resi,[3,~5,6,~3],[29,43,~14,~14]) in
-let v3:[int]1 = prArrI(v2) in
-let v6:[int]0 = reduce{[int],[0]}(addi,0,v2) in
-i2d(v6)

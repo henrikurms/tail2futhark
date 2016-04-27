@@ -1,3 +1,0 @@
-let v0:Sh(1000) = iotaSh(1000) in
-let v3:Sh(1001) = consSh(0,v0) in
-reduce{[double],[0]}(addd,0.00,each{[double,double],[1]}(fn v11:[double]0 => maxd(i2d(~50),v11),each{[double,double],[1]}(fn v10:[double]0 => mind(i2d(50),v10),each{[double,double],[1]}(fn v9:[double]0 => muld(i2d(50),v9),zipWith{[double,double,double],[1]}(divd,each{[int,double],[1]}(i2d,drop{[int],[1]}(1,zipWith{[int,int,int],[1]}(subi,v3,rotateSh(~1,v3)))),each{[double,double],[1]}(fn v2:[double]0 => addd(0.01,v2),each{[int,double],[1]}(i2d,v0)))))))

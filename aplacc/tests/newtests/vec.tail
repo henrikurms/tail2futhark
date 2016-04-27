@@ -1,8 +1,0 @@
-let v0:S(int,8) = 8 in
-let v1:<int>2 = [2,v0] in
-let v2:<int>2 = prArrI(v1) in
-let v3:S(int,8) = 8 in
-let v4:[int]0 = addi(5,v3) in
-let v5:<int>3 = [addi(v4,addi(4,v3)),v4,v3] in
-let v6:<int>3 = prArrI(v5) in
-i2d(b2iV(ff))

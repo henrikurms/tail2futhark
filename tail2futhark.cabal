@@ -17,7 +17,7 @@ executable tail2futhark
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  hs-source-dirs:      src,aplacc/src
+  hs-source-dirs:      src
   build-depends:       base >= 4 && < 5,
                        parsec,
                        pretty

@@ -1,3 +1,0 @@
-let v0:[int]0 = 5 in
-let v1:[double]1 = each{[int,double],[1]}(i2d, [v0]) in
-reduce{[double],[0]}(addd, 0.0, v1)
