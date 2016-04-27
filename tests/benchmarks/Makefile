@@ -28,4 +28,4 @@ fut_%: %.fut
 	$(FUTHARKC) -o $@ $<
 
 clean:
-	rm *.fut *.tail tail_* fut_*
+	rm -f *.fut *.tail tail_* fut_*
