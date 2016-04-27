@@ -65,7 +65,9 @@ ppSOAC1 v k e = text v <> parens (ppKernel k <> comma <> ppExp e)
 ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
 ppSOAC2 v k e1 e2 = text v <> parens (ppKernel k <> comma <> ppExp e1 <> comma <> ppExp e2)
 
-ppKernel (Fn tp args body) = text "fn" <+> ppr tp <+> (commaList . map ppArg $ args) <+> text "=>" <+> ppExp body
+ppKernel (Fn tp args body) =
+  text "fn" <+> ppr tp <+> (commaList . map ppArg $ args) <+> text "=>" </>
+  ppExp body
 ppKernel (Fun ident []) = text ident
 ppKernel (Fun ident exps) = text ident <+> (commaList . map ppExp $ exps)
 ppKernel (Op op) = ppOp op
