@@ -14,7 +14,7 @@ import Options (Options(..))
 --------------------------
 
 compile :: Options -> T.Program -> F.Program
-compile opts e = includes ++ [(F32T, "main", signature, compileExp rootExp)]
+compile opts e = F.Program $ includes ++ [F.FunDecl F32T "main" signature $ compileExp rootExp]
   where includes = if includeLibs opts then builtins else []
         (signature, rootExp) = compileReads e
 
@@ -143,10 +143,6 @@ makeTransp2 = F.FunCall2 "rearrange"
 -- GENERAL AUX FUNCTIONS --
 ---------------------------
 
--- make string representation of Futhark type --
-showTp :: F.Type -> String
-showTp  = render . F.ppType
-
 -- make Futhark basic type from string representation --
 readBType :: String -> F.Type
 readBType tp = case tp of
@@ -177,7 +173,7 @@ zero F.IntT = Constant (Int 0)
 zero F.F32T = Constant (F32 0)
 zero F.F64T = Constant (F64 0)
 zero F.BoolT = Constant (Bool False)
-zero tp = error $ "take for type " ++ showTp tp ++ " not supported"
+zero tp = error $ "take for type " ++ pretty tp ++ " not supported"
 
 -- make Futhark function expression from ident
 makeKernel :: String -> Kernel
@@ -233,53 +229,54 @@ builtins = [boolToInt,negi,negd,absi,absd,mini,mind,signd,signi,maxi,maxd,eqb,xo
         ++ dropFuns
 
 boolToInt :: FunDecl
-boolToInt = (F.IntT, "boolToInt", [(F.BoolT, "x")], F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0)))
+boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
+  F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
 
 negi, negd, absi, absd, mini, mind, signd, signi,
   maxi, maxd, nandb, norb, eqb, xorb, neqi, neqd, resi :: FunDecl
 
-negi = (F.IntT, "negi", [(F.IntT,"x")], F.Neg (F.Var "x"))
+negi = F.FunDecl F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
 
-negd = (F.F32T, "negd", [(F.F32T,"x")], F.Neg (F.Var "x"))
+negd = F.FunDecl F.F32T "negd" [(F.F32T,"x")] $ F.Neg (F.Var "x")
 
-absi = (F.IntT, "absi", [(F.IntT,"x")], absExp (F.Var "x"))
+absi = F.FunDecl F.IntT "absi" [(F.IntT,"x")] $ absExp (F.Var "x")
 
-absd = (F.F32T, "absd", [(F.F32T,"x")], absFloatExp (F.Var "x"))
+absd = F.FunDecl F.F32T "absd" [(F.F32T,"x")] $ absFloatExp (F.Var "x")
 
-mini = (F.IntT, "mini", [(F.IntT, "x"), (F.IntT, "y")], minExp (F.Var "x") (F.Var "y"))
+mini = F.FunDecl F.IntT "mini" [(F.IntT, "x"), (F.IntT, "y")] $ minExp (F.Var "x") (F.Var "y")
 
-mind = (F.F32T, "mind", [(F.F32T, "x"), (F.F32T, "y")], minExp (F.Var "x") (F.Var "y"))
+mind = F.FunDecl F.F32T "mind" [(F.F32T, "x"), (F.F32T, "y")] $ minExp (F.Var "x") (F.Var "y")
 
-signd = (F.IntT, "signd", [(F.F32T, "x")], signdExp (F.Var "x"))
+signd = F.FunDecl F.IntT "signd" [(F.F32T, "x")] $ signdExp (F.Var "x")
 
-signi = (F.IntT, "signi", [(F.IntT, "x")], signiExp (F.Var "x"))
+signi = F.FunDecl F.IntT "signi" [(F.IntT, "x")] $ signiExp (F.Var "x")
 
-maxi = (F.IntT, "maxi", [(F.IntT, "x"), (F.IntT, "y")], maxExp (F.Var "x") (F.Var "y"))
+maxi = F.FunDecl F.IntT "maxi" [(F.IntT, "x"), (F.IntT, "y")] $ maxExp (F.Var "x") (F.Var "y")
 
-maxd = (F.F32T, "maxd", [(F.F32T, "x"), (F.F32T, "y")], maxExp (F.Var "x") (F.Var "y"))
+maxd = F.FunDecl F.F32T "maxd" [(F.F32T, "x"), (F.F32T, "y")] $ maxExp (F.Var "x") (F.Var "y")
 
-nandb = (F.BoolT, "nandb", [(F.BoolT, "x"), (F.BoolT, "y")], nandExp (F.Var "x") (F.Var "y"))
+nandb = F.FunDecl F.BoolT "nandb" [(F.BoolT, "x"), (F.BoolT, "y")] $ nandExp (F.Var "x") (F.Var "y")
 
-norb = (F.BoolT, "norb", [(F.BoolT, "x"), (F.BoolT, "y")], norExp (F.Var "x") (F.Var "y"))
+norb = F.FunDecl F.BoolT "norb" [(F.BoolT, "x"), (F.BoolT, "y")] $ norExp (F.Var "x") (F.Var "y")
 
-eqb = (F.BoolT, "eqb", [(F.BoolT, "x"), (F.BoolT, "y")], boolEquals (F.Var "x") (F.Var "y"))
+eqb = F.FunDecl F.BoolT "eqb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolEquals (F.Var "x") (F.Var "y")
   where boolEquals e1 e2 = BinApp F.LogicOr (norExp e1 e2) (BinApp F.LogicAnd e1 e2)
 
-xorb = (F.BoolT, "xorb", [(F.BoolT, "x"), (F.BoolT, "y")], boolXor (F.Var "x") (F.Var "y"))
+xorb = F.FunDecl F.BoolT "xorb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolXor (F.Var "x") (F.Var "y")
   where boolXor e1 e2 = BinApp F.LogicAnd (nandExp e1 e2) (BinApp F.LogicOr e1 e2)
 
-neqi = (F.BoolT, "neqi", [(F.IntT, "x"), (F.IntT, "y")], notEq (F.Var "x") (F.Var "y"))
+neqi = F.FunDecl F.BoolT "neqi" [(F.IntT, "x"), (F.IntT, "y")] $ notEq (F.Var "x") (F.Var "y")
 
-neqd = (F.BoolT, "neqd", [(F.F32T, "x"), (F.F32T, "y")], notEq (F.Var "x") (F.Var "y"))
+neqd = F.FunDecl F.BoolT "neqd" [(F.F32T, "x"), (F.F32T, "y")] $ notEq (F.Var "x") (F.Var "y")
 
 notEq :: F.Exp -> F.Exp -> F.Exp
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
-resi = (F.IntT, "resi", [(F.IntT, "x"),(F.IntT, "y")], resiExp (F.Var "x") (F.Var "y"))
+resi = F.FunDecl F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
 
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
-makeFun args name body tp = (ArrayT tp,name ++ "_" ++ showTp tp,args,body)
+makeFun args name body tp = F.FunDecl (ArrayT tp) (name ++ "_" ++ pretty tp) args body
 
 stdArgs :: F.Type -> [(F.Type, String)]
 stdArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
@@ -461,14 +458,14 @@ compileCat _ _ = error "compileCat: invalid arguments"
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileTakeV (Just([tp],_)) [len,e] = F.FunCall fname [compileExp len,compileExp e]
-    where fname = "take1_" ++ showTp (makeBTp tp)
+    where fname = "take1_" ++ pretty (makeBTp tp)
 compileTakeV Nothing _ = error "Need instance declaration for takeV"
 compileTakeV _ _ = error "TakeV needs 2 arguments"
 
 -- dropV --
 compileDropV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileDropV (Just([tp],_)) [len,e] = F.FunCall fname [compileExp len,compileExp e]
-    where fname = "drop1_" ++ showTp (makeBTp tp)
+    where fname = "drop1_" ++ pretty (makeBTp tp)
 compileDropV Nothing _ = error "Need instance declaration for dropV"
 compileDropV _ _ = error "DropV needs 2 arguments"
 
@@ -477,7 +474,7 @@ compileTake :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileTake (Just([tp],[r])) [len,e] = F.FunCall2 "reshape" dims $ F.FunCall fname [sizeProd,resh]
     where dims = absExp (compileExp len) : tail shape
           sizeProd = multExp $ compileExp len : tail shape
-          fname = "take1_" ++ showTp (makeBTp tp)
+          fname = "take1_" ++ pretty (makeBTp tp)
           resh = F.FunCall2 "reshape" [multExp shape] (compileExp e)
           shape = makeShape r [e]
 compileTake Nothing _args = error "Need instance declaration for take"
@@ -489,7 +486,7 @@ compileDrop (Just([tp],[r])) [len,e] = F.FunCall2 "reshape" dims $ F.FunCall fna
     where dims = maxExp (Constant (Int 0)) (F.BinApp F.Minus (F.FunCall "size" [Constant (Int 0), compileExp e])  (absExp (compileExp len))) : tail shape
           resh = F.FunCall2 "reshape" [multExp shape] (compileExp e)
           sizeProd = multExp $ compileExp len : tail shape
-          fname = "drop1_" ++ showTp (makeBTp tp)
+          fname = "drop1_" ++ pretty (makeBTp tp)
           shape = makeShape r [e]
 compileDrop _ _ = error "compileDrop: invalid arguments"
 
@@ -500,7 +497,7 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = F.FunCall2 "reshape" dimsList
                    | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
                    | otherwise = error $ "reshape needs literal or variable as shape argument, not " ++ show dimsExp
           dimsExp = compileExp dims
-          fname = "reshape1_" ++ showTp (makeBTp tp)
+          fname = "reshape1_" ++ pretty (makeBTp tp)
           dimProd = multExp dimsList
           resh = F.FunCall2 "reshape" [shapeProd] (compileExp array)
           shapeProd = multExp (makeShape r1 [array])

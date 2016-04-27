@@ -6,7 +6,7 @@ import System.Console.GetOpt
 import System.Environment
 import Tail2Futhark.TAIL.Parser (parseFile)
 import Tail2Futhark.TAIL.AST (Program)
-import Tail2Futhark.Futhark.Pretty (prettyPrint)
+import Tail2Futhark.Futhark.Pretty (pretty)
 import Tail2Futhark.Compile (compile)
 import Options
 
@@ -18,8 +18,8 @@ main = do
   checkErrors errors
   program <- run args
   case outputFile opts of
-    Nothing -> putStrLn . prettyPrint . compile opts $ program
-    Just  f -> withFile f WriteMode (\h -> hPutStr h $ prettyPrint . compile opts $ program)
+    Nothing -> putStrLn . pretty . compile opts $ program
+    Just  f -> withFile f WriteMode (\h -> hPutStr h $ pretty . compile opts $ program)
 
 
 checkErrors :: [String] -> IO ()

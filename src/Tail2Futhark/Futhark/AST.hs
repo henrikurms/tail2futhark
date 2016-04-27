@@ -1,8 +1,8 @@
 module Tail2Futhark.Futhark.AST where
 
-type Program = [FunDecl]
+newtype Program = Program [FunDecl]
 
-type FunDecl = (Type, Ident, [Arg], Exp)
+data FunDecl = FunDecl Type Ident [Arg] Exp
 
 data Type = IntT
           | Int8T
