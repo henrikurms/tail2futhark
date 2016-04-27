@@ -15,14 +15,14 @@ import Options (Options(..))
 
 compile :: Options -> T.Program -> F.Program
 compile opts e = includes ++ [(F32T, "main", signature, compileExp rootExp)]
-  where includes = (if includeLibs opts then builtins else [])
+  where includes = if includeLibs opts then builtins else []
         (signature, rootExp) = compileReads e
 
 -------------------------
 -- HELPER FUNCTIONS --
 -------------------------
 
-compileReads :: T.Exp -> ([(F.Type, [Char])], T.Exp)
+compileReads :: T.Exp -> ([(F.Type, String)], T.Exp)
 compileReads (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) = ((F.ArrayT F.IntT , "t_" ++ v):sig,e')
   where (sig,e') = compileReads e2
 compileReads (T.Let v  _ (T.Op "readDoubleVecFile" _ _) e2) = ((F.ArrayT F.F32T , "t_" ++ v):sig,e')
@@ -73,7 +73,8 @@ resiExp y x = F.IfThenElse F.Indent (y `eq` izero) x $ F.IfThenElse F.Indent con
 -- reshape1 --
 -- create split part of reshape1 function -- 
 mkSplit :: F.Ident -> F.Ident -> F.Exp -> F.Exp -> F.Exp -> F.Exp
-mkSplit id1 id2 dims e retExp = F.Let Inline (TouplePat [(Ident id1),(Ident id2)]) (F.FunCall2 "split" [dims] e) retExp
+mkSplit id1 id2 dims e =
+  F.Let Inline (TouplePat [Ident id1,Ident id2]) (F.FunCall2 "split" [dims] e)
 
 makeLets :: [(F.Ident, F.Exp)] -> F.Exp -> F.Exp
 makeLets ((v,e) : rest) body = F.Let Indent (Ident v) e (makeLets rest body)
@@ -82,7 +83,7 @@ makeLets [] body = body
 reshape1Body :: F.Type -> F.Exp
 reshape1Body _ = makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split 
   where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
-        desired = (F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size)
+        desired = F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size
         reshapeCall = F.FunCall2 "reshape" [BinApp Mult size len] (F.FunCall "replicate" [len,F.Var "x"])
         size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
         len = F.Var "roundUp"
@@ -115,7 +116,7 @@ takeBody padElement = IfThenElse Indent (izero `less` len) posTake negTake
           size = F.FunCall "size" [izero, F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
-          padding = F.FunCall "replicate" [(BinApp Minus len size), padElement]
+          padding = F.FunCall "replicate" [BinApp Minus len size, padElement]
           posTake = IfThenElse Indent (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse Indent (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
 
@@ -310,7 +311,7 @@ compileExp Inf = Constant (F32 (read "Infinity"))
 compileExp (T.Neg e) = F.Neg (compileExp e)
 compileExp (T.Let v _ e1 e2) = F.Let Indent (Ident ("t_" ++ v)) (compileExp e1) (compileExp e2) -- Let
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
-compileExp (T.Fn _ _ _) = error "Fn not supported"
+compileExp T.Fn{} = error "Fn not supported"
 compileExp (Vc exps) = Array(map compileExp exps)
 
 -- operators --
@@ -346,7 +347,8 @@ compileOpExp ident instDecl args = case ident of
   "snocV" -> compileSnocV instDecl args
   "cons" -> compileCons instDecl args
   "consV" -> compileConsV instDecl args
-  "b2iV" | [T.Var "tt"] <- args -> (Constant (Int 1)) | [T.Var "ff"] <- args -> (Constant (Int 0)) -- | otherwise -> error "only bool literals supported in b2iV"
+  "b2iV" | [T.Var "tt"] <- args -> Constant (Int 1)
+         | [T.Var "ff"] <- args -> Constant (Int 0)
   "idxS" | [T.I 1, i, arr] <- args ->
            F.Index (compileExp arr) [compileExp i]
   _

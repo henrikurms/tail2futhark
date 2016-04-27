@@ -53,10 +53,10 @@ ppExp (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
 ppExp (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
 
 ppSOAC1 :: String -> Kernel -> Exp -> Doc
-ppSOAC1 v k e     = text v <> parens ((ppKernel k) <> comma <> ppExp e)
+ppSOAC1 v k e = text v <> parens (ppKernel k <> comma <> ppExp e)
 
 ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
-ppSOAC2 v k e1 e2 = text v <> parens ((ppKernel k) <> comma <> ppExp e1 <> comma <> ppExp e2)
+ppSOAC2 v k e1 e2 = text v <> parens (ppKernel k <> comma <> ppExp e1 <> comma <> ppExp e2)
 
 ppKernel (Fn tp args body) = text "fn" <+> ppType tp <+> (commaList . map ppArg $ args) <+> text "=>" <+> ppExp body
 ppKernel (Fun ident []) = text ident
