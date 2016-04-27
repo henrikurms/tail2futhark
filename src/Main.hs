@@ -5,6 +5,7 @@ import System.Exit
 import System.Console.GetOpt
 import System.Environment
 import Tail2Futhark.TAIL.Parser (parseFile)
+import Tail2Futhark.TAIL.AST (Program)
 import Tail2Futhark.Futhark.Pretty (prettyPrint)
 import Tail2Futhark.Compile (compile)
 import Options
@@ -21,6 +22,7 @@ main = do
     Just  f -> withFile f WriteMode (\h -> hPutStr h $ prettyPrint . compile opts $ program)
 
 
+checkErrors :: [String] -> IO ()
 checkErrors [] = return ()
 checkErrors errors = putStrLn (concat errors ++ usageInfo "Usage: tail2futhark [options] FILE" options) >> exitFailure
 
@@ -31,5 +33,6 @@ runArgs cmdargs = (opts,args,errors)
   (nonargs,args,errors) = getOpt Permute options cmdargs
   opts = foldl (.) id nonargs defaultOptions -- MAGIC!!!! - our ooption record
 
+run :: [String] -> IO Program
 run [] = putStrLn (usageInfo "Usage: tail2futhark [options] FILE" options) >> exitFailure
 run (f : _) = withFile f ReadMode $ flip parseFile f
