@@ -1,0 +1,20 @@
+language: haskell
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.ghc
+    - $HOME/.cabal
+    - $HOME/.stack
+
+before_install:
+ - export PATH=$HOME/.local/bin:$PATH
+ - ./.travis-setup.sh
+
+install:
+ - stack --no-terminal test --only-dependencies -j 3
+
+script:
+ - stack --no-terminal test --haddock --no-haddock-deps -j 3
+ - stack install
