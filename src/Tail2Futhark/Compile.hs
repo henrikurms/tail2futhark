@@ -191,6 +191,7 @@ makeBTp T.IntT = F.IntT
 makeBTp T.DoubleT = F.F32T -- XXX - we turn doubles into singles!
 makeBTp T.BoolT = F.BoolT
 makeBTp T.CharT = F.Int8T
+makeBTp (T.Btyv v) = error $ "makeBTp: cannot transform type variable " ++ v
 
 -- make Futhark array type from Futhark basic type --
 mkType :: (BType, Integer) -> F.Type
@@ -210,6 +211,7 @@ compileKernel :: T.Exp -> F.Type -> Kernel
 compileKernel (T.Var ident) _ = makeKernel ident
 compileKernel (T.Fn ident tp (T.Fn ident2 tp2 e)) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident),(compileTp tp2,"t_" ++ ident2)] (compileExp e)
 compileKernel (T.Fn ident tp e) rtp = F.Fn rtp [(compileTp tp,"t_" ++ ident)] (compileExp e)
+compileKernel e t = error $ unwords ["compileKernel, invalid args:", show e, show t]
 
 -- AUX for compileKernel --
 compileTp :: T.Type -> F.Type
@@ -368,6 +370,7 @@ compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileSnoc (Just([_],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,e'])
   where e' = F.Array [makeTransp r (compileExp e)]
         arr = makeTransp (r+1) (compileExp a)
+compileSnoc _ _ = error "compileSnoc: invalid arguments"
 
 -- consV --
 compileConsV :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -375,11 +378,13 @@ compileConsV (Just([_],[_])) [e,a] = F.FunCall "concat" [F.Array [compileExp e],
 compileConsV Nothing _ = error "consV needs instance declaration"
 compileConsV _ _ = error "consV take two aguments"
 
+
 -- cons --
 compileCons :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileCons (Just([_],[r])) [e,a] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [e', arr])
   where e' = F.Array [makeTransp r (compileExp e)]
         arr = makeTransp (r+1) (compileExp a)
+compileCons _ _ = error "compileCons: invalid arguments"
 
 -- first --
 compileFirst :: Maybe (t, [Integer]) -> [T.Exp] -> F.Exp
@@ -396,10 +401,15 @@ compileIota _ _ = error "Iota take one argument"
 -- vreverse --
 compileVReverse :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
 compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r (compileExp a)
+compileVReverse _ _ = error "compileVReverse: invalid arguments"
+
 compileReverse :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileReverse (Just([tp],[r])) [a] = makeTransp r $ makeVReverse tp r $ makeTransp r $ compileExp a
+compileReverse _ _ = error "compileReverse: invalid arguments"
+
 compileVReverseV :: Maybe ([BType], [t]) -> [T.Exp] -> F.Exp
 compileVReverseV (Just([tp],[_])) [a] = makeVReverse tp 1 (compileExp a)
+compileVReverseV _ _ = error "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> F.Exp
 makeVReverse tp r a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0), a]])
@@ -437,13 +447,14 @@ makeVRotate tp r i a = F.Let Inline (Ident "a") a $ Map kernelExp (FunCall "iota
 
 -- cat --
 compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
-compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2) 
+compileCat (Just([tp],[r])) [a1,a2] = makeCat tp r (compileExp a1) (compileExp a2)
   where
     makeCat _tp 1 a1' a2' = FunCall "concat" [a1', a2']
     makeCat _tp _r a1' a2' = Map kernelExp (FunCall "zip" [a1', a2'])
       where
         kernelExp = F.Fn (mkType (tp,r-1)) [(mkType (tp,r-1),"x"), (mkType(tp,r-1),"y")] recursiveCall
         recursiveCall = makeCat tp (r-1) (F.Var "x") (F.Var "y")
+compileCat _ _ = error "compileCat: invalid arguments"
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> F.Exp
@@ -478,6 +489,7 @@ compileDrop (Just([tp],[r])) [len,e] = F.FunCall2 "reshape" dims $ F.FunCall fna
           sizeProd = multExp $ compileExp len : tail shape
           fname = "drop1_" ++ showTp (makeBTp tp)
           shape = makeShape r [e]
+compileDrop _ _ = error "compileDrop: invalid arguments"
 
 -- reshape --
 compileReshape :: Maybe ([BType], [Integer]) -> [T.Exp] -> F.Exp
@@ -512,6 +524,7 @@ compileTransp2 _ e = case e of [_,_] -> error "transp2 needs litaral as first ar
 compileShape :: Maybe (t, [Integer]) -> [T.Exp] -> F.Exp
 compileShape (Just(_,[len])) args = F.Array $ makeShape len args
 compileShape Nothing _args = error "Need instance declaration for shape"
+compileShape _ _ = error "compileShape: invalid arguments"
 
 -- firstV --
 compileFirstV :: t -> [T.Exp] -> F.Exp
@@ -523,7 +536,8 @@ compileFirstV _ args
 compileEachV :: Maybe InstDecl -> [T.Exp] -> F.Exp
 compileEachV Nothing _ = error "Need instance declaration for eachV"
 compileEachV (Just ([_intp,outtp],[_len])) [kernel,array] = Map kernelExp (compileExp array)
-   where kernelExp = compileKernel kernel (makeBTp outtp) 
+   where kernelExp = compileKernel kernel (makeBTp outtp)
+compileEachV _ _ = error "compileEachV: invalid arguments"
 
 -- each --
 compileEach :: Maybe InstDecl -> [T.Exp] -> F.Exp
