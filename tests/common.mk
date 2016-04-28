@@ -1,6 +1,6 @@
 # Standard paths and definitions used by all the Makefiles in here.
 
-T2F       ?= ~/gits/tail2futhark/dist/build/tail2futhark/tail2futhark
+T2F       ?= tail2futhark
 FUTHARKC  ?= futhark-c
 APLT_ROOT ?= ~/gits/apltail
 APLT      ?= $(APLT_ROOT)/aplt
