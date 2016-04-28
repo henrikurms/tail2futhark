@@ -20,12 +20,12 @@ cache:
 
 before_install:
  - export PATH=$HOME/.local/bin:$PATH
+ - export APLT_ROOT=$HOME/apltail
  - ./.travis-setup.sh
  - git clone https://github.com/melsman/apltail.git
- - export APLT_ROOT=$HOME/apltail
  # Something nasty happens now.
- - wget http://napoleon.hiperfit.dk/~athas/aplt -O apltail/aplt
- - chmod +x apltail/aplt
+ - wget http://napoleon.hiperfit.dk/~athas/aplt -O $HOME/apltail/aplt
+ - chmod +x $HOME/apltail/aplt
  - wget http://napoleon.hiperfit.dk/~athas/futhark-c -O $HOME/.local/bin/futhark-c
  - chmod +x $HOME/.local/bin/futhark-c
 
