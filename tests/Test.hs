@@ -17,7 +17,7 @@ main = do
 
 makeTest :: FilePath -> IO ()
 makeTest file =
-  void $ system ("make -B -C " ++ dir ++ " " ++ outname)
+  void $ system ("make -s -B -C " ++ dir ++ " " ++ outname ++ "> /dev/null")
   where (dir,name) = splitFileName file
         outname = name `replaceExtension` "out"
 
