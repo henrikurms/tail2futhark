@@ -594,13 +594,16 @@ compileReshape :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileReshape (Just([tp],[r1,r2])) [dims,array] = do
   dimsExp <- compileExp dims
   fname <- ("reshape1_" ++) . pretty <$> makeBTp tp
-  let dimsList | F.Array l <- dimsExp = l
-               | F.Var dimsVar <- dimsExp = map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
-               | otherwise = error $ "reshape needs literal or variable as shape argument, not " ++ show dimsExp
-      dimProd = multExp dimsList
+  dimsList <- case dimsExp of
+    F.Array l ->
+      return l
+    F.Var dimsVar ->
+      return $ map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1]
+    _ ->
+      fail $ "reshape needs literal or variable as shape argument, not " ++ pretty dimsExp
   shapeProd <- multExp <$> makeShape r1 [array]
   resh <- F.FunCall2 "reshape" [shapeProd] <$> compileExp array
-  return $ F.FunCall2 "reshape" dimsList $ F.FunCall fname [dimProd, resh]
+  return $ F.FunCall2 "reshape" dimsList $ F.FunCall fname [multExp dimsList, resh]
 compileReshape Nothing _args = error "Need instance declaration for reshape"
 compileReshape _ _ = error "Reshape needs 2 arguments"
 

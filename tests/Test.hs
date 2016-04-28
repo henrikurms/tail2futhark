@@ -1,19 +1,25 @@
+module Main(main) where
+
+import Control.Monad
+import System.Process
+import System.FilePath
+
 import Test.Tasty
 import Test.Tasty.Providers
---import Test.Tasty.Program
 import Test.Tasty.Golden
 import Test.Tasty.Golden.Manage as G
-import System.Process
-import System.FilePath.Posix
 
+main :: IO ()
 main = do
     files <- findByExtension [".tail"] "tests/basic_tests"
     let tests = testGroup "Tests"$ map (\f -> goldenVsFile f (replaceExtension f "ok") (replaceExtension f "out") (makeTest f)) files
     G.defaultMain tests
 
 makeTest :: FilePath -> IO ()
-makeTest file = rawSystem "tail2futhark" [file,"-o",replaceExtension file "fut"] >>
-                system ("futhark -i " ++ replaceExtension file "fut" ++ " < /dev/null > " ++ replaceExtension file "out") >> return ()
+makeTest file =
+  void $ system ("make -B -C " ++ dir ++ " " ++ outname)
+  where (dir,name) = splitFileName file
+        outname = name `replaceExtension` "out"
 
 
 --tests = testGroup "Tests" [crashTests,outputTests]
