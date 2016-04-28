@@ -2,6 +2,10 @@ language: haskell
 
 sudo: false
 
+matrix:
+  include:
+    - env: BUILD=stack STACK_YAML=stack.yaml
+
 cache:
   directories:
     - $HOME/.ghc
