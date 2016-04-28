@@ -1,0 +1,5 @@
+let v1:[int]2 = reshape{[int],[1,2]}([3,3],[1,2,3,8,0,4,7,6,5]) in
+let v4:[int]2 = power{[int],[2]}(fn v2:[int]2 => vreverse{[int],[2]}(transp{[int],[2]}(v2)),14,v1) in
+let v6:[int]2 = vreverse{[int],[2]}(transp{[int],[2]}(v1)) in
+let v9:[bool]2 = zipWith{[int,int,bool],[2]}(eqi,v4,vreverse{[int],[2]}(transp{[int],[2]}(v6))) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,v9))))
