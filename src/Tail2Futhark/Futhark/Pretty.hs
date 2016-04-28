@@ -46,7 +46,7 @@ ppExp (Let Inline pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppExp
 ppExp (IfThenElse Indent e1 e2 e3) = text "if" <+> ppExp e1 </> text "then" <+> ppExp e2 </> text "else" <+> ppExp e3
 ppExp (IfThenElse Inline e1 e2 e3) = text "if" <+> ppExp e1 <+> text "then" <+> ppExp e2 <+> text "else" <+> ppExp e3
 ppExp (Constant c) = ppr c
-ppExp (Neg e)    = text "-" <> ppExp e
+ppExp (Neg e)    = parens $ text "-" <> ppExp e
 ppExp (Index e exps) = ppExp e <> brackExps exps
 ppExp (Array exps) = brackExps exps
 ppExp (BinApp op e1 e2) = parens $ ppExp e1 <+> ppOp op <+> ppExp e2
@@ -55,6 +55,7 @@ ppExp (FunCall2 ident exps e) = text ident <> parens (commaExps exps <> comma <>
 --ppExp (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppExp exp)
 ppExp (Empty tp) = text "empty" <> parens (ppr tp)
 ppExp (Map k e) = ppSOAC1 "map" k e
+ppExp (Power k e1 e2) = ppPower k e1 e2
 ppExp (Filter k e) = ppSOAC1 "filter" k e
 ppExp (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
 ppExp (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
@@ -64,6 +65,14 @@ ppSOAC1 v k e = text v <> parens (ppKernel k <> comma <> ppExp e)
 
 ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
 ppSOAC2 v k e1 e2 = text v <> parens (ppKernel k <> comma <> ppExp e1 <> comma <> ppExp e2)
+
+ppPower :: Kernel -> Exp -> Exp -> Doc
+ppPower (Fn _ [(_,var)] body) e1 e2 =
+  text "loop" <+> parens (text var <+> text"=" <+> ppExp e2) <+> text "=" </>
+  text "for" <+> text "i" <+> text "<" <+> (ppExp e1) <+> text "do" </>
+  ppExp body <+> text "in" <+> text var
+ppPower (Fn _ _ _) _ _ = error "expecting exactly one argument in function to power-function"
+ppPower _ _ _ = error "expecting anonymous function as argument to power-function"
 
 ppKernel (Fn tp args body) =
   text "fn" <+> ppr tp <+> (commaList . map ppArg $ args) <+> text "=>" </>

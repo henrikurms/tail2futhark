@@ -1,2 +1,1 @@
-let v1:<int>4 = rotateV{[int],[4]}(2,[b2iV(tt),2,3,4]) in
-i2d(first{[int],[1]}(v1))
+3.0

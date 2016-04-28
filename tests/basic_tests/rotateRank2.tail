@@ -1,3 +1,3 @@
-let v0:[int]3 = reshape{[int],[1,3]}([2,3,4],iotaV(8)) in
-let v1:[int]3 = transp{[int],[3]}(vrotate{[int],[3]}(2,transp{[int],[3]}(v0))) in
-i2d(first{[int],[3]}(v1))
+let v1:[int]3 = reshape{[int],[1,3]}([2,3,4],iotaV(8)) in
+let v2:[int]3 = rotate{[int],[3]}(2,v1) in
+i2d(first{[int],[3]}(v2))

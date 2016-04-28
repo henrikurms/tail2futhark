@@ -317,6 +317,8 @@ compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
   "each"   -> compileEach instDecl args
+  "power"  -> compilePower instDecl args
+  "powerScl" -> compilePower instDecl args
   "firstV" -> compileFirstV instDecl args
   "first" -> compileFirst instDecl args
   "shapeV" -> F.Array $ makeShape 1 args 
@@ -546,6 +548,14 @@ compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = makeEach intp 
           | otherwise = Map (F.Fn (mkType (tp2,r-1)) [(mkType (tp1,r-1),"x")] (makeEach tp1 tp2 (r-1) kernel (F.Var "x"))) array
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
+
+-- power --
+compilePower :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compilePower (Just ([tp],_)) [kernel,num,arr] =
+  Power (compileKernel kernel (makeBTp tp)) (compileExp num) (compileExp arr)
+compilePower (Just (_,_)) _ = error "power takes one type argument"
+compilePower Nothing [_,_,_] = error "Need instance declaration for power"
+compilePower _ _ = error "power takes three arguments"
 
 -- zipWith --
 compileZipWith :: Maybe InstDecl -> [T.Exp] -> F.Exp

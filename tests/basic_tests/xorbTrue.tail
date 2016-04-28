@@ -1,1 +1,1 @@
-i2d(b2i(xorb(eqi(3,3),eqi(4,b2iV(tt)))))
+i2d(b2i(xorb(eqi(3,3),eqi(4,1))))

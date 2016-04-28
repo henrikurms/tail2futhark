@@ -1,6 +1,6 @@
-T2F=~/tail2futhark/dist/build/tail2futhark/tail2futhark
-FUTHARKC=~/futhark/dist/build/futhark-c/futhark-c
-APLT_ROOT=~/apltail
+T2F=~/gits/tail2futhark/dist/build/tail2futhark/tail2futhark
+FUTHARKC=futhark-c
+APLT_ROOT=~/gits/apltail
 APLT=$(APLT_ROOT)/aplt
 PRELUDE=$(APLT_ROOT)/lib/prelude.apl
 INCLUDE=$(APLT_ROOT)/include

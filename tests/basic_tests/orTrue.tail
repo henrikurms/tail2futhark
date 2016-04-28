@@ -1,1 +1,1 @@
-i2d(b2i(orb(eqi(2,b2iV(tt)),eqi(2,2))))
+i2d(b2i(orb(eqi(2,1),eqi(2,2))))

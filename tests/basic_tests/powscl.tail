@@ -1,0 +1,1 @@
+i2d(powerScl{[int],[]}(fn v2:[int]0 => addi(v2,1),3,100))

@@ -60,6 +60,7 @@ data Exp = Var Ident
          -- | Reshape [Exp] Exp -- "old" version of impl
          | Empty Type
          | Map Kernel Exp
+         | Power Kernel Exp Exp
          | Filter Kernel Exp
          | Scan Kernel Exp Exp
          | Reduce Kernel Exp Exp
