@@ -531,11 +531,11 @@ compileCat (Just([tp],[r])) [a1,a2] = do
   a1' <- compileExp a1
   a2' <- compileExp a2
   makeCat tp r a1' a2'
-  where makeCat _tp 1 a1' a2' = return $ FunCall "concat" [a1', a2']
-        makeCat _tp _r a1' a2' = Map <$> kernelExp <*> pure (FunCall "zip" [a1', a2'])
+  where makeCat _ 1 a1' a2' = return $ FunCall "concat" [a1', a2']
+        makeCat tp' r' a1' a2' = Map <$> kernelExp <*> pure (FunCall "zip" [a1', a2'])
           where kernelExp = do
-                  t <- mkType (tp,r-1)
-                  F.Fn t [(t,"x"),(t,"y")] <$> makeCat tp (r-1) (F.Var "x") (F.Var "y")
+                  t <- mkType (tp',r'-1)
+                  F.Fn t [(t,"x"),(t,"y")] <$> makeCat tp' (r'-1) (F.Var "x") (F.Var "y")
 compileCat _ _ = error "compileCat: invalid arguments"
 
 -- takeV --
@@ -645,13 +645,13 @@ compileEachV _ _ = error "compileEachV: invalid arguments"
 compileEach :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] =
   makeEach intp outtp orig_r okernel =<< compileExp orig_array
-  where makeEach tp1 tp2 r kernel array
-          | r == 1 = Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure array
-          | otherwise = do
-              tp2' <- mkType (tp2,r-1)
-              tp1' <- mkType (tp1,r-1)
-              body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
-              return $ Map (F.Fn tp2' [(tp1',"x")] body) array
+  where makeEach _ tp2 1 kernel array =
+          Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure array
+        makeEach tp1 tp2 r kernel array = do
+          tp2' <- mkType (tp2,r-1)
+          tp1' <- mkType (tp1,r-1)
+          body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
+          return $ Map (F.Fn tp2' [(tp1',"x")] body) array
 compileEach Nothing _ = error "Need instance declaration for each"
 compileEach _ _ = error "each takes two arguments"
 
