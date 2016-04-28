@@ -368,6 +368,8 @@ compileSnocV _ _ = error "snocV take two aguments"
 
 -- snoc --
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> F.Exp
+compileSnoc (Just([_],[0])) [a,e] = F.FunCall "concat" [compileExp a,e']
+  where e' = F.Array [compileExp e]
 compileSnoc (Just([_],[r])) [a,e] = makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,e'])
   where e' = F.Array [makeTransp r (compileExp e)]
         arr = makeTransp (r+1) (compileExp a)
