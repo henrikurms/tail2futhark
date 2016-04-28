@@ -8,6 +8,7 @@ import Tail2Futhark.Futhark.Pretty as F -- the futhark AST
 import Prelude
 
 import Control.Monad.Reader
+import Control.Monad.Except
 import Data.Char
 import Options (Options(..))
 
@@ -16,26 +17,28 @@ data Env = Env { floatType :: F.Type }
 newEnv :: Env
 newEnv = Env F.F64T
 
-newtype CompilerM a = CompilerM (Reader Env a)
+newtype CompilerM a = CompilerM (ReaderT Env (Except String) a)
                     deriving (Applicative, Functor, Monad,
-                              MonadReader Env)
+                              MonadReader Env, MonadError String)
 
-runCompilerM :: CompilerM a -> Env -> a
-runCompilerM (CompilerM m) = runReader m
+runCompilerM :: CompilerM a -> Env -> Either String a
+runCompilerM (CompilerM m) = runExcept . runReaderT m
 
 --------------------------
 -- THE MAIN FUNCTION --
 --------------------------
 
 compile :: Options -> T.Program -> F.Program
-compile opts e =
-  F.Program $ includes ++ [F.FunDecl float "main" signature mainbody]
+compile opts prog =
+  case runCompilerM (compileExp rootExp) env of
+    Left e -> error e
+    Right mainbody ->
+      F.Program $ includes ++ [F.FunDecl float "main" signature mainbody]
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
-        (signature, rootExp) = compileReads float e
+        (signature, rootExp) = compileReads float prog
         float = if floatAsSingle opts then F.F32T else F.F64T
         env = newEnv { floatType = float }
-        mainbody = runCompilerM (compileExp rootExp) env
 
 -------------------------
 -- HELPER FUNCTIONS --
@@ -147,7 +150,7 @@ makeShape r args
   | [e] <- args = do
       e' <- compileExp e
       return $ map (\x -> FunCall "size" [Constant (Int x), e']) [0..r-1]
-  | otherwise = error "shape takes one argument"
+  | otherwise = throwError "shape takes one argument"
 
 -- AUX transp --
 makeTransp :: Integer -> F.Exp -> F.Exp
@@ -206,7 +209,7 @@ makeBTp T.IntT = return F.IntT
 makeBTp T.DoubleT = asks floatType
 makeBTp T.BoolT = return F.BoolT
 makeBTp T.CharT = return F.Int8T
-makeBTp (T.Btyv v) = fail $ "makeBTp: cannot transform type variable " ++ v
+makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ v
 
 -- make Futhark array type from Futhark basic type --
 mkType :: (BType, Integer) -> CompilerM F.Type
@@ -232,7 +235,7 @@ compileKernel (T.Fn ident tp (T.Fn ident2 tp2 e)) rtp = do
 compileKernel (T.Fn ident tp e) rtp = do
   tp' <- compileTp tp
   F.Fn rtp [(tp',"t_" ++ ident)] <$> compileExp e
-compileKernel e t = fail $ unwords ["compileKernel, invalid args:", show e, show t]
+compileKernel e t = throwError $ unwords ["compileKernel, invalid args:", show e, show t]
 
 -- AUX for compileKernel --
 compileTp :: T.Type -> CompilerM F.Type
@@ -359,7 +362,7 @@ compileExp (T.Let v _ e1 e2) =
   F.Let Indent (Ident ("t_" ++ v)) <$>
   compileExp e1 <*> compileExp e2
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
-compileExp T.Fn{} = fail "Fn not supported"
+compileExp T.Fn{} = throwError "Fn not supported"
 compileExp (Vc exps) = Array <$> mapM compileExp exps
 
 -- operators --
@@ -409,7 +412,7 @@ compileOpExp ident instDecl args = case ident of
       F.FunCall fun <$> mapM compileExp args
     | ident `elem` idFuns ->
       F.FunCall ident <$> mapM compileExp args
-    | otherwise       -> error $ ident ++ " not supported"
+    | otherwise       -> throwError $ ident ++ " not supported"
 
 -- snocV --
 compileSnocV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -417,8 +420,8 @@ compileSnocV (Just([_],[_])) [a,e] = do
   a' <- compileExp a
   e' <- compileExp e
   return $ F.FunCall "concat" [a', F.Array [e']]
-compileSnocV Nothing _ = error "snocV needs instance declaration"
-compileSnocV _ _ = error "snocV take two aguments"
+compileSnocV Nothing _ = throwError "snocV needs instance declaration"
+compileSnocV _ _ = throwError "snocV take two aguments"
 
 -- snoc --
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -430,15 +433,15 @@ compileSnoc (Just([_],[r])) [a,e] = compileSnoc' <$> compileExp a <*> compileExp
           makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,e''])
           where e'' = F.Array [makeTransp r e']
                 arr = makeTransp (r+1) a'
-compileSnoc _ _ = error "compileSnoc: invalid arguments"
+compileSnoc _ _ = throwError "compileSnoc: invalid arguments"
 
 -- consV --
 compileConsV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileConsV (Just([_],[_])) [e,a] =
   compileConsV' <$> compileExp e <*> compileExp a
   where compileConsV' e' a' = F.FunCall "concat" [F.Array [e'], a']
-compileConsV Nothing _ = error "consV needs instance declaration"
-compileConsV _ _ = error "consV take two aguments"
+compileConsV Nothing _ = throwError "consV needs instance declaration"
+compileConsV _ _ = throwError "consV take two aguments"
 
 
 -- cons --
@@ -448,7 +451,7 @@ compileCons (Just([_],[r])) [e,a] = compileCons' <$> compileExp e <*> compileExp
           makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [e'', arr])
           where e'' = F.Array [makeTransp r e']
                 arr = makeTransp (r+1) a'
-compileCons _ _ = error "compileCons: invalid arguments"
+compileCons _ _ = throwError "compileCons: invalid arguments"
 
 -- first --
 compileFirst :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
@@ -457,8 +460,8 @@ compileFirst (Just(_,[r])) [a] = compileFirst' <$> compileExp a
           F.Let Inline (Ident "x") a' $
           F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
         rInt = fromInteger r :: Int
-compileFirst Nothing _ = error "first needs instance declaration"
-compileFirst _ _ = error "first take one argument"
+compileFirst Nothing _ = throwError "first needs instance declaration"
+compileFirst _ _ = throwError "first take one argument"
 
 -- iota --
 compileIota :: t -> [T.Exp] -> CompilerM F.Exp
@@ -466,21 +469,21 @@ compileIota _ [a] = compileIota' <$> compileExp a
   where compileIota' a' =
           Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1))))
           (FunCall "iota" [a'])
-compileIota _ _ = error "Iota take one argument"
+compileIota _ _ = throwError "Iota take one argument"
 
 -- vreverse --
 compileVReverse :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r =<< compileExp a
-compileVReverse _ _ = error "compileVReverse: invalid arguments"
+compileVReverse _ _ = throwError "compileVReverse: invalid arguments"
 
 compileReverse :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileReverse (Just([tp],[r])) [a] =
   makeTransp r <$> (makeVReverse tp r =<< (makeTransp r <$> compileExp a))
-compileReverse _ _ = error "compileReverse: invalid arguments"
+compileReverse _ _ = throwError "compileReverse: invalid arguments"
 
 compileVReverseV :: Maybe ([BType], [t]) -> [T.Exp] -> CompilerM F.Exp
 compileVReverseV (Just([tp],[_])) [a] = makeVReverse tp 1 =<< compileExp a
-compileVReverseV _ _ = error "compileVReverseC: invalid arguments"
+compileVReverseV _ _ = throwError "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> CompilerM F.Exp
 makeVReverse tp r a = F.Let Inline (Ident "a") a <$>
@@ -498,20 +501,20 @@ makeVReverse tp r a = F.Let Inline (Ident "a") a <$>
 -- rotate --
 compileVRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i =<< compileExp a
-compileVRotate Nothing _ = error "Need instance declaration for vrotate"
-compileVRotate _ _ = error "vrotate needs 2 arguments"
+compileVRotate Nothing _ = throwError "Need instance declaration for vrotate"
+compileVRotate _ _ = throwError "vrotate needs 2 arguments"
 
 compileRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileRotate (Just([tp],[r])) [i,a] =
   makeTransp r <$> (makeVRotate tp r i =<< (makeTransp r <$> compileExp a))
-compileRotate Nothing _ = error "Need instance declaration for rotate"
-compileRotate _ _ = error "rotate needs 2 arguments"
+compileRotate Nothing _ = throwError "Need instance declaration for rotate"
+compileRotate _ _ = throwError "rotate needs 2 arguments"
 
 -- vrotateV --
 compileVRotateV :: Maybe ([BType], [t]) -> [T.Exp] -> CompilerM F.Exp
 compileVRotateV (Just([tp],[_])) [i,a] = makeVRotate tp 1 i =<< compileExp a
-compileVRotateV Nothing _ = error "Need instance declaration for vrotateV"
-compileVRotateV _ _ = error "vrotateV needs 2 arguments"
+compileVRotateV Nothing _ = throwError "Need instance declaration for vrotateV"
+compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
@@ -536,23 +539,23 @@ compileCat (Just([tp],[r])) [a1,a2] = do
           where kernelExp = do
                   t <- mkType (tp',r'-1)
                   F.Fn t [(t,"x"),(t,"y")] <$> makeCat tp' (r'-1) (F.Var "x") (F.Var "y")
-compileCat _ _ = error "compileCat: invalid arguments"
+compileCat _ _ = throwError "compileCat: invalid arguments"
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileTakeV (Just([tp],_)) [len,e] =
   F.FunCall <$> fname <*> sequence [compileExp len, compileExp e]
   where fname = ("take1_" ++) . pretty <$> makeBTp tp
-compileTakeV Nothing _ = error "Need instance declaration for takeV"
-compileTakeV _ _ = error "TakeV needs 2 arguments"
+compileTakeV Nothing _ = throwError "Need instance declaration for takeV"
+compileTakeV _ _ = throwError "TakeV needs 2 arguments"
 
 -- dropV --
 compileDropV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileDropV (Just([tp],_)) [len,e] =
   F.FunCall <$> fname <*> sequence [compileExp len,compileExp e]
     where fname = ("drop1_" ++) . pretty <$> makeBTp tp
-compileDropV Nothing _ = error "Need instance declaration for dropV"
-compileDropV _ _ = error "DropV needs 2 arguments"
+compileDropV Nothing _ = throwError "Need instance declaration for dropV"
+compileDropV _ _ = throwError "DropV needs 2 arguments"
 
 -- take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -563,8 +566,8 @@ compileTake (Just([tp],[r])) [len,e] = takeDropHelper compileTake' r len e
                 sizeProd = multExp $ len':tail shape
                 fname = ("take1_" ++) . pretty <$> makeBTp tp
                 resh = F.FunCall2 "reshape" [multExp shape] e'
-compileTake Nothing _args = error "Need instance declaration for take"
-compileTake _ _ = error "Take needs 2 arguments"
+compileTake Nothing _args = throwError "Need instance declaration for take"
+compileTake _ _ = throwError "Take needs 2 arguments"
 
 -- drop --
 compileDrop :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
@@ -579,7 +582,7 @@ compileDrop (Just([tp],[r])) [len,e] = takeDropHelper compileDrop' r len e
                 resh = F.FunCall2 "reshape" [multExp shape] e'
                 sizeProd = multExp $ len' : tail shape
                 fname = ("drop1_" ++) . pretty <$> makeBTp tp
-compileDrop _ _ = error "compileDrop: invalid arguments"
+compileDrop _ _ = throwError "compileDrop: invalid arguments"
 
 takeDropHelper :: ([F.Exp] -> F.Exp -> F.Exp -> CompilerM b)
                -> Integer -> T.Exp -> T.Exp -> CompilerM b
@@ -606,15 +609,15 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = do
   shapeProd <- multExp <$> makeShape r1 [array]
   resh <- F.FunCall2 "reshape" [shapeProd] <$> compileExp array
   return $ wrap $ F.FunCall2 "reshape" dimsList $ F.FunCall fname [multExp dimsList, resh]
-compileReshape Nothing _args = error "Need instance declaration for reshape"
-compileReshape _ _ = error "Reshape needs 2 arguments"
+compileReshape Nothing _args = throwError "Need instance declaration for reshape"
+compileReshape _ _ = throwError "Reshape needs 2 arguments"
 
 -- transp --
 compileTransp :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileTransp (Just(_,[r])) [e] =
   makeTransp2 (map (Constant . Int) (reverse [0..r-1])) <$> compileExp e
-compileTransp Nothing _args = error "Need instance declaration for transp"
-compileTransp _ _ = error "Transpose takes 1 argument"
+compileTransp Nothing _args = throwError "Need instance declaration for transp"
+compileTransp _ _ = throwError "Transpose takes 1 argument"
 
 -- transp2 --
 compileTransp2 :: t -> [T.Exp] -> CompilerM F.Exp
@@ -622,14 +625,14 @@ compileTransp2 _ [Vc dims,e] = makeTransp2 <$> mapM compileExp dimsExps <*> comp
     where dimsExps = map (I . (\x -> x - 1) . getInt) dims
           getInt (I i) = i
           getInt _ = error "transp2 expects number literals in it's first argument"
-compileTransp2 _ e = case e of [_,_] -> error "transp2 needs litaral as first argument"
-                               _     -> error "transp2 takes 2 arguments"
+compileTransp2 _ e = case e of [_,_] -> throwError "transp2 needs litaral as first argument"
+                               _     -> throwError "transp2 takes 2 arguments"
 
 -- shape --
 compileShape :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileShape (Just(_,[len])) args = F.Array <$> makeShape len args
-compileShape Nothing _args = error "Need instance declaration for shape"
-compileShape _ _ = error "compileShape: invalid arguments"
+compileShape Nothing _args = throwError "Need instance declaration for shape"
+compileShape _ _ = throwError "compileShape: invalid arguments"
 
 -- firstV --
 compileFirstV :: t -> [T.Exp] -> CompilerM F.Exp
@@ -637,14 +640,14 @@ compileFirstV _ args
   | [e] <- args =
       F.Let Inline (Ident "x") <$> compileExp e <*>
       pure (F.Index (F.Var "x")[F.Constant (F.Int 0)])
-  | otherwise = error "firstV takes one argument"
+  | otherwise = throwError "firstV takes one argument"
 
 -- eachV --
 compileEachV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileEachV Nothing _ = error "Need instance declaration for eachV"
+compileEachV Nothing _ = throwError "Need instance declaration for eachV"
 compileEachV (Just ([_intp,outtp],[_len])) [kernel,array] =
   Map <$> (compileKernel kernel =<< makeBTp outtp) <*> compileExp array
-compileEachV _ _ = error "compileEachV: invalid arguments"
+compileEachV _ _ = throwError "compileEachV: invalid arguments"
 
 -- each --
 compileEach :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -657,16 +660,16 @@ compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] =
           tp1' <- mkType (tp1,r-1)
           body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
           return $ Map (F.Fn tp2' [(tp1',"x")] body) array
-compileEach Nothing _ = error "Need instance declaration for each"
-compileEach _ _ = error "each takes two arguments"
+compileEach Nothing _ = throwError "Need instance declaration for each"
+compileEach _ _ = throwError "each takes two arguments"
 
 -- power --
 compilePower :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compilePower (Just ([tp],_)) [kernel,num,arr] =
   Power <$> (compileKernel kernel =<< makeBTp tp) <*> compileExp num <*> compileExp arr
-compilePower (Just (_,_)) _ = error "power takes one type argument"
-compilePower Nothing [_,_,_] = error "Need instance declaration for power"
-compilePower _ _ = error "power takes three arguments"
+compilePower (Just (_,_)) _ = throwError "power takes one type argument"
+compilePower Nothing [_,_,_] = throwError "Need instance declaration for power"
+compilePower _ _ = throwError "power takes three arguments"
 
 -- zipWith --
 compileZipWith :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -684,12 +687,12 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
               body <- makeZipWith (r-1) kernel (F.Var "x") (F.Var "y")
               return $ Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) (FunCall "zip" [a1, a2])
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
-compileZipWith Nothing _ = error "Need instance declaration for zipWith"
-compileZipWith _ _ = error "zipWith takes 3 arguments"
+compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
+compileZipWith _ _ = throwError "zipWith takes 3 arguments"
 
 -- reduce --
 compileReduce :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileReduce Nothing _ = error "Need instance declaration for reduce"
+compileReduce Nothing _ = throwError "Need instance declaration for reduce"
 compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
   kernel <- compileKernel orig_kernel =<< makeBTp orig_tp
   v' <- compileExp v
@@ -702,7 +705,7 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               t <- mkType (tp,r)
               body <- makeReduce tp (r-1) kernel idExp (F.Var "x")
               return $ Map (F.Fn rt [(t,"x")] body) arrayExp
-compileReduce _ _ = error "reduce needs 3 arguments"
+compileReduce _ _ = throwError "reduce needs 3 arguments"
 
 
 -- operators that are 1:1  --
