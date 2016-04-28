@@ -1,4 +1,4 @@
-language: haskell
+language: c
 
 sudo: false
 
@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
     - wget
+    - libgmp-dev
 
 cache:
   directories:
