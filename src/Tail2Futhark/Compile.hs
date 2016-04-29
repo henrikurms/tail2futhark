@@ -74,18 +74,18 @@ inputsAndOutputs float = inputsAndOutputs' []
 ----------------------------------------
 
 absExp :: F.Exp -> F.Exp
-absExp e = IfThenElse Inline (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
+absExp e = IfThenElse (BinApp LessEq e (Constant (Int 0))) (F.Neg e) e
 
 maxExp :: F.Exp -> F.Exp -> F.Exp
-maxExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e2 e1
+maxExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e2 e1
 
 minExp :: F.Exp -> F.Exp -> F.Exp
-minExp e1 e2 = IfThenElse Inline (BinApp LessEq e1 e2) e1 e2
+minExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e1 e2
 
 signiExp :: F.Exp -> F.Exp
 
-signiExp e = IfThenElse Indent (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
-  where elseBranch = IfThenElse Indent (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
+signiExp e = IfThenElse (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
+  where elseBranch = IfThenElse (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
 
 nandExp :: F.Exp -> F.Exp -> F.Exp
 nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2] 
@@ -94,7 +94,7 @@ norExp :: F.Exp -> F.Exp -> F.Exp
 norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
 
 resiExp :: F.Exp -> F.Exp -> F.Exp
-resiExp y x = F.IfThenElse F.Indent (y `eq` izero) x $ F.IfThenElse F.Indent cond (x % y) (x % y `plus` y)
+resiExp y x = F.IfThenElse (y `eq` izero) x $ F.IfThenElse cond (x % y) (x % y `plus` y)
   where cond = ((x % y) `eq` izero) `lor` ((x `gr` izero) `land` (y `gr` izero)) `lor` ((x `less` izero) `land` (y `less` izero))
         infix 1 %; (%) = F.BinApp F.Mod
         izero = Constant (Int 0)
@@ -109,10 +109,10 @@ resiExp y x = F.IfThenElse F.Indent (y `eq` izero) x $ F.IfThenElse F.Indent con
 -- create split part of reshape1 function -- 
 mkSplit :: F.Ident -> F.Ident -> F.Exp -> F.Exp -> F.Exp -> F.Exp
 mkSplit id1 id2 dims e =
-  F.Let Inline (TouplePat [Ident id1,Ident id2]) (F.FunCall2 "split" [dims] e)
+  F.Let (TouplePat [Ident id1,Ident id2]) (F.FunCall2 "split" [dims] e)
 
 makeLets :: [(F.Ident, F.Exp)] -> F.Exp -> F.Exp
-makeLets ((v,e) : rest) body = F.Let Indent (Ident v) e (makeLets rest body)
+makeLets ((v,e) : rest) body = F.Let (Ident v) e (makeLets rest body)
 makeLets [] body = body
 
 reshape1Body :: F.Type -> F.Exp
@@ -129,21 +129,21 @@ reshape1Body _ = makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split
 -- drop --
 -- make body for drop1 function --
 dropBody :: F.Type -> F.Exp
-dropBody tp = IfThenElse Indent (size `less` absExp len) emptArr elseBranch
+dropBody tp = IfThenElse (size `less` absExp len) emptArr elseBranch
     where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
           size = F.FunCall "size" [izero, F.Var "x"]
           plus = BinApp Plus len size
           emptArr = F.Empty tp
-          elseBranch = IfThenElse Indent (len `less` izero) negDrop posDrop
+          elseBranch = IfThenElse (len `less` izero) negDrop posDrop
           negDrop = mkSplit "v1" "_" plus (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
 
 -- take1 --
 -- make body for take1 function --
 takeBody :: F.Exp -> F.Exp
-takeBody padElement = IfThenElse Indent (izero `less` len) posTake negTake
+takeBody padElement = IfThenElse (izero `less` len) posTake negTake
     where less = BinApp LessEq
           izero = Constant (Int 0)
           plus  = BinApp Plus len size
@@ -152,8 +152,8 @@ takeBody padElement = IfThenElse Indent (izero `less` len) posTake negTake
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate" [BinApp Minus len size, padElement]
-          posTake = IfThenElse Indent (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
-          negTake = IfThenElse Indent (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
+          posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
+          negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
 
 
 ------------------------------------------
@@ -287,24 +287,24 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         sqrtf = F.FunDecl t "sqrt" [(t, "x")] $ F.FunCall (suff "sqrt") [x]
         ln = F.FunDecl t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
         absd = F.FunDecl t "absd" [(t,"x")] $
-          IfThenElse Inline (BinApp LessEq x (constant 0)) (F.Neg x) x
+          IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
         negd = F.FunDecl t "negd" [(t,"x")] $ F.Neg x
         maxd = F.FunDecl t "maxd" [(t, "x"), (t, "y")] $ maxExp x y
         mind = F.FunDecl t "mind" [(t, "x"), (t, "y")] $ minExp x y
         expd = F.FunDecl t "expd" [(t, "x")] $ F.FunCall (suff "exp") [x]
         signd = F.FunDecl F.IntT "signd" [(t, "x")] $
-          IfThenElse Indent (BinApp Less (constant 0) x)
+          IfThenElse (BinApp Less (constant 0) x)
           (Constant (Int 1)) $
-          IfThenElse Indent (BinApp Eq (constant 0) x)
+          IfThenElse (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
         ceil = F.FunDecl F.IntT "ceil" [(t, "x")] $
-          IfThenElse Indent (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
+          IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
-  F.IfThenElse Inline (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
+  F.IfThenElse (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
 
 negi, absi, mini, signi,
   maxi, nandb, norb, eqb, xorb, neqi, neqd, resi :: FunDecl
@@ -379,7 +379,7 @@ compileExp (B bool)   = return $ Constant (Bool bool)
 compileExp Inf = return $ Constant (F32 (read "Infinity"))
 compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
-  F.Let Indent (Ident ("t_" ++ v)) <$>
+  F.Let (Ident ("t_" ++ v)) <$>
   compileExp e1 <*> compileExp e2
 compileExp (T.Op "tuple" Nothing args) = F.Tuple <$> mapM compileExp args
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
@@ -480,7 +480,7 @@ compileCons _ _ = throwError "compileCons: invalid arguments"
 compileFirst :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileFirst (Just(_,[r])) [a] = compileFirst' <$> compileExp a
   where compileFirst' a' =
-          F.Let Inline (Ident "x") a' $
+          F.Let (Ident "x") a' $
           F.Index (F.Var "x") (replicate rInt (F.Constant (F.Int 0)))
         rInt = fromInteger r :: Int
 compileFirst Nothing _ = throwError "first needs instance declaration"
@@ -509,7 +509,7 @@ compileVReverseV (Just([tp],[_])) [a] = makeVReverse tp 1 =<< compileExp a
 compileVReverseV _ _ = throwError "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> CompilerM F.Exp
-makeVReverse tp r a = F.Let Inline (Ident "a") a <$>
+makeVReverse tp r a = F.Let (Ident "a") a <$>
   (Map <$> kernelExp <*> pure (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0), a]]))
   where
     kernelExp = F.Fn <$>
@@ -542,7 +542,7 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
 makeVRotate tp r i a =
-  F.Let Inline (Ident "a") a <$> (Map <$> kernelExp <*> pure (FunCall "iota" [size]))
+  F.Let (Ident "a") a <$> (Map <$> kernelExp <*> pure (FunCall "iota" [size]))
   where
     kernelExp = F.Fn <$>
       mkType (tp, r-1) <*>
@@ -628,7 +628,7 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = do
     _ -> do
       let name = "shape_tmp"
       return ([F.Index (F.Var name) [Constant (Int i)] | i <- [0..r2-1]],
-              F.Let F.Indent (F.Ident name) dimsExp)
+              F.Let (F.Ident name) dimsExp)
   shapeProd <- multExp <$> makeShape r1 [array]
   resh <- F.FunCall2 "reshape" [shapeProd] <$> compileExp array
   return $ wrap $ F.FunCall2 "reshape" dimsList $ F.FunCall fname [multExp dimsList, resh]
@@ -661,7 +661,7 @@ compileShape _ _ = throwError "compileShape: invalid arguments"
 compileFirstV :: t -> [T.Exp] -> CompilerM F.Exp
 compileFirstV _ args
   | [e] <- args =
-      F.Let Inline (Ident "x") <$> compileExp e <*>
+      F.Let (Ident "x") <$> compileExp e <*>
       pure (F.Index (F.Var "x")[F.Constant (F.Int 0)])
   | otherwise = throwError "firstV takes one argument"
 

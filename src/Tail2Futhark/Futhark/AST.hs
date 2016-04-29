@@ -48,8 +48,8 @@ data Operator = Plus | Mult | LessEq | GreaterEq | Less | Greater | Minus | Div 
   deriving (Show, Eq)
 
 data Exp = Var Ident
-         | Let Mode Pattern Exp Exp
-         | IfThenElse Mode Exp Exp Exp
+         | Let Pattern Exp Exp
+         | IfThenElse Exp Exp Exp
          | Constant Constant
          | Index Exp [Exp]
          | Neg Exp
@@ -66,6 +66,4 @@ data Exp = Var Ident
          | Scan Kernel Exp Exp
          | Reduce Kernel Exp Exp
   deriving (Show, Eq)
-
-data Mode = Inline | Indent deriving (Show, Eq)
 

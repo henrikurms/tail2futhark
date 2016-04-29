@@ -42,10 +42,8 @@ instance Pretty Type where
 
 instance Pretty Exp where
   ppr (Var ident) = text ident
-  ppr (Let Indent pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppr exp1 <+> text "in" </> ppr exp2
-  ppr (Let Inline pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppr exp1 <+> text "in" <+> ppr exp2
-  ppr (IfThenElse Indent e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
-  ppr (IfThenElse Inline e1 e2 e3) = text "if" <+> ppr e1 <+> text "then" <+> ppr e2 <+> text "else" <+> ppr e3
+  ppr (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppr exp1 <+> text "in" </> ppr exp2
+  ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
   ppr (Constant c) = ppr c
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
