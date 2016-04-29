@@ -688,8 +688,17 @@ compileEach _ _ = throwError "each takes two arguments"
 
 -- power --
 compilePower :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compilePower (Just ([tp],_)) [kernel,num,arr] =
-  Power <$> (compileKernel kernel =<< makeBTp tp) <*> compileExp num <*> compileExp arr
+compilePower (Just ([tp],_)) [kernel,num,arr] = do
+  fn <- compileKernel kernel =<< makeBTp tp
+  num' <- compileExp num
+  arr' <- compileExp arr
+  case fn of
+    F.Fn _ [(_,var)] body ->
+      return $ F.ForLoop var arr' "i" num' body $ F.Var var
+    F.Fn{} ->
+      fail "expecting exactly one argument in function to power-function"
+    _  ->
+      fail "expecting anonymous function as argument to power-function"
 compilePower (Just (_,_)) _ = throwError "power takes one type argument"
 compilePower Nothing [_,_,_] = throwError "Need instance declaration for power"
 compilePower _ _ = throwError "power takes three arguments"

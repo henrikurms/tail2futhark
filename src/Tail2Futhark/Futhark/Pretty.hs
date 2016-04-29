@@ -44,6 +44,10 @@ instance Pretty Exp where
   ppr (Var ident) = text ident
   ppr (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppr exp1 <+> text "in" </> ppr exp2
   ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
+  ppr (ForLoop merge merge_init i bound loopbody letbody) =
+    text "loop" <+> parens (text merge <+> text "=" <+> ppr merge_init) <+>
+    text "=" <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
+    ppr loopbody <+> text "in" <+> ppr letbody
   ppr (Constant c) = ppr c
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
@@ -55,7 +59,6 @@ instance Pretty Exp where
   --ppr (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppr exp)
   ppr (Empty tp) = text "empty" <> parens (ppr tp)
   ppr (Map k e) = ppSOAC1 "map" k e
-  ppr (Power k e1 e2) = ppPower k e1 e2
   ppr (Filter k e) = ppSOAC1 "filter" k e
   ppr (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
   ppr (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
@@ -65,14 +68,6 @@ ppSOAC1 v k e = text v <> parens (ppKernel k <> comma <> ppr e)
 
 ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
 ppSOAC2 v k e1 e2 = text v <> parens (ppKernel k <> comma <> ppr e1 <> comma <> ppr e2)
-
-ppPower :: Kernel -> Exp -> Exp -> Doc
-ppPower (Fn _ [(_,var)] body) e1 e2 =
-  text "loop" <+> parens (text var <+> text"=" <+> ppr e2) <+> text "=" </>
-  text "for" <+> text "i" <+> text "<" <+> (ppr e1) <+> text "do" </>
-  ppr body <+> text "in" <+> text var
-ppPower (Fn _ _ _) _ _ = error "expecting exactly one argument in function to power-function"
-ppPower _ _ _ = error "expecting anonymous function as argument to power-function"
 
 ppKernel (Fn tp args body) =
   text "fn" <+> ppr tp <+> (commaList . map ppArg $ args) <+> text "=>" </>
