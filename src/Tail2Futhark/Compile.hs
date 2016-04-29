@@ -33,12 +33,15 @@ compile opts prog =
   case runCompilerM (compileExp rootExp) env of
     Left e -> error e
     Right mainbody ->
-      F.Program $ includes ++ [F.FunDecl ret "main" signature mainbody]
+      F.Program $ includes ++ [F.FunDecl ret "main" signature $ maybeUnsafe mainbody]
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
         (signature, ret, rootExp) = inputsAndOutputs float prog
         float = if floatAsSingle opts then F.F32T else F.F64T
         env = newEnv { floatType = float }
+        maybeUnsafe
+          | unsafe opts = Unsafe
+          | otherwise   = id
 
 -------------------------
 -- HELPER FUNCTIONS --

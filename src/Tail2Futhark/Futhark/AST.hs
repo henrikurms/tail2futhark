@@ -59,6 +59,7 @@ data Exp = Var Ident
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
          | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args
+         | Unsafe Exp
          -- | Reshape [Exp] Exp -- "old" version of impl
          | Empty Type
          | Map Kernel Exp

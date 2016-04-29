@@ -44,6 +44,7 @@ instance Pretty Exp where
   ppr (Var ident) = text ident
   ppr (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> ppr exp1 <+> text "in" </> ppr exp2
   ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
+  ppr (Unsafe e) = text "unsafe" <+> ppr e
   ppr (ForLoop merge merge_init i bound loopbody letbody) =
     text "loop" <+> parens (text merge <+> text "=" <+> ppr merge_init) <+>
     text "=" <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
