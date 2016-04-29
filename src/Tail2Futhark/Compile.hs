@@ -33,10 +33,10 @@ compile opts prog =
   case runCompilerM (compileExp rootExp) env of
     Left e -> error e
     Right mainbody ->
-      F.Program $ includes ++ [F.FunDecl float "main" signature mainbody]
+      F.Program $ includes ++ [F.FunDecl ret "main" signature mainbody]
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
-        (signature, rootExp) = compileReads float prog
+        (signature, ret, rootExp) = inputsAndOutputs float prog
         float = if floatAsSingle opts then F.F32T else F.F64T
         env = newEnv { floatType = float }
 
@@ -44,14 +44,30 @@ compile opts prog =
 -- HELPER FUNCTIONS --
 -------------------------
 
-compileReads :: F.Type -> T.Exp -> ([(F.Type, String)], T.Exp)
-compileReads float (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) =
-  ((F.ArrayT F.IntT , "t_" ++ v):sig,e')
-  where (sig,e') = compileReads float e2
-compileReads float (T.Let v  _ (T.Op "readDoubleVecFile" _ _) e2) =
-  ((F.ArrayT float , "t_" ++ v):sig,e')
-  where (sig,e') = compileReads float e2
-compileReads _ e = ([],e)
+inputsAndOutputs :: F.Type -> T.Exp -> ([(F.Type, String)], F.Type, T.Exp)
+inputsAndOutputs float = inputsAndOutputs' []
+  where inputsAndOutputs' outs (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) =
+          ((F.ArrayT F.IntT , "t_" ++ v):sig, ret, e')
+          where (sig, ret, e') = inputsAndOutputs' outs e2
+
+        inputsAndOutputs' outs (T.Let v  _ (T.Op "readDoubleVecFile" _ _) e2) =
+          ((F.ArrayT float , "t_" ++ v):sig, ret, e')
+          where (sig, ret, e') = inputsAndOutputs' outs e2
+
+        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrC" _ [e]) e2) =
+          inputsAndOutputs' outs' e2
+          where outs' = (e, foldr (const F.ArrayT) F.IntT [0..r-1]) : outs
+
+        inputsAndOutputs' outs (T.Let v  t e body) =
+          (sig, ret, T.Let v t e body')
+          where (sig, ret, body') = inputsAndOutputs' outs body
+
+        inputsAndOutputs' outs@(_:_) _ =
+          ([], F.TupleT ret, T.Op "tuple" Nothing $ reverse es)
+          where (es, ret) = unzip outs
+
+        inputsAndOutputs' [] e =
+          ([], float, e)
 
 ----------------------------------------
 -- AUX FUNCTIONS OF LIBRARY FUNCTIONS --
@@ -208,7 +224,7 @@ makeBTp :: BType -> CompilerM F.Type
 makeBTp T.IntT = return F.IntT
 makeBTp T.DoubleT = asks floatType
 makeBTp T.BoolT = return F.BoolT
-makeBTp T.CharT = return F.Int8T
+makeBTp T.CharT = return F.IntT
 makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ v
 
 -- make Futhark array type from Futhark basic type --
@@ -263,7 +279,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof32 = Constant . F32 . fromRational . toRational
     tof64 = Constant . F64
 
-    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd]
+    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil]
       where
         x = F.Var "x"
         y = F.Var "y"
@@ -281,6 +297,10 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           (Constant (Int 1)) $
           IfThenElse Indent (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
+        ceil = F.FunDecl F.IntT "ceil" [(t, "x")] $
+          IfThenElse Indent (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
+          (F.FunCall "int" [x])
+          (F.FunCall "int" [F.BinApp Plus x (constant 1)])
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
@@ -361,6 +381,7 @@ compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let Indent (Ident ("t_" ++ v)) <$>
   compileExp e1 <*> compileExp e2
+compileExp (T.Op "tuple" Nothing args) = F.Tuple <$> mapM compileExp args
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp T.Fn{} = throwError "Fn not supported"
 compileExp (Vc exps) = Array <$> mapM compileExp exps
@@ -403,7 +424,9 @@ compileOpExp ident instDecl args = case ident of
   "b2iV" | [T.Var "tt"] <- args -> return $ Constant (Int 1)
          | [T.Var "ff"] <- args -> return $ Constant (Int 0)
   "idxS" | [T.I 1, i, arr] <- args ->
-           F.Index <$> compileExp arr <*> (pure <$> compileExp i)
+           F.Index <$>
+           compileExp arr <*>
+           sequence [F.BinApp F.Minus <$> compileExp i <*> compileExp (I 1) ]
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident ->
@@ -723,7 +746,7 @@ idFuns = ["negi",
           "maxd",
           "eqb",
           "xorb",
-          "nandb", 
+          "nandb",
           "norb",
           "neqi",
           "neqd",
@@ -737,6 +760,7 @@ convertFun fun = case fun of
   "b2i"    -> Just "boolToInt"
   "b2iV"   -> Just "boolToInt"
   "ln"     -> Just "ln"
+  "ceil"   -> Just "ceil"
   "expd"   -> Just "expd"
   "notb"   -> Just "!"
   "floor"  -> Just "int"

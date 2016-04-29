@@ -9,7 +9,7 @@ data Type = IntT
           | F32T
           | F64T
           | BoolT
-         -- | ToupleT [Type]
+          | TupleT [Type]
           | ArrayT Type
          -- | UArrayT Type
   deriving (Show, Eq)
@@ -54,6 +54,7 @@ data Exp = Var Ident
          | Index Exp [Exp]
          | Neg Exp
          | Array [Exp]
+         | Tuple [Exp]
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
          | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args

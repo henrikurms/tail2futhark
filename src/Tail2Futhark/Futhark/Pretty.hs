@@ -38,6 +38,7 @@ instance Pretty Type where
   ppr F64T = text "f64"
   ppr BoolT = text "bool"
   ppr (ArrayT at) = brackets (ppr at)
+  ppr (TupleT ts) = braces $ commasep $ map ppr ts
 
 instance Pretty Exp where
   ppr (Var ident) = text ident
@@ -49,6 +50,7 @@ instance Pretty Exp where
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
   ppr (Array exps) = brackExps exps
+  ppr (Tuple exps) = braces $ commasep $ map ppr exps
   ppr (BinApp op e1 e2) = parens $ ppr e1 <+> ppOp op <+> ppr e2
   ppr (FunCall ident exps) = text ident <> commaExps exps
   ppr (FunCall2 ident exps e) = text ident <> parens (commaExps exps <> comma <> ppr e)
