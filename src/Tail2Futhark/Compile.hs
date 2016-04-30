@@ -61,6 +61,11 @@ inputsAndOutputs float = inputsAndOutputs' []
           inputsAndOutputs' outs' e2
           where outs' = (e, foldr (const F.ArrayT) F.IntT [0..r-1]) : outs
 
+        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prSclI" _ [e]) e2) =
+          inputsAndOutputs' outs' e2
+          where outs' = (e, foldr (const F.ArrayT) F.IntT [0..r-1]) : outs
+
+
         inputsAndOutputs' outs (T.Let v  t e body) =
           (sig, ret, T.Let v t e body')
           where (sig, ret, body') = inputsAndOutputs' outs body
