@@ -162,7 +162,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           size = F.FunCall "size" [izero, F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
-          padding = F.FunCall "replicate" [BinApp Minus len size, padElement]
+          padding = F.FunCall "replicate" [BinApp Minus (F.FunCall "abs" [len]) size, padElement]
           posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
 
