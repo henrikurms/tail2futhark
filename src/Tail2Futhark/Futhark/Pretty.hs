@@ -38,7 +38,7 @@ instance Pretty Type where
   ppr F64T = text "f64"
   ppr BoolT = text "bool"
   ppr (ArrayT at) = brackets (ppr at)
-  ppr (TupleT ts) = braces $ commasep $ map ppr ts
+  ppr (TupleT ts) = parens $ commasep $ map ppr ts
 
 instance Pretty Exp where
   ppr (Var ident) = text ident
@@ -53,7 +53,7 @@ instance Pretty Exp where
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
   ppr (Array exps) = brackExps exps
-  ppr (Tuple exps) = braces $ commasep $ map ppr exps
+  ppr (Tuple exps) = parens $ commasep $ map ppr exps
   ppr (BinApp op e1 e2) = parens $ ppr e1 <+> ppOp op <+> ppr e2
   ppr (FunCall ident exps) = text ident <> commaExps exps
   ppr (FunCall2 ident exps e) = text ident <> parens (commaExps exps <> comma <> ppr e)
@@ -105,7 +105,7 @@ instance Pretty Constant where
   ppr (F64 f) = text (show f) <> text "f64"
   ppr (Char c) = text $ show c
   ppr (Bool b) = text (if b then "True" else "False")
-  ppr (ArrayConstant arr) = braces . commasep . map ppr $ arr
+  ppr (ArrayConstant arr) = brackets . commasep . map ppr $ arr
 
 -- Arguments --
 ppArg :: (Type, String) -> Doc
@@ -114,4 +114,4 @@ ppArg (tp,ident) = ppr tp <+> text ident
 -- Pattern --
 ppPat :: Pattern -> Doc
 ppPat (Ident ident) = text ident
-ppPat (TouplePat pat) = braces . commasep . map ppPat $ pat 
+ppPat (TouplePat pat) = parens . commasep . map ppPat $ pat
