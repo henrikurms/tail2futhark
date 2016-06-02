@@ -70,6 +70,9 @@ inputsAndOutputs float = inputsAndOutputs' []
           (sig, ret, T.Let v t e body')
           where (sig, ret, body') = inputsAndOutputs' outs body
 
+        inputsAndOutputs' [(e,t)] _ =
+          ([], t, e)
+
         inputsAndOutputs' outs@(_:_) _ =
           ([], F.TupleT ret, T.Op "tuple" Nothing $ reverse es)
           where (es, ret) = unzip outs
