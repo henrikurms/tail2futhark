@@ -27,8 +27,10 @@ before_install:
  - export APLT_ROOT=$(pwd)/apltail
  - wget http://napoleon.hiperfit.dk/~athas/aplt -O $APLT_ROOT/aplt
  - chmod +x $APLT_ROOT/aplt
- - wget http://napoleon.hiperfit.dk/~athas/futhark-c -O $HOME/.local/bin/futhark-c
- - chmod +x $HOME/.local/bin/futhark-c
+ # Nastyness over; now it's all good.
+ - wget http://futhark-lang.org/releases/futhark-nightly-linux-x86_64.tar.xz
+ - tar xf futhark-nightly-linux-x86_64.tar.xz
+ - (cd futhark-nightly-linux-x86_64/ && PREFIX=$HOME/.local make install)
 
 install:
  - stack --no-terminal test --only-dependencies -j 3
