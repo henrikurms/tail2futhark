@@ -50,25 +50,28 @@ compile opts prog =
 inputsAndOutputs :: F.Type -> T.Exp -> ([(F.Type, String)], F.Type, T.Exp)
 inputsAndOutputs float = inputsAndOutputs' []
   where inputsAndOutputs' outs (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) =
-          ((F.ArrayT F.IntT , "t_" ++ v):sig, ret, e')
+          ((F.ArrayT F.IntT F.AnyDim, "t_" ++ v):sig, ret, e')
           where (sig, ret, e') = inputsAndOutputs' outs e2
 
         inputsAndOutputs' outs (T.Let v  _ (T.Op "readDoubleVecFile" _ _) e2) =
-          ((F.ArrayT float , "t_" ++ v):sig, ret, e')
+          ((F.ArrayT float F.AnyDim, "t_" ++ v):sig, ret, e')
           where (sig, ret, e') = inputsAndOutputs' outs e2
 
         inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrC" _ [e]) e2) =
           inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const F.ArrayT) F.IntT [0..r-1]) : outs
+          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
 
         inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prSclI" _ [e]) e2) =
           inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const F.ArrayT) F.IntT [0..r-1]) : outs
+          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
 
 
         inputsAndOutputs' outs (T.Let v  t e body) =
           (sig, ret, T.Let v t e body')
           where (sig, ret, body') = inputsAndOutputs' outs body
+
+        inputsAndOutputs' [(e,t)] _ =
+          ([], t, e)
 
         inputsAndOutputs' outs@(_:_) _ =
           ([], F.TupleT ret, T.Op "tuple" Nothing $ reverse es)
@@ -159,7 +162,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           size = F.FunCall "size" [izero, F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
-          padding = F.FunCall "replicate" [BinApp Minus len size, padElement]
+          padding = F.FunCall "replicate" [BinApp Minus (F.FunCall "abs" [len]) size, padElement]
           posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft 
 
@@ -239,10 +242,14 @@ makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ 
 mkType :: (BType, Integer) -> CompilerM F.Type
 mkType (tp, r) = makeArrTp <$> makeBTp tp <*> pure r
 
+setOuterSize :: DimDecl -> F.Type -> F.Type
+setOuterSize d (F.ArrayT t _) = F.ArrayT t d
+setOuterSize _ t              = t
+
 -- aux for mkType --
 makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
-makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1))
+makeArrTp btp n = F.ArrayT (makeArrTp btp (n-1)) F.AnyDim
 
 -- make curried Futhark function that have 1 as basic element and folds with times
 multExp :: [F.Exp] -> F.Exp
@@ -348,10 +355,10 @@ resi = F.FunDecl F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x
 
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
-makeFun args name body tp = F.FunDecl (ArrayT tp) (name ++ "_" ++ pretty tp) args body
+makeFun args name body tp = F.FunDecl (ArrayT tp F.AnyDim) (name ++ "_" ++ pretty tp) args body
 
 stdArgs :: F.Type -> [(F.Type, String)]
-stdArgs tp = [(F.IntT,"l"),(ArrayT tp, "x")]
+stdArgs tp = [(F.IntT,"l"),(ArrayT tp F.AnyDim, "x")]
 
 reshapeFun :: F.Type -> FunDecl
 reshapeFun tp = makeFun (stdArgs tp) "reshape1" (reshape1Body tp) tp
@@ -549,15 +556,10 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
-makeVRotate tp r i a =
-  F.Let (Ident "a") a <$> (Map <$> kernelExp <*> pure (FunCall "iota" [size]))
-  where
-    kernelExp = F.Fn <$>
-      mkType (tp, r-1) <*>
-      pure [(F.IntT, "x")] <*>
-      (F.Index (F.Var "a") <$> sequence [F.BinApp F.Mod <$> add <*> pure size])
-    add = F.BinApp F.Plus (F.Var "x") <$> compileExp i
-    size = FunCall "size" [F.Constant (F.Int 0), a]
+makeVRotate tp r i a = do
+  i' <- compileExp i
+  return $ F.FunCall "rotate" [izero, i', a]
+  where izero = F.Constant (F.Int 0)
 
 -- cat --
 compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
