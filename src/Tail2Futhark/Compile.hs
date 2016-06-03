@@ -556,18 +556,10 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
-makeVRotate tp r i a =
-  F.Let (Ident "a") a <$>
-  F.Let (Ident "n") (F.FunCall "size" [ione, F.Var "a"]) <$>
-  (Map <$> kernelExp <*> pure (FunCall "iota" [size]))
-  where
-    ione = F.Constant (F.Int 1)
-    kernelExp = F.Fn <$>
-      (setOuterSize (NamedDim "n") <$> mkType (tp, r-1)) <*>
-      pure [(F.IntT, "x")] <*>
-      (F.Index (F.Var "a") <$> sequence [F.BinApp F.Mod <$> add <*> pure size])
-    add = F.BinApp F.Plus (F.Var "x") <$> compileExp i
-    size = FunCall "size" [F.Constant (F.Int 0), a]
+makeVRotate tp r i a = do
+  i' <- compileExp i
+  return $ F.FunCall "rotate" [izero, i', a]
+  where izero = F.Constant (F.Int 0)
 
 -- cat --
 compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
