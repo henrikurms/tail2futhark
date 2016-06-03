@@ -37,7 +37,9 @@ instance Pretty Type where
   ppr F32T = text "f32"
   ppr F64T = text "f64"
   ppr BoolT = text "bool"
-  ppr (ArrayT at) = brackets (ppr at)
+  ppr (ArrayT at AnyDim) = brackets (ppr at)
+  ppr (ArrayT at (NamedDim v)) = brackets (ppr at <> comma <> ppr v)
+  ppr (ArrayT at (ConstDim k)) = brackets (ppr at <> comma <> ppr k)
   ppr (TupleT ts) = parens $ commasep $ map ppr ts
 
 instance Pretty Exp where

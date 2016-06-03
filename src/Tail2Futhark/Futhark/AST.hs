@@ -4,22 +4,25 @@ newtype Program = Program [FunDecl]
 
 data FunDecl = FunDecl Type Ident [Arg] Exp
 
+data DimDecl = AnyDim | NamedDim Ident | ConstDim Int
+             deriving (Show, Eq)
+
 data Type = IntT
           | Int8T
           | F32T
           | F64T
           | BoolT
           | TupleT [Type]
-          | ArrayT Type
+          | ArrayT Type DimDecl
          -- | UArrayT Type
   deriving (Show, Eq)
 
 rank :: Num a => Type -> a
-rank (ArrayT tp) = 1 + rank tp
+rank (ArrayT tp _) = 1 + rank tp
 rank _ = 0
 
 baseType :: Type -> Type
-baseType (ArrayT tp) = baseType tp
+baseType (ArrayT tp _) = baseType tp
 baseType tp = tp
 
 type Ident = String
