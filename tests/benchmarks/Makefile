@@ -8,4 +8,5 @@ TLEXECS=$(APLFILES:%.apl=tail_%)
 all: $(FUTEXECS) $(TLEXECS)
 
 clean:
-	rm -f *.fut *.tail tail_* fut_*
+	make -C life clean
+	rm -f *~ *.fut *.tail tail_* fut_*
