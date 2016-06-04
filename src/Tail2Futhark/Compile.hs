@@ -446,6 +446,11 @@ compileOpExp ident instDecl args = case ident of
            F.Index <$>
            compileExp arr <*>
            sequence [F.BinApp F.Minus <$> compileExp i <*> compileExp (I 1) ]
+
+  -- The bench function is semantically identity.  Since Futhark
+  -- contains its own benchmarking infrastructure, we compile it away.
+  "bench" | [_, _runs, arg] <- args -> compileBench instDecl args
+
   _
     | [e1,e2]  <- args
     , Just op  <- convertBinOp ident ->
@@ -752,6 +757,12 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               body <- makeReduce tp (r-1) kernel idExp (F.Var "x")
               return $ Map (F.Fn rt [(t,"x")] body) arrayExp
 compileReduce _ _ = throwError "reduce needs 3 arguments"
+
+-- bench --
+compileBench :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileBench _ [(T.Fn ident _tp e), _nruns, arg] =
+  F.Let (Ident ident) <$> compileExp arg <*> compileExp e
+compileBench _ _ = throwError "compileBench: invalid arguments"
 
 
 -- operators that are 1:1  --
