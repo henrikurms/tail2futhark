@@ -294,13 +294,17 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof32 = Constant . F32 . fromRational . toRational
     tof64 = Constant . F64
 
-    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil]
+    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
+                           sinf, cosf, atan2f]
       where
         x = F.Var "x"
         y = F.Var "y"
         i2dt = F.FunDecl t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
         sqrtf = F.FunDecl t "sqrt" [(t, "x")] $ F.FunCall (suff "sqrt") [x]
         ln = F.FunDecl t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
+        sinf = F.FunDecl t "sin" [(t, "x")] $ F.FunCall (suff "sin") [x]
+        cosf = F.FunDecl t "cos" [(t, "x")] $ F.FunCall (suff "cos") [x]
+        atan2f = F.FunDecl t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (suff "atan2_") [x,y]
         absd = F.FunDecl t "absd" [(t,"x")] $
           IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
         negd = F.FunDecl t "negd" [(t,"x")] $ F.Neg x
@@ -781,6 +785,9 @@ convertFun fun = case fun of
   "ln"     -> Just "ln"
   "ceil"   -> Just "ceil"
   "expd"   -> Just "expd"
+  "sin"    -> Just "sin"
+  "cos"    -> Just "cos"
+  "atan2"  -> Just "atan2"
   "notb"   -> Just "!"
   "floor"  -> Just "int"
   "mem"    -> Just "copy"
