@@ -242,10 +242,6 @@ makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ 
 mkType :: (BType, Integer) -> CompilerM F.Type
 mkType (tp, r) = makeArrTp <$> makeBTp tp <*> pure r
 
-setOuterSize :: DimDecl -> F.Type -> F.Type
-setOuterSize d (F.ArrayT t _) = F.ArrayT t d
-setOuterSize _ t              = t
-
 -- aux for mkType --
 makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
@@ -453,10 +449,7 @@ compileOpExp ident instDecl args = case ident of
            F.Index <$>
            compileExp arr <*>
            sequence [F.BinApp F.Minus <$> compileExp i <*> compileExp (I 1) ]
-
-  -- The bench function is semantically identity.  Since Futhark
-  -- contains its own benchmarking infrastructure, we compile it away.
-  "bench" | [_, _runs, arg] <- args -> compileBench instDecl args
+  "bench" -> compileBench instDecl args
 
   _
     | [e1,e2]  <- args
@@ -572,7 +565,7 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
-makeVRotate tp r i a = do
+makeVRotate _ _ i a = do
   i' <- compileExp i
   return $ F.FunCall "rotate" [izero, i', a]
   where izero = F.Constant (F.Int 0)
@@ -766,6 +759,9 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
 compileReduce _ _ = throwError "reduce needs 3 arguments"
 
 -- bench --
+--
+-- The bench function is semantically identity.  Since Futhark
+-- contains its own benchmarking infrastructure, we compile it away.
 compileBench :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileBench _ [(T.Fn ident _tp e), _nruns, arg] =
   F.Let (Ident ident) <$> compileExp arg <*> compileExp e
