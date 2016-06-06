@@ -281,7 +281,7 @@ compileTp (S bt _) = makeBTp bt
 
 -- list containing ompl of all library functions -- 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,absi,mini,signi,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi]
+builtins = [boolToInt,negi,absi,mini,signi,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
         ++ reshapeFuns 
         ++ takeFuns
         ++ dropFuns
@@ -326,7 +326,7 @@ boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
   F.IfThenElse (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
 
 negi, absi, mini, signi,
-  maxi, nandb, norb, eqb, xorb, neqi, neqd, resi :: FunDecl
+  maxi, nandb, norb, eqb, xorb, neqi, neqd, resi, inf32, inf64 :: FunDecl
 
 negi = F.FunDecl F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
 
@@ -356,6 +356,9 @@ notEq :: F.Exp -> F.Exp -> F.Exp
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 resi = F.FunDecl F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
+
+inf32 = F.FunDecl F.F32T "inf32" [] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
+inf64 = F.FunDecl F.F64T "inf64" [] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
 
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
@@ -395,7 +398,11 @@ compileExp (D d) = do
       return $ Constant (F64 d)
 compileExp (C char)   = return $ Constant (Char char)
 compileExp (B bool)   = return $ Constant (Bool bool)
-compileExp Inf = return $ Constant (F32 (read "Infinity"))
+compileExp Inf = do
+  float <- asks floatType
+  case float of
+    F.F32T -> return $ F.FunCall "inf32" []
+    _      -> return $ F.FunCall "inf64" []
 compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let (Ident ("t_" ++ v)) <$>
