@@ -50,7 +50,7 @@ instance Pretty Exp where
   ppr (ForLoop merge merge_init i bound loopbody letbody) =
     text "loop" <+> parens (text merge <+> text "=" <+> ppr merge_init) <+>
     text "=" <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
-    ppr loopbody <+> text "in" <+> ppr letbody
+    indent 2 (ppr loopbody) <+> text "in" <+> ppr letbody
   ppr (Constant c) = ppr c
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
