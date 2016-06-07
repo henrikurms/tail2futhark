@@ -60,6 +60,9 @@ inputsAndOutputs float = inputsAndOutputs' []
         inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrC" _ [e]) e2) =
           inputsAndOutputs' outs' e2
           where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
+        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrB" _ [e]) e2) =
+          inputsAndOutputs' outs' e2
+          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.BoolT [0..r-1]) : outs
 
         inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prSclI" _ [e]) e2) =
           inputsAndOutputs' outs' e2
