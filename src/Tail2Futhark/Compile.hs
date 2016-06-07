@@ -245,6 +245,11 @@ makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ 
 mkType :: (BType, Integer) -> CompilerM F.Type
 mkType (tp, r) = makeArrTp <$> makeBTp tp <*> pure r
 
+-- Set the outer dimension of a Futhark type.
+setOuterSize :: DimDecl -> F.Type -> F.Type
+setOuterSize d (F.ArrayT t _) = F.ArrayT t d
+setOuterSize _ t              = t
+
 -- aux for mkType --
 makeArrTp :: F.Type -> Integer -> F.Type
 makeArrTp btp 0 = btp
@@ -696,15 +701,19 @@ compileEachV _ _ = throwError "compileEachV: invalid arguments"
 
 -- each --
 compileEach :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] =
-  makeEach intp outtp orig_r okernel =<< compileExp orig_array
-  where makeEach _ tp2 1 kernel array =
+compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = do
+  array <- compileExp orig_array
+  F.Let (Ident "array") array <$>
+    makeEach intp outtp orig_r okernel (F.Var "array")
+  where ione = F.Constant (F.Int 1)
+        makeEach _ tp2 1 kernel array =
           Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure array
         makeEach tp1 tp2 r kernel array = do
-          tp2' <- mkType (tp2,r-1)
+          rtp  <- setOuterSize (F.NamedDim "n") <$> mkType (tp2,r-1)
           tp1' <- mkType (tp1,r-1)
           body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
-          return $ Map (F.Fn tp2' [(tp1',"x")] body) array
+          return $ F.Let (Ident "n") (F.FunCall "size" [ione, array]) $
+            Map (F.Fn rtp [(tp1',"x")] body) array
 compileEach Nothing _ = throwError "Need instance declaration for each"
 compileEach _ _ = throwError "each takes two arguments"
 
@@ -730,16 +739,20 @@ compileZipWith :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
   a1 <- compileExp orig_a1
   a2 <- compileExp orig_a2
-  makeZipWith rk orig_kernel a1 a2
-  where makeZipWith r kernel a1 a2
+  F.Let (Ident "x") a1 <$>
+    F.Let (Ident "y") a2 <$>
+    makeZipWith rk orig_kernel (F.Var "x") (F.Var "y")
+  where ione = F.Constant (F.Int 1)
+        makeZipWith r kernel a1 a2
           | r == 1 =
             Map <$> (compileKernel kernel =<< makeBTp rtp) <*> pure (FunCall "zip" [a1,a2])
           | otherwise = do
-              rtp' <- mkType (rtp,r-1)
+              rtp' <- setOuterSize (F.NamedDim "n") <$> mkType (rtp,r-1)
               tp1' <- mkType (tp1,r-1)
               tp2' <- mkType (tp2,r-1)
               body <- makeZipWith (r-1) kernel (F.Var "x") (F.Var "y")
-              return $ Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) (FunCall "zip" [a1, a2])
+              return $ F.Let (Ident "n") (F.FunCall "size" [ione, a1]) $
+                Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) (FunCall "zip" [a1, a2])
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
 compileZipWith _ _ = throwError "zipWith takes 3 arguments"
