@@ -21,6 +21,7 @@ data Type
   | VecT BType Rank
   | S BType Rank
   | SV BType Rank
+  | TupT [Type]
 --  | FunT Type Type
 --  | ShT Rank
 --  | SiT Rank
@@ -52,6 +53,7 @@ data Exp
   | Op Ident (Maybe InstDecl) [Exp]
   | Fn Ident Type Exp
   | Vc [Exp]
+  | Ts [Exp]
   deriving (Show)
 
 type Program = Exp

@@ -88,6 +88,7 @@ valueExpr = try (D <$> lexeme float)
          <|> C <$> charlit
          <|> B <$> ((reserved "tt" >> return True) <|> (reserved "ff" >> return False))
          <|> Var <$> identifier
+         <|> Ts <$> try (parens (expr `sepBy1` comma))
          <?> "number or identifier"
 
 arrayExpr :: Parser Exp
@@ -138,7 +139,7 @@ typedIdent =
 -- Types
 
 typeExpr :: Parser Type
-typeExpr = arrayType <|> vectorType <?> "type"
+typeExpr = arrayType <|> vectorType <|> tupleType <?> "type"
 --typeExpr = liftM (foldr1 FunT) $
 --  sepBy1 (arrayType <|> vectorType <?> "type") (symbol "->")
 
@@ -151,6 +152,9 @@ vectorType = VecT <$> angles basicType <*> rank
          <|> (try (symbol "SV") >> parens (SV <$> basicType <* comma <*> rank))
          <|> (try (symbol "S") >> parens (S <$> basicType <* comma <*> rank))
          <?> "vector type"
+
+tupleType :: Parser Type
+tupleType = TupT <$> parens (typeExpr `sepBy1` symbol "*")
 
 --shapeType :: Parser Type
 --shapeType = shape "Sh" ShT
