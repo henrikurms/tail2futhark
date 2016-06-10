@@ -285,6 +285,7 @@ compileKernel e t = throwError $ unwords ["compileKernel, invalid args:", show e
 compileTp :: T.Type -> CompilerM F.Type
 compileTp (ArrT bt (R r)) = makeArrTp <$> makeBTp bt <*> pure r
 compileTp (VecT bt (R _)) = makeArrTp <$> makeBTp bt <*> pure 1
+compileTp (TupT ts) = F.TupleT <$> mapM compileTp ts
 compileTp (SV bt (R _)) = makeArrTp <$> makeBTp bt <*> pure 1
 compileTp (S bt _) = makeBTp bt
 
@@ -420,8 +421,10 @@ compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let (Ident ("t_" ++ v)) <$>
   compileExp e1 <*> compileExp e2
+compileExp (T.Prj n i e) = compilePrj n i e
 compileExp (T.Op "tuple" Nothing args) = F.Tuple <$> mapM compileExp args
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
+compileExp (Ts es) = F.Tuple <$> mapM compileExp es
 compileExp T.Fn{} = throwError "Fn not supported"
 compileExp (Vc exps) = Array <$> mapM compileExp exps
 
@@ -728,8 +731,9 @@ compileEach _ _ = throwError "each takes two arguments"
 
 -- power --
 compilePower :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compilePower (Just ([tp],_)) [kernel,num,arr] = do
-  fn <- compileKernel kernel =<< makeBTp tp
+compilePower (Just (ts,rs)) [kernel,num,arr] = do
+  ts' <- zipWithM (curry mkType) ts rs
+  fn <- compileKernel kernel $ F.TupleT ts'
   num' <- compileExp num
   arr' <- compileExp arr
   case fn of
@@ -739,7 +743,7 @@ compilePower (Just ([tp],_)) [kernel,num,arr] = do
       fail "expecting exactly one argument in function to power-function"
     _  ->
       fail "expecting anonymous function as argument to power-function"
-compilePower (Just (_,_)) _ = throwError "power takes one type argument"
+compilePower (Just (_,_)) _ = throwError $ "power takes one type argument"
 compilePower Nothing [_,_,_] = throwError "Need instance declaration for power"
 compilePower _ _ = throwError "power takes three arguments"
 
@@ -782,6 +786,15 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               body <- makeReduce tp (r-1) kernel idExp (F.Var "x")
               return $ Map (F.Fn rt [(t,"x")] body) arrayExp
 compileReduce _ _ = throwError "reduce needs 3 arguments"
+
+-- Prj ---
+compilePrj :: Maybe Integer -> Integer -> T.Exp -> CompilerM F.Exp
+compilePrj (Just n) i tup =
+  F.Let (TouplePat (map Ident vs)) <$>
+  compileExp tup <*>
+  pure (F.Var $ vs !! fromInteger i)
+  where vs = map (("tup"++) . show) [0..n-1]
+compilePrj _ _ _ = throwError "compilePrj: invalid arguments"
 
 -- bench --
 --

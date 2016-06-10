@@ -50,6 +50,7 @@ data Exp
   | Inf
   | Neg Exp
   | Let Ident Type Exp Exp
+  | Prj (Maybe Integer) Integer Exp
   | Op Ident (Maybe InstDecl) [Exp]
   | Fn Ident Type Exp
   | Vc [Exp]

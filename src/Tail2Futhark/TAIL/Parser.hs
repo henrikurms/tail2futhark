@@ -73,7 +73,8 @@ program =
 -- Expression
 
 expr :: Parser Exp
-expr = opExpr
+expr = projExpr
+   <|> opExpr
    <|> arrayExpr
    <|> letExpr
    <|> fnExpr
@@ -110,6 +111,13 @@ instanceDecl = braces $
      comma
      ranks <- brackets $ sepBy (lexeme decimal) comma
      return (btyps, ranks)
+
+projExpr :: Parser Exp
+projExpr =
+  do symbol "Prj"
+     n <- optionMaybe $ braces $ lexeme decimal
+     (i, e) <- parens $ (,) <$> lexeme decimal <*> (comma *> expr)
+     return $ Prj n i e
 
 opExpr :: Parser Exp
 opExpr =
