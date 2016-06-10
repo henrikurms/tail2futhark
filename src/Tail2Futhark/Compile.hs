@@ -421,7 +421,7 @@ compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let (Ident ("t_" ++ v)) <$>
   compileExp e1 <*> compileExp e2
-compileExp (T.Prj n i e) = compilePrj n i e
+compileExp (T.Prj _ i e) = compilePrj i e
 compileExp (T.Op "tuple" Nothing args) = F.Tuple <$> mapM compileExp args
 compileExp (T.Op ident instDecl args) = compileOpExp ident instDecl args
 compileExp (Ts es) = F.Tuple <$> mapM compileExp es
@@ -788,13 +788,9 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
 compileReduce _ _ = throwError "reduce needs 3 arguments"
 
 -- Prj ---
-compilePrj :: Maybe Integer -> Integer -> T.Exp -> CompilerM F.Exp
-compilePrj (Just n) i tup =
-  F.Let (TouplePat (map Ident vs)) <$>
-  compileExp tup <*>
-  pure (F.Var $ vs !! fromInteger i)
-  where vs = map (("tup"++) . show) [0..n-1]
-compilePrj _ _ _ = throwError "compilePrj: invalid arguments"
+compilePrj :: Integer -> T.Exp -> CompilerM F.Exp
+compilePrj i tup =
+  F.Project <$> compileExp tup <*> pure (show i)
 
 -- bench --
 --

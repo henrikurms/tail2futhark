@@ -59,6 +59,7 @@ data Exp = Var Ident
          | Neg Exp
          | Array [Exp]
          | Tuple [Exp]
+         | Project Exp String
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
          | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args
