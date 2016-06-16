@@ -8,8 +8,11 @@ import Tail2Futhark.Futhark.Pretty as F -- the futhark AST
 import Prelude
 
 import Control.Monad.Reader
+import Control.Monad.Writer
 import Control.Monad.Except
 import Data.Char
+import Data.List
+import qualified Data.Map as M
 import Options (Options(..))
 
 data Env = Env { floatType :: F.Type }
@@ -17,12 +20,13 @@ data Env = Env { floatType :: F.Type }
 newEnv :: Env
 newEnv = Env F.F64T
 
-newtype CompilerM a = CompilerM (ReaderT Env (Except String) a)
+newtype CompilerM a = CompilerM (ReaderT Env (WriterT (M.Map GenFun FunDecl) (Except String)) a)
                     deriving (Applicative, Functor, Monad,
-                              MonadReader Env, MonadError String)
+                              MonadReader Env, MonadError String,
+                              MonadWriter (M.Map GenFun FunDecl))
 
-runCompilerM :: CompilerM a -> Env -> Either String a
-runCompilerM (CompilerM m) = runExcept . runReaderT m
+runCompilerM :: CompilerM a -> Env -> Either String (a, M.Map GenFun FunDecl)
+runCompilerM (CompilerM m) = runExcept . runWriterT . runReaderT m
 
 --------------------------
 -- THE MAIN FUNCTION --
@@ -32,8 +36,11 @@ compile :: Options -> T.Program -> F.Program
 compile opts prog =
   case runCompilerM (compileExp rootExp) env of
     Left e -> error e
-    Right mainbody ->
-      F.Program $ includes ++ [F.FunDecl ret "main" signature $ maybeUnsafe mainbody]
+    Right (mainbody, genfuns) ->
+      F.Program $
+      includes ++
+      map snd (M.toList genfuns) ++
+      [F.FunDecl ret "main" signature $ maybeUnsafe mainbody]
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
         (signature, ret, rootExp) = inputsAndOutputs float prog
@@ -223,17 +230,17 @@ getType s
         r | [] <- prefix = Nothing 
           | otherwise = Just (read prefix :: Integer)
 
--- make list of Futhark basic types --
-btypes :: [F.Type]
-btypes = map readBType ["int","f32","f64","bool"]
-
 -- return zero expression of basic type --
-zero :: F.Type -> F.Exp
-zero F.IntT = Constant (Int 0)
-zero F.F32T = Constant (F32 0)
-zero F.F64T = Constant (F64 0)
-zero F.BoolT = Constant (Bool False)
-zero tp = error $ "take for type " ++ pretty tp ++ " not supported"
+zero :: (Integer, F.Ident) -> F.Type -> F.Exp
+zero _ F.IntT = Constant (Int 0)
+zero _ F.F32T = Constant (F32 0)
+zero _ F.F64T = Constant (F64 0)
+zero _ F.BoolT = Constant (Bool False)
+zero (i,x) (F.ArrayT t _) =
+  F.FunCall "replicate"
+  [FunCall "size" [F.Constant (F.Int i), F.Var x],
+   zero (i+1,x) t]
+zero _ tp = error $ "take for type " ++ pretty tp ++ " not supported"
 
 -- make Futhark function expression from ident
 makeKernel :: String -> Kernel
@@ -296,9 +303,6 @@ compileTp (S bt _) = makeBTp bt
 -- list containing ompl of all library functions -- 
 builtins :: [F.FunDecl]
 builtins = [boolToInt,negi,absi,mini,signi,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
-        ++ reshapeFuns 
-        ++ takeFuns
-        ++ dropFuns
 
 f32Builtins, f64Builtins :: [F.FunDecl]
 (f32Builtins, f64Builtins) = (funs F.F32T (++"32") tof32,
@@ -376,22 +380,30 @@ inf64 = F.FunDecl F.F64T "inf64" [] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Con
 
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
-makeFun args name body tp = F.FunDecl (ArrayT tp F.AnyDim) (name ++ "_" ++ pretty tp) args body
+makeFun args name body tp = F.FunDecl (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) args body
+  where annot (TupleT ts) = intercalate "_" $ map annot ts
+        annot (ArrayT t _) = "arr" ++ annot t
+        annot t = pretty t
 
 stdArgs :: F.Type -> [(F.Type, String)]
-stdArgs tp = [(F.IntT,"l"),(ArrayT tp F.AnyDim, "x")]
+stdArgs tp = [(F.IntT,"l"),(ArrayT tp AnyDim, "x")]
 
-reshapeFun :: F.Type -> FunDecl
-reshapeFun tp = makeFun (stdArgs tp) "reshape1" (reshape1Body tp) tp
-takeFun :: F.Type -> F.FunDecl
-takeFun tp = makeFun (stdArgs tp) "take1" (takeBody (zero tp)) tp
-dropFun :: F.Type -> F.FunDecl
-dropFun tp = makeFun (stdArgs tp) "drop1" (dropBody tp) tp
+-- Generic library functions
+data GenFun = TakeFun F.Type
+            | DropFun F.Type
+            | ReshapeFun F.Type
+            deriving (Eq, Ord, Show)
 
-reshapeFuns, takeFuns, dropFuns :: [FunDecl]
-reshapeFuns = map reshapeFun btypes
-takeFuns = map takeFun btypes
-dropFuns = map dropFun btypes
+generateGenFun :: GenFun -> FunDecl
+generateGenFun (TakeFun t) = makeFun (stdArgs t) "take" (takeBody (zero (0, "x") t)) t
+generateGenFun (DropFun t) = makeFun (stdArgs t) "drop" (dropBody t) t
+generateGenFun (ReshapeFun t) = makeFun (stdArgs t) "reshape" (reshape1Body t) t
+
+genFun :: GenFun -> CompilerM F.Ident
+genFun gf = do
+  let ff@(FunDecl _ name _ _) = generateGenFun gf
+  tell $ M.singleton gf ff
+  return name
 
 -----------------
 -- EXPRESSIONS --
@@ -605,45 +617,41 @@ compileCat _ _ = throwError "compileCat: invalid arguments"
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileTakeV (Just([tp],_)) [len,e] =
-  F.FunCall <$> fname <*> sequence [compileExp len, compileExp e]
-  where fname = ("take1_" ++) . pretty <$> makeBTp tp
+compileTakeV (Just([tp],_)) [len,e] = do
+  tp' <- mkType (tp, 0)
+  fname <- genFun $ TakeFun tp'
+  F.FunCall fname <$> sequence [compileExp len, compileExp e]
 compileTakeV Nothing _ = throwError "Need instance declaration for takeV"
 compileTakeV _ _ = throwError "TakeV needs 2 arguments"
 
 -- dropV --
 compileDropV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileDropV (Just([tp],_)) [len,e] =
-  F.FunCall <$> fname <*> sequence [compileExp len,compileExp e]
-    where fname = ("drop1_" ++) . pretty <$> makeBTp tp
+compileDropV (Just([tp],_)) [len,e] = do
+  tp' <- mkType (tp, 0)
+  fname <- genFun $ DropFun tp'
+  F.FunCall fname <$> sequence [compileExp len,compileExp e]
 compileDropV Nothing _ = throwError "Need instance declaration for dropV"
 compileDropV _ _ = throwError "DropV needs 2 arguments"
 
 -- take --
 compileTake :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileTake (Just([tp],[r])) [len,e] = takeDropHelper compileTake' r len e
-  where compileTake' shape len' e' =
-          F.FunCall2 "reshape" dims <$> (F.FunCall <$> fname <*> pure [sizeProd,resh])
-          where dims =  absExp len':tail shape
-                sizeProd = multExp $ len':tail shape
-                fname = ("take1_" ++) . pretty <$> makeBTp tp
-                resh = F.FunCall2 "reshape" [multExp shape] e'
+compileTake (Just([tp],[r])) [len,e] = do
+  tp' <- mkType (tp, r-1)
+  fname <- genFun $ TakeFun tp'
+  takeDropHelper (compileTake' fname) r len e
+  where compileTake' fname _ len' e' =
+          F.FunCall fname <$> pure [len',e']
 compileTake Nothing _args = throwError "Need instance declaration for take"
 compileTake _ _ = throwError "Take needs 2 arguments"
 
 -- drop --
 compileDrop :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
-compileDrop (Just([tp],[r])) [len,e] = takeDropHelper compileDrop' r len e
-  where compileDrop' shape len' e' =
-          F.FunCall2 "reshape" dims <$> (F.FunCall <$> fname <*> pure [sizeProd,resh])
-          where dims =
-                  maxExp (Constant (Int 0))
-                  (F.BinApp F.Minus
-                   (F.FunCall "size" [Constant (Int 0), e'])
-                   (absExp len')) : tail shape
-                resh = F.FunCall2 "reshape" [multExp shape] e'
-                sizeProd = multExp $ len' : tail shape
-                fname = ("drop1_" ++) . pretty <$> makeBTp tp
+compileDrop (Just([tp],[r])) [len,e] = do
+  tp' <- mkType (tp, r-1)
+  fname <- genFun $ DropFun tp'
+  takeDropHelper (compileDrop' fname) r len e
+  where compileDrop' fname _ len' e' =
+          F.FunCall fname <$> pure [len',e']
 compileDrop _ _ = throwError "compileDrop: invalid arguments"
 
 takeDropHelper :: ([F.Exp] -> F.Exp -> F.Exp -> CompilerM b)
@@ -658,7 +666,7 @@ takeDropHelper f r len e = do
 compileReshape :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileReshape (Just([tp],[r1,r2])) [dims,array] = do
   dimsExp <- compileExp dims
-  fname <- ("reshape1_" ++) . pretty <$> makeBTp tp
+  fname <- genFun =<< ReshapeFun <$> mkType (tp, 0)
   (dimsList, wrap) <- case dimsExp of
     F.Array l ->
       return (l, id)

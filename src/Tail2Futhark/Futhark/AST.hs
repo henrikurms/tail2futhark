@@ -5,7 +5,7 @@ newtype Program = Program [FunDecl]
 data FunDecl = FunDecl Type Ident [Arg] Exp
 
 data DimDecl = AnyDim | NamedDim Ident | ConstDim Int
-             deriving (Show, Eq)
+             deriving (Show, Eq, Ord)
 
 data Type = IntT
           | Int8T
@@ -15,7 +15,7 @@ data Type = IntT
           | TupleT [Type]
           | ArrayT Type DimDecl
          -- | UArrayT Type
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 rank :: Num a => Type -> a
 rank (ArrayT tp _) = 1 + rank tp
