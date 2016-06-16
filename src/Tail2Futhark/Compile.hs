@@ -395,7 +395,7 @@ data GenFun = TakeFun F.Type
             deriving (Eq, Ord, Show)
 
 generateGenFun :: GenFun -> FunDecl
-generateGenFun (TakeFun t) = makeFun (stdArgs t) "take" (takeBody (zero (0, "x") t)) t
+generateGenFun (TakeFun t) = makeFun (stdArgs t) "take" (takeBody (zero (1, "x") t)) t
 generateGenFun (DropFun t) = makeFun (stdArgs t) "drop" (dropBody t) t
 generateGenFun (ReshapeFun t) = makeFun (stdArgs t) "reshape" (reshape1Body t) t
 
