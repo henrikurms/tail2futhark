@@ -112,11 +112,6 @@ maxExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e2 e1
 minExp :: F.Exp -> F.Exp -> F.Exp
 minExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e1 e2
 
-signiExp :: F.Exp -> F.Exp
-
-signiExp e = IfThenElse (BinApp Less (Constant (Int 0)) e) (Constant (Int 1)) elseBranch
-  where elseBranch = IfThenElse (BinApp Eq (Constant (Int 0)) e) (Constant (Int 0)) (Constant (Int (-1)))
-
 nandExp :: F.Exp -> F.Exp -> F.Exp
 nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2] 
 
@@ -302,7 +297,7 @@ compileTp (S bt _) = makeBTp bt
 
 -- list containing ompl of all library functions -- 
 builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,absi,mini,signi,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
+builtins = [boolToInt,negi,absi,mini,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
 
 f32Builtins, f64Builtins :: [F.FunDecl]
 (f32Builtins, f64Builtins) = (funs F.F32T (++"32") tof32,
@@ -343,7 +338,7 @@ boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
   F.IfThenElse (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
 
-negi, absi, mini, signi,
+negi, absi, mini,
   maxi, nandb, norb, eqb, xorb, neqi, neqd, resi, inf32, inf64 :: FunDecl
 
 negi = F.FunDecl F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
@@ -351,8 +346,6 @@ negi = F.FunDecl F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
 absi = F.FunDecl F.IntT "absi" [(F.IntT,"x")] $ absExp (F.Var "x")
 
 mini = F.FunDecl F.IntT "mini" [(F.IntT, "x"), (F.IntT, "y")] $ minExp (F.Var "x") (F.Var "y")
-
-signi = F.FunDecl F.IntT "signi" [(F.IntT, "x")] $ signiExp (F.Var "x")
 
 maxi = F.FunDecl F.IntT "maxi" [(F.IntT, "x"), (F.IntT, "y")] $ maxExp (F.Var "x") (F.Var "y")
 
@@ -820,7 +813,6 @@ idFuns = ["negi",
           "mini",
           "mind",
           "signd",
-          "signi",
           "maxi",
           "maxd",
           "eqb",
@@ -831,7 +823,7 @@ idFuns = ["negi",
           "neqd",
           "resi"]
 
--- operators that are 1:1 with Futhark functions --
+-- operators that are 1:1 with Futhark functions or prefix operators --
 convertFun :: String -> Maybe String
 convertFun fun = case fun of
   "i2d"    -> Just "i2d"
@@ -847,6 +839,7 @@ convertFun fun = case fun of
   "notb"   -> Just "!"
   "floor"  -> Just "int"
   "mem"    -> Just "copy"
+  "signi"  -> Just "signum"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
