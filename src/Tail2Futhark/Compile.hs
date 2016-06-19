@@ -434,7 +434,7 @@ compileExp T.Fn{} = throwError "Fn not supported"
 compileExp (Vc exps) = Array <$> mapM compileExp exps
 
 -- operators --
-compileOpExp :: String -> Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
   "eachV"  -> compileEachV instDecl args
@@ -541,7 +541,7 @@ compileIota _ [a] = compileIota' <$> compileExp a
 compileIota _ _ = throwError "Iota take one argument"
 
 -- vreverse --
-compileVReverse :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileVReverse :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileVReverse (Just([tp],[r])) [a] = makeVReverse tp r =<< compileExp a
 compileVReverse _ _ = throwError "compileVReverse: invalid arguments"
 
@@ -568,12 +568,12 @@ makeVReverse tp r a = F.Let (Ident "a") a <$>
     ione = F.Constant (F.Int 1)
 
 -- rotate --
-compileVRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileVRotate :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileVRotate (Just([tp],[r])) [i,a] = makeVRotate tp r i =<< compileExp a
 compileVRotate Nothing _ = throwError "Need instance declaration for vrotate"
 compileVRotate _ _ = throwError "vrotate needs 2 arguments"
 
-compileRotate :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileRotate :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileRotate (Just([tp],[r])) [i,a] =
   makeTransp r <$> (makeVRotate tp r i =<< (makeTransp r <$> compileExp a))
 compileRotate Nothing _ = throwError "Need instance declaration for rotate"
@@ -593,7 +593,7 @@ makeVRotate _ _ i a = do
   where izero = F.Constant (F.Int 0)
 
 -- cat --
-compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileCat :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileCat (Just([_],[r])) [a1,a2] = do
   a1' <- compileExp a1
   a2' <- compileExp a2
@@ -631,7 +631,7 @@ compileTake Nothing _args = throwError "Need instance declaration for take"
 compileTake _ _ = throwError "Take needs 2 arguments"
 
 -- drop --
-compileDrop :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileDrop :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileDrop (Just([tp],[r])) [len,e] = do
   tp' <- mkType (tp, r-1)
   fname <- genFun $ DropFun tp'
@@ -649,7 +649,7 @@ takeDropHelper f r len e = do
   f shape len' e'
 
 -- reshape --
-compileReshape :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
+compileReshape :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileReshape (Just([tp],[r1,r2])) [dims,array] = do
   dimsExp <- compileExp dims
   fname <- genFun =<< ReshapeFun <$> mkType (tp, 0)
