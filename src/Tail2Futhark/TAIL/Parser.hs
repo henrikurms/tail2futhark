@@ -82,7 +82,8 @@ expr = projExpr
    <?> "expression"
 
 valueExpr :: Parser Exp
-valueExpr = try (D <$> lexeme float)
+valueExpr =  try (X <$> signed float <* symbol "j" <*> signed float)
+         <|> try (D <$> lexeme float)
          <|> I <$> lexeme decimal
          <|> try (reserved "inf" >> return Inf)
          <|> (char '-' >> Neg <$> valueExpr)
@@ -91,6 +92,9 @@ valueExpr = try (D <$> lexeme float)
          <|> Var <$> identifier
          <|> Ts <$> try (parens (expr `sepBy1` comma))
          <?> "number or identifier"
+
+signed :: Num num => Parser num -> Parser num
+signed p = (char '-' >> negate <$> p) <|> p
 
 arrayExpr :: Parser Exp
 arrayExpr = Vc <$> brackets (sepBy (opExpr <|> valueExpr) comma)
@@ -181,6 +185,7 @@ basicType = (reserved "int" >> return IntT)
         <|> (reserved "double" >> return DoubleT)
         <|> (reserved "bool" >> return BoolT)
         <|> (reserved "char" >> return CharT)
+        <|> (reserved "complex" >> return ComplexT)
         <|> (char '\'' >> Btyv <$> many1 alphaNum)
         <?> "basic type"
 

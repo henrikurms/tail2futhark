@@ -56,7 +56,8 @@ compile opts prog =
 
 inputsAndOutputs :: F.Type -> T.Exp -> ([(F.Type, String)], F.Type, T.Exp)
 inputsAndOutputs float = inputsAndOutputs' []
-  where inputsAndOutputs' outs (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) =
+  where complex = F.TupleT [float, float]
+        inputsAndOutputs' outs (T.Let v  _ (T.Op "readIntVecFile" _ _) e2) =
           ((F.ArrayT F.IntT F.AnyDim, "t_" ++ v):sig, ret, e')
           where (sig, ret, e') = inputsAndOutputs' outs e2
 
@@ -64,25 +65,23 @@ inputsAndOutputs float = inputsAndOutputs' []
           ((F.ArrayT float F.AnyDim, "t_" ++ v):sig, ret, e')
           where (sig, ret, e') = inputsAndOutputs' outs e2
 
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrC" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrB" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.BoolT [0..r-1]) : outs
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrI" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prArrD" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) float [0..r-1]) : outs
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prArrC" _ [e]) e2) =
+          output outs v e T.IntT F.IntT r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prArrB" _ [e]) e2) =
+          output outs v e T.BoolT F.BoolT r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prArrI" _ [e]) e2) =
+          output outs v e T.IntT F.IntT r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prArrD" _ [e]) e2) =
+          output outs v e T.DoubleT float r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prArrX" _ [e]) e2) =
+          output outs v e T.ComplexT complex r e2
 
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prSclI" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) F.IntT [0..r-1]) : outs
-        inputsAndOutputs' outs (T.Let _ (T.ArrT _ (R r)) (T.Op "prSclD" _ [e]) e2) =
-          inputsAndOutputs' outs' e2
-          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) float [0..r-1]) : outs
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prSclI" _ [e]) e2) =
+          output outs v e T.IntT F.IntT r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prSclD" _ [e]) e2) =
+          output outs v e T.DoubleT float r e2
+        inputsAndOutputs' outs (T.Let v (T.ArrT _ (R r)) (T.Op "prSclX" _ [e]) e2) =
+          output outs v e T.ComplexT complex r e2
 
 
         inputsAndOutputs' outs (T.Let v  t e body) =
@@ -93,11 +92,16 @@ inputsAndOutputs float = inputsAndOutputs' []
           ([], t, e)
 
         inputsAndOutputs' outs@(_:_) _ =
-          ([], F.TupleT ret, T.Op "tuple" Nothing $ reverse es)
-          where (es, ret) = unzip outs
+          ([], F.TupleT ret, T.Op "tuple" Nothing es)
+          where (es, ret) = unzip $ reverse outs
 
         inputsAndOutputs' [] e =
           ([], float, e)
+
+        output outs v e bt t r rest =
+          let (outs'', ret, rest') = inputsAndOutputs' outs' rest
+          in (outs'', ret, T.Let v (T.ArrT bt (R r)) e rest')
+          where outs' = (e, foldr (const (`F.ArrayT` F.AnyDim)) t [0..r-1]) : outs
 
 ----------------------------------------
 -- AUX FUNCTIONS OF LIBRARY FUNCTIONS --
@@ -250,6 +254,8 @@ makeBTp T.IntT = return F.IntT
 makeBTp T.DoubleT = asks floatType
 makeBTp T.BoolT = return F.BoolT
 makeBTp T.CharT = return F.IntT
+makeBTp T.ComplexT = do t <- makeBTp T.DoubleT
+                        return $ F.TupleT [t,t]
 makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ v
 
 -- make Futhark array type from Futhark basic type --
@@ -308,8 +314,9 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof64 = Constant . F64
 
     funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
-                           sinf, cosf, atan2f]
+                           sinf, cosf, atan2f, d2x, addx, mulx]
       where
+        complex = TupleT [t, t]
         x = F.Var "x"
         y = F.Var "y"
         i2dt = F.FunDecl t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
@@ -333,6 +340,19 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
+        addx = F.FunDecl complex "addx" [(complex, "x"), (complex, "y")] $
+          (F.Tuple [BinApp Plus (Project x "0") (Project y "0"),
+                    BinApp Plus (Project x "1") (Project y "1")])
+        mulx = F.FunDecl complex "mulx" [(complex, "x"), (complex, "y")] $
+          let a = Project x "0"
+              b = Project x "1"
+              c = Project y "0"
+              d = Project y "1"
+          in (F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
+                       BinApp Minus (BinApp Mult a d) (BinApp Mult b c)])
+        d2x = F.FunDecl complex "d2x" [(t, "x")] $
+          F.Tuple [x, constant 0]
+
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
@@ -415,6 +435,10 @@ compileExp (D d) = do
       return $ Constant (F32 $ fromRational $ toRational d)
     _ ->
       return $ Constant (F64 d)
+compileExp (X a b) = do
+  a' <- compileExp $ D a
+  b' <- compileExp $ D b
+  return $ Tuple [a',b']
 compileExp (C char)   = return $ Constant (Char char)
 compileExp (B bool)   = return $ Constant (Bool bool)
 compileExp Inf = do
@@ -814,7 +838,12 @@ idFuns = ["negi",
           "norb",
           "neqi",
           "neqd",
-          "resi"]
+          "resi",
+
+          -- Complex number functions
+         "addx",
+         "mulx",
+         "d2x"]
 
 -- operators that are 1:1 with Futhark functions or prefix operators --
 convertFun :: String -> Maybe String

@@ -13,6 +13,7 @@ data BType = IntT
            | DoubleT
            | BoolT
            | CharT
+           | ComplexT
            | Btyv Ident
   deriving (Show, Eq)
 
@@ -47,6 +48,7 @@ data Exp
   | D Double
   | C Char
   | B Bool
+  | X Double Double
   | Inf
   | Neg Exp
   | Let Ident Type Exp Exp
