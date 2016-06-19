@@ -497,14 +497,11 @@ compileSnocV _ _ = throwError "snocV take two aguments"
 
 -- snoc --
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileSnoc (Just([_],[0])) [a,e] = compileSnoc' <$> compileExp a <*> compileExp e
-  where compileSnoc' a' e' =
-          F.FunCall "concat" [a',F.Array [e']]
 compileSnoc (Just([_],[r])) [a,e] = compileSnoc' <$> compileExp a <*> compileExp e
   where compileSnoc' a' e' =
-          makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [arr,e''])
-          where e'' = F.Array [makeTransp r e']
-                arr = makeTransp (r+1) a'
+          F.FunCall concatf [a',e'']
+          where e'' = makeTransp (r+1) $ F.Array [e']
+        concatf = "concat@" ++ show r
 compileSnoc _ _ = throwError "compileSnoc: invalid arguments"
 
 -- consV --
@@ -520,9 +517,9 @@ compileConsV _ _ = throwError "consV take two aguments"
 compileCons :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileCons (Just([_],[r])) [e,a] = compileCons' <$> compileExp e <*> compileExp a
   where compileCons' e' a' =
-          makeTransp2 (map (Constant . Int) (reverse [0..r])) (F.FunCall "concat" [e'', arr])
-          where e'' = F.Array [makeTransp r e']
-                arr = makeTransp (r+1) a'
+          F.FunCall concatf [e'',a']
+            where e'' = makeTransp (r+1) $ F.Array [e']
+        concatf = "concat@" ++ show r
 compileCons _ _ = throwError "compileCons: invalid arguments"
 
 -- first --
@@ -600,12 +597,8 @@ compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
 compileCat (Just([tp],[r])) [a1,a2] = do
   a1' <- compileExp a1
   a2' <- compileExp a2
-  makeCat tp r a1' a2'
-  where makeCat _ 1 a1' a2' = return $ FunCall "concat" [a1', a2']
-        makeCat tp' r' a1' a2' = Map <$> kernelExp <*> pure (FunCall "zip" [a1', a2'])
-          where kernelExp = do
-                  t <- mkType (tp',r'-1)
-                  F.Fn t [(t,"x"),(t,"y")] <$> makeCat tp' (r'-1) (F.Var "x") (F.Var "y")
+  return $ FunCall concatf [a1', a2']
+  where concatf = "concat@" ++ show (r-1)
 compileCat _ _ = throwError "compileCat: invalid arguments"
 
 -- takeV --
