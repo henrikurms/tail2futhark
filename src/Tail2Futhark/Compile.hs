@@ -594,7 +594,7 @@ makeVRotate _ _ i a = do
 
 -- cat --
 compileCat :: Maybe ([BType], [Integer]) -> [T.Exp] -> CompilerM F.Exp
-compileCat (Just([tp],[r])) [a1,a2] = do
+compileCat (Just([_],[r])) [a1,a2] = do
   a1' <- compileExp a1
   a2' <- compileExp a2
   return $ FunCall concatf [a1', a2']
