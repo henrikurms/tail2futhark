@@ -82,7 +82,7 @@ expr = projExpr
    <?> "expression"
 
 valueExpr :: Parser Exp
-valueExpr =  try (X <$> signed float <* symbol "j" <*> signed float)
+valueExpr =  try (X <$> signed float <* (symbol "j" <|> symbol "J") <*> signed float)
          <|> try (D <$> lexeme float)
          <|> I <$> lexeme decimal
          <|> try (reserved "inf" >> return Inf)
