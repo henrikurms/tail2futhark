@@ -31,7 +31,7 @@ Testing
 
 To test the compiler, run the following command:
 
-    (cd tests/basic_tests; make clean test)
+    stack test
 
 This command will execute a number of tests and print a test report on
 stdout.
