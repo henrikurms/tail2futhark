@@ -314,7 +314,8 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof64 = Constant . F64
 
     funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
-                           sinf, cosf, atan2f, d2x, addx, mulx]
+                            sinf, cosf, atan2f,
+                            d2x, addx, mulx, injx, subx, negx, conjx, expx]
       where
         complex = TupleT [t, t]
         x = F.Var "x"
@@ -340,19 +341,34 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
+        d2x = F.FunDecl complex "d2x" [(t, "x")] $
+          F.Tuple [x, constant 0]
+        injx = F.FunDecl complex "injx" [(t, "x")] $
+          F.Tuple [constant 0, x]
         addx = F.FunDecl complex "addx" [(complex, "x"), (complex, "y")] $
-          (F.Tuple [BinApp Plus (Project x "0") (Project y "0"),
-                    BinApp Plus (Project x "1") (Project y "1")])
+          F.Tuple [BinApp Plus (Project x "0") (Project y "0"),
+                   BinApp Plus (Project x "1") (Project y "1")]
+        subx = F.FunDecl complex "subx" [(complex, "x"), (complex, "y")] $
+          F.Tuple [BinApp Minus (Project x "0") (Project y "0"),
+                   BinApp Minus (Project x "1") (Project y "1")]
         mulx = F.FunDecl complex "mulx" [(complex, "x"), (complex, "y")] $
           let a = Project x "0"
               b = Project x "1"
               c = Project y "0"
               d = Project y "1"
-          in (F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
-                       BinApp Minus (BinApp Mult a d) (BinApp Mult b c)])
-        d2x = F.FunDecl complex "d2x" [(t, "x")] $
-          F.Tuple [x, constant 0]
-
+          in F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
+                      BinApp Minus (BinApp Mult a d) (BinApp Mult b c)]
+        negx = F.FunDecl complex "negx" [(complex, "x")] $
+          F.Tuple [F.Neg (Project x "0"),
+                   F.Neg (Project x "1")]
+        conjx = F.FunDecl complex "conjx" [(complex, "x")] $
+          F.Tuple [Project x "0",
+                   F.Neg (Project x "1")]
+        expx = F.FunDecl complex "expx" [(complex, "x")] $
+          FunCall "mulx" [F.Tuple [constant 0,
+                                   FunCall "expd" [Project x "0"]],
+                          F.Tuple [FunCall "cos" [Project x "1"],
+                                   FunCall "sin" [Project x "1"]]]
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
@@ -843,7 +859,12 @@ idFuns = ["negi",
           -- Complex number functions
          "addx",
          "mulx",
-         "d2x"]
+         "d2x",
+         "injx",
+         "subx",
+         "negx",
+         "conjx",
+         "expx"]
 
 -- operators that are 1:1 with Futhark functions or prefix operators --
 convertFun :: String -> Maybe String
