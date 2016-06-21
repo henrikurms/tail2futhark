@@ -315,7 +315,8 @@ f32Builtins, f64Builtins :: [F.FunDecl]
 
     funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
                             sinf, cosf, atan2f,
-                            d2x, addx, mulx, injx, subx, negx, conjx, expx]
+                            d2x, addx, mulx, injx, subx, negx, conjx, expx,
+                            rex, imx]
       where
         complex = TupleT [t, t]
         x = F.Var "x"
@@ -369,6 +370,10 @@ f32Builtins, f64Builtins :: [F.FunDecl]
                                    FunCall "expd" [Project x "0"]],
                           F.Tuple [FunCall "cos" [Project x "1"],
                                    FunCall "sin" [Project x "1"]]]
+        rex = F.FunDecl t "rex" [(complex, "x")] $
+          Project x "0"
+        imx = F.FunDecl t "imx" [(complex, "x")] $
+          Project x "1"
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
@@ -860,6 +865,8 @@ idFuns = ["negi",
          "addx",
          "mulx",
          "d2x",
+         "rex",
+         "imx",
          "injx",
          "subx",
          "negx",
