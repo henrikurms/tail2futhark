@@ -316,7 +316,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
                             sinf, cosf, atan2f,
                             d2x, addx, mulx, injx, subx, negx, conjx, expx,
-                            rex, imx]
+                            rex, imx, magnx]
       where
         complex = TupleT [t, t]
         x = F.Var "x"
@@ -374,6 +374,10 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           Project x "0"
         imx = F.FunDecl t "imx" [(complex, "x")] $
           Project x "1"
+        magnx = F.FunDecl t "magnx" [(complex, "x")] $
+          let a = Project x "0"
+              b = Project x "1"
+          in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
 boolToInt :: FunDecl
 boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
@@ -871,7 +875,8 @@ idFuns = ["negi",
          "subx",
          "negx",
          "conjx",
-         "expx"]
+         "expx",
+         "magnx"]
 
 -- operators that are 1:1 with Futhark functions or prefix operators --
 convertFun :: String -> Maybe String
