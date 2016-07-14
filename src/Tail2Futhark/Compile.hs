@@ -624,7 +624,7 @@ compileVRotate _ _ = throwError "vrotate needs 2 arguments"
 
 compileRotate :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileRotate (Just([tp],[r])) [i,a] =
-  makeTransp r <$> (makeVRotate tp r i =<< (makeTransp r <$> compileExp a))
+  makeRotate tp r i =<< compileExp a
 compileRotate Nothing _ = throwError "Need instance declaration for rotate"
 compileRotate _ _ = throwError "rotate needs 2 arguments"
 
@@ -638,8 +638,13 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
 makeVRotate _ _ i a = do
   i' <- compileExp i
-  return $ F.FunCall "rotate" [izero, i', a]
-  where izero = F.Constant (F.Int 0)
+  return $ F.FunCall "rotate@0" [i', a]
+
+makeRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
+makeRotate _ r i a = do
+  i' <- compileExp i
+  return $ F.FunCall rotatef [i', a]
+  where rotatef = "rotate@" ++ show (r-1)
 
 -- cat --
 compileCat :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
