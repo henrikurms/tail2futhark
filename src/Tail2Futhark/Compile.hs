@@ -149,7 +149,7 @@ reshape1Body _ = makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split
   where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
         desired = F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size
         reshapeCall = F.FunCall2 "reshape" [BinApp Mult size len] (F.FunCall "replicate" [len,F.Var "x"])
-        size = F.FunCall "size" [Constant (Int 0),F.Var "x"]
+        size = F.Index (F.FunCall "shape" [F.Var "x"]) [Constant (Int 0)]
         len = F.Var "roundUp"
         fdiv = BinApp Div
         fplus = BinApp Plus
@@ -162,7 +162,7 @@ dropBody tp = IfThenElse (size `less` absExp len) emptArr elseBranch
     where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
-          size = F.FunCall "size" [izero, F.Var "x"]
+          size = F.Index (F.FunCall "shape" [F.Var "x"]) [izero]
           plus = BinApp Plus len size
           emptArr = F.Empty tp
           elseBranch = IfThenElse (len `less` izero) negDrop posDrop
@@ -177,7 +177,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           izero = Constant (Int 0)
           plus  = BinApp Plus len size
           len  = F.Var "l"
-          size = F.FunCall "size" [izero, F.Var "x"]
+          size = F.Index (F.FunCall "shape" [F.Var "x"]) [izero]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate" [BinApp Minus (F.FunCall "abs" [len]) size, padElement]
@@ -194,7 +194,7 @@ makeShape :: Integer -> [T.Exp] -> CompilerM [F.Exp]
 makeShape r args
   | [e] <- args = do
       e' <- compileExp e
-      return $ map (\x -> FunCall "size" [Constant (Int x), e']) [0..r-1]
+      return $ map (\x -> F.Index (FunCall "shape" [e']) [Constant (Int x)]) [0..r-1]
   | otherwise = throwError "shape takes one argument"
 
 -- AUX transp --
@@ -237,7 +237,7 @@ zero _ F.F64T = Constant (F64 0)
 zero _ F.BoolT = Constant (Bool False)
 zero (i,x) (F.ArrayT t _) =
   F.FunCall "replicate"
-  [FunCall "size" [F.Constant (F.Int i), F.Var x],
+  [F.Index (FunCall "shape" [F.Var x]) [F.Constant (F.Int i)],
    zero (i+1,x) t]
 zero _ tp = error $ "take for type " ++ pretty tp ++ " not supported"
 
@@ -605,13 +605,13 @@ compileVReverseV _ _ = throwError "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> CompilerM F.Exp
 makeVReverse tp r a = F.Let (Ident "a") a <$>
-  (Map <$> kernelExp <*> pure (FunCall "iota" [FunCall "size" [F.Constant (F.Int 0), a]]))
+  (Map <$> kernelExp <*> pure (FunCall "iota" [F.Index (FunCall "shape" [a]) [F.Constant (F.Int 0)]]))
   where
     kernelExp = F.Fn <$>
       mkType (tp,r-1) <*>
       pure [(F.IntT,"x")] <*>
       pure (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex ione])
-    sizeCall = F.FunCall "size" [izero, a]
+    sizeCall = F.Index (F.FunCall "shape" [a]) [izero]
     minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
     izero = F.Constant (F.Int 0)
     ione = F.Constant (F.Int 1)
@@ -772,7 +772,7 @@ compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = do
           rtp  <- setOuterSize (F.NamedDim "n") <$> mkType (tp2,r-1)
           tp1' <- mkType (tp1,r-1)
           body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
-          return $ F.Let (Ident "n") (F.FunCall "size" [ione, array]) $
+          return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [array]) [ione]) $
             Map (F.Fn rtp [(tp1',"x")] body) array
 compileEach Nothing _ = throwError "Need instance declaration for each"
 compileEach _ _ = throwError "each takes two arguments"
@@ -812,7 +812,7 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
               tp1' <- mkType (tp1,r-1)
               tp2' <- mkType (tp2,r-1)
               body <- makeZipWith (r-1) kernel (F.Var "x") (F.Var "y")
-              return $ F.Let (Ident "n") (F.FunCall "size" [ione, a1]) $
+              return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [a1]) [ione]) $
                 Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) (FunCall "zip" [a1, a2])
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
