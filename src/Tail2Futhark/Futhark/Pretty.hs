@@ -16,8 +16,8 @@ instance Pretty Program where
 instance Pretty FunDecl where
   ppr (FunDecl tp ident args body) =
     text "fun"
-    <+> ppr tp
     <+> text ident <> (commaList . map ppArg) args
+    <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
 
@@ -77,7 +77,7 @@ ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
 ppSOAC2 v k e1 e2 = text v <> parens (ppKernel k <> comma <> ppr e1 <> comma <> ppr e2)
 
 ppKernel (Fn tp args body) =
-  text "fn" <+> ppr tp <+> (commaList . map ppArg $ args) <+> text "=>" </>
+  text "fn" <+> (commaList . map ppArg $ args) <> text ":" <+> ppr tp <+> text "=>" </>
   ppr body
 ppKernel (Fun ident []) = text ident
 ppKernel (Fun ident exps) = text ident <+> (commaList . map ppr $ exps)
@@ -115,7 +115,7 @@ instance Pretty Constant where
 
 -- Arguments --
 ppArg :: (Type, String) -> Doc
-ppArg (tp,ident) = ppr tp <+> text ident
+ppArg (tp,ident) = text ident <> text ":" <+> ppr tp
 
 -- Pattern --
 ppPat :: Pattern -> Doc
