@@ -3,6 +3,7 @@ module Main(main) where
 import Control.Monad
 import System.Process
 import System.FilePath
+import System.Exit
 
 import Test.Tasty
 import Test.Tasty.Providers
@@ -16,8 +17,9 @@ main = do
     G.defaultMain tests
 
 makeTest :: FilePath -> IO ()
-makeTest file =
-  void $ system ("make -s -B -C " ++ dir ++ " " ++ outname ++ "> /dev/null")
+makeTest file = do
+  ret <- system ("make -s -B -C " ++ dir ++ " " ++ outname ++ "> /dev/null")
+  unless (ret == ExitSuccess) $ fail "Test failed."
   where (dir,name) = splitFileName file
         outname = name `replaceExtension` "out"
 

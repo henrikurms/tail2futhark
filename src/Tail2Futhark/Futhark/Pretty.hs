@@ -16,7 +16,7 @@ instance Pretty Program where
 instance Pretty FunDecl where
   ppr (FunDecl tp ident args body) =
     text "fun"
-    <+> text ident <> (commaList . map ppArg) args
+    <+> text ident <+> spread (map (parens . ppArg) args)
     <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
@@ -47,28 +47,28 @@ instance Pretty DimDecl where
 
 instance Pretty Exp where
   ppr (Var ident) = text ident
-  ppr (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> align (ppr exp1) <+> text "in" </> ppr exp2
+  ppr (Let pat exp1 exp2) = parens $ text "let" <+> ppPat pat <+> equals <+> align (ppr exp1) <+> text "in" </> ppr exp2
   ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
   ppr (Unsafe e) = text "unsafe" <+> ppr e
   ppr (ForLoop merge merge_init i bound loopbody letbody) =
+    parens $
     text "loop" <+> parens (text merge <+> text "=" <+> ppr merge_init) <+>
     text "=" <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
     indent 2 (ppr loopbody) <+> text "in" <+> ppr letbody
   ppr (Constant c) = ppr c
   ppr (Neg e)    = parens $ text "-" <> ppr e
   ppr (Index e exps) = ppr e <> brackExps exps
-  ppr (Array exps) = brackExps exps
+  ppr (Array exps) = parens $ brackExps exps
   ppr (Tuple exps) = parens $ commasep $ map ppr exps
   ppr (Project e f) = ppr e <> text "." <> text f
   ppr (BinApp op e1 e2) = parens $ ppr e1 <+> ppOp op <+> ppr e2
-  ppr (FunCall ident exps) = text ident <> commaExps exps
-  ppr (FunCall2 ident exps e) = text ident <> parens (commaExps exps <> comma <> ppr e)
-  --ppr (Reshape exps exp) = text "reshape" <> parens (commaExps exps <> comma <> ppr exp)
+  ppr (FunCall ident exps) = parens $ text ident <+> spread (map ppr exps)
+  ppr (FunCall2 ident exps e) = parens $ text ident <> parens (commaExps exps <> comma <> ppr e)
   ppr (Empty tp) = text "empty" <> parens (ppr tp)
-  ppr (Map k e) = ppSOAC1 "map" k e
-  ppr (Filter k e) = ppSOAC1 "filter" k e
-  ppr (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
-  ppr (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
+  ppr (Map k e) = parens $ ppSOAC1 "map" k e
+  ppr (Filter k e) = parens $ ppSOAC1 "filter" k e
+  ppr (Scan k e1 e2) = parens $ ppSOAC2 "scan" k e1 e2
+  ppr (Reduce k e1 e2) = parens $ ppSOAC2 "reduce" k e1 e2
 
 ppSOAC1 :: String -> Kernel -> Exp -> Doc
 ppSOAC1 v k e = text v <> parens (ppKernel k <> comma <> ppr e)
@@ -81,7 +81,7 @@ ppKernel (Fn tp args body) =
   ppr body
 ppKernel (Fun ident []) = text ident
 ppKernel (Fun ident exps) = text ident <+> (commaList . map ppr $ exps)
-ppKernel (Op op) = ppOp op
+ppKernel (Op op) = parens $ ppOp op
 
 ppOp :: Operator -> Doc
 ppOp op = text $ case op of
