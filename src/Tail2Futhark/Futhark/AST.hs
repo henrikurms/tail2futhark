@@ -19,11 +19,11 @@ data Type = IntT
 
 rank :: Num a => Type -> a
 rank (ArrayT tp _) = 1 + rank tp
-rank _ = 0
+rank _             = 0
 
 baseType :: Type -> Type
 baseType (ArrayT tp _) = baseType tp
-baseType tp = tp
+baseType tp            = tp
 
 type Ident = String
 
@@ -62,11 +62,11 @@ data Exp = Var Ident
          | Project Exp String
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
-         | FunCall2 Ident [Exp] Exp -- special case for FunCalls with paranthese list of args
+         | Rearrange [Integer] Exp
          | Unsafe Exp
-         -- | Reshape [Exp] Exp -- "old" version of impl
          | Empty Type
          | Map Kernel Exp
+         | ZipWith Kernel [Exp]
          | Filter Kernel Exp
          | Scan Kernel Exp Exp
          | Reduce Kernel Exp Exp
