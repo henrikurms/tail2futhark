@@ -40,10 +40,12 @@ compile opts prog =
       F.Program $
       includes ++
       map snd (M.toList genfuns) ++
-      [F.FunDecl ret "main" signature $ maybeUnsafe mainbody]
+      [F.FunDecl ret "main" signature' $ maybeUnsafe mainbody]
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
         (signature, ret, rootExp) = inputsAndOutputs float prog
+        signature' = case signature of [] -> [(F.TupleT [], "_")]
+                                       _  -> signature
         float = if floatAsSingle opts then F.F32T else F.F64T
         env = newEnv { floatType = float }
         maybeUnsafe
@@ -415,8 +417,8 @@ notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
 resi = F.FunDecl F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
 
-inf32 = F.FunDecl F.F32T "inf32" [] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
-inf64 = F.FunDecl F.F64T "inf64" [] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
+inf32 = F.FunDecl F.F32T "inf32" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
+inf64 = F.FunDecl F.F64T "inf64" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
 
 -- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
@@ -471,8 +473,8 @@ compileExp (B bool)   = return $ Constant (Bool bool)
 compileExp Inf = do
   float <- asks floatType
   case float of
-    F.F32T -> return $ F.FunCall "inf32" []
-    _      -> return $ F.FunCall "inf64" []
+    F.F32T -> return $ F.FunCall "inf32" [Tuple []]
+    _      -> return $ F.FunCall "inf64" [Tuple []]
 compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let (Ident ("t_" ++ v)) <$>
