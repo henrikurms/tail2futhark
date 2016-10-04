@@ -32,25 +32,32 @@ runCompilerM (CompilerM m) = runExcept . runWriterT . runReaderT m
 -- THE MAIN FUNCTION --
 --------------------------
 
-compile :: Options -> T.Program -> F.Program
-compile opts prog =
-  case runCompilerM (compileExp rootExp) env of
+compile :: Options -> [(String, T.Program)] -> F.Program
+compile opts progs =
+  case runCompilerM (mapM (uncurry $ compileProg opts) progs) env of
     Left e -> error e
-    Right (mainbody, genfuns) ->
+    Right (entry_funs, genfuns) ->
       F.Program $
       includes ++
       map snd (M.toList genfuns) ++
-      [F.FunDecl ret "main" signature' $ maybeUnsafe mainbody]
+      entry_funs
   where includes = if includeLibs opts then builtins ++ fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
-        (signature, ret, rootExp) = inputsAndOutputs float prog
+        float = if floatAsSingle opts then F.F32T else F.F64T
+        env = newEnv { floatType = float }
+
+compileProg :: Options -> String -> T.Program -> CompilerM F.FunDecl
+compileProg opts entry_name prog = do
+  mainbody <- compileExp rootExp
+  return $ F.FunDecl ret entry_name signature' $ maybeUnsafe mainbody
+  where (signature, ret, rootExp) = inputsAndOutputs float prog
         signature' = case signature of [] -> [(F.TupleT [], "_")]
                                        _  -> signature
         float = if floatAsSingle opts then F.F32T else F.F64T
-        env = newEnv { floatType = float }
         maybeUnsafe
           | unsafe opts = Unsafe
           | otherwise   = id
+
 
 -------------------------
 -- HELPER FUNCTIONS --
