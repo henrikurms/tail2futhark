@@ -38,7 +38,7 @@ runArgs cmdargs = (opts,args,errors)
 run :: Bool -> [String] -> IO [(String,Program)]
 run True fs = forM fs $ \f -> do
   prog <- withFile f ReadMode (flip parseFile f)
-  return (removeDirectory $ dropExtension f, prog)
+  return (dropExtension $ takeFileName f, prog)
 run False [f] = do
   prog <- withFile f ReadMode $ flip parseFile f
   return [("main", prog)]
