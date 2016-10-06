@@ -14,12 +14,13 @@ instance Pretty Program where
     stack . map ppr $ fundecs
 
 instance Pretty FunDecl where
-  ppr (FunDecl tp ident args body) =
-    text "fun"
+  ppr (FunDecl entry tp ident args body) =
+    fun'
     <+> text ident <+> spread (map (parens . ppArg) args)
     <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
+    where fun' = text $ if entry then "entry" else "fun"
 
 commaList :: [Doc] -> Doc
 commaList = parens . commasep

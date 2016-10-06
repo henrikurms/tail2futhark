@@ -2,7 +2,8 @@ module Tail2Futhark.Futhark.AST where
 
 newtype Program = Program [FunDecl]
 
-data FunDecl = FunDecl Type Ident [Arg] Exp
+-- | Boolean is true if entry point.
+data FunDecl = FunDecl Bool Type Ident [Arg] Exp
 
 data DimDecl = AnyDim | NamedDim Ident | ConstDim Int
              deriving (Show, Eq, Ord)

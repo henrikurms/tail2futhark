@@ -49,7 +49,7 @@ compile opts progs =
 compileProg :: Options -> String -> T.Program -> CompilerM F.FunDecl
 compileProg opts entry_name prog = do
   mainbody <- compileExp rootExp
-  return $ F.FunDecl ret entry_name signature' $ maybeUnsafe mainbody
+  return $ F.FunDecl True ret entry_name signature' $ maybeUnsafe mainbody
   where (signature, ret, rootExp) = inputsAndOutputs float prog
         signature' = case signature of [] -> [(F.TupleT [], "_")]
                                        _  -> signature
@@ -332,104 +332,104 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         complex = TupleT [t, t]
         x = F.Var "x"
         y = F.Var "y"
-        i2dt = F.FunDecl t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
-        sqrtf = F.FunDecl t "sqrt" [(t, "x")] $ F.FunCall (suff "sqrt") [x]
-        ln = F.FunDecl t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
-        sinf = F.FunDecl t "sin" [(t, "x")] $ F.FunCall (suff "sin") [x]
-        cosf = F.FunDecl t "cos" [(t, "x")] $ F.FunCall (suff "cos") [x]
-        atan2f = F.FunDecl t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (suff "atan2_") [x,y]
-        absd = F.FunDecl t "absd" [(t,"x")] $
+        i2dt = F.FunDecl False t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
+        sqrtf = F.FunDecl False t "sqrt" [(t, "x")] $ F.FunCall (suff "sqrt") [x]
+        ln = F.FunDecl False t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
+        sinf = F.FunDecl False t "sin" [(t, "x")] $ F.FunCall (suff "sin") [x]
+        cosf = F.FunDecl False t "cos" [(t, "x")] $ F.FunCall (suff "cos") [x]
+        atan2f = F.FunDecl False t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (suff "atan2_") [x,y]
+        absd = F.FunDecl False t "absd" [(t,"x")] $
           IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
-        negd = F.FunDecl t "negd" [(t,"x")] $ F.Neg x
-        maxd = F.FunDecl t "maxd" [(t, "x"), (t, "y")] $ maxExp x y
-        mind = F.FunDecl t "mind" [(t, "x"), (t, "y")] $ minExp x y
-        expd = F.FunDecl t "expd" [(t, "x")] $ F.FunCall (suff "exp") [x]
-        signd = F.FunDecl F.IntT "signd" [(t, "x")] $
+        negd = F.FunDecl False t "negd" [(t,"x")] $ F.Neg x
+        maxd = F.FunDecl False t "maxd" [(t, "x"), (t, "y")] $ maxExp x y
+        mind = F.FunDecl False t "mind" [(t, "x"), (t, "y")] $ minExp x y
+        expd = F.FunDecl False t "expd" [(t, "x")] $ F.FunCall (suff "exp") [x]
+        signd = F.FunDecl False F.IntT "signd" [(t, "x")] $
           IfThenElse (BinApp Less (constant 0) x)
           (Constant (Int 1)) $
           IfThenElse (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
-        ceil = F.FunDecl F.IntT "ceil" [(t, "x")] $
+        ceil = F.FunDecl False F.IntT "ceil" [(t, "x")] $
           IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
-        d2x = F.FunDecl complex "d2x" [(t, "x")] $
+        d2x = F.FunDecl False complex "d2x" [(t, "x")] $
           F.Tuple [x, constant 0]
-        injx = F.FunDecl complex "injx" [(t, "x")] $
+        injx = F.FunDecl False complex "injx" [(t, "x")] $
           F.Tuple [constant 0, x]
-        addx = F.FunDecl complex "addx" [(complex, "x"), (complex, "y")] $
+        addx = F.FunDecl False complex "addx" [(complex, "x"), (complex, "y")] $
           F.Tuple [BinApp Plus (Project x "0") (Project y "0"),
                    BinApp Plus (Project x "1") (Project y "1")]
-        subx = F.FunDecl complex "subx" [(complex, "x"), (complex, "y")] $
+        subx = F.FunDecl False complex "subx" [(complex, "x"), (complex, "y")] $
           F.Tuple [BinApp Minus (Project x "0") (Project y "0"),
                    BinApp Minus (Project x "1") (Project y "1")]
-        mulx = F.FunDecl complex "mulx" [(complex, "x"), (complex, "y")] $
+        mulx = F.FunDecl False complex "mulx" [(complex, "x"), (complex, "y")] $
           let a = Project x "0"
               b = Project x "1"
               c = Project y "0"
               d = Project y "1"
           in F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
                       BinApp Minus (BinApp Mult a d) (BinApp Mult b c)]
-        negx = F.FunDecl complex "negx" [(complex, "x")] $
+        negx = F.FunDecl False complex "negx" [(complex, "x")] $
           F.Tuple [F.Neg (Project x "0"),
                    F.Neg (Project x "1")]
-        conjx = F.FunDecl complex "conjx" [(complex, "x")] $
+        conjx = F.FunDecl False complex "conjx" [(complex, "x")] $
           F.Tuple [Project x "0",
                    F.Neg (Project x "1")]
-        expx = F.FunDecl complex "expx" [(complex, "x")] $
+        expx = F.FunDecl False complex "expx" [(complex, "x")] $
           FunCall "mulx" [F.Tuple [constant 0,
                                    FunCall "expd" [Project x "0"]],
                           F.Tuple [FunCall "cos" [Project x "1"],
                                    FunCall "sin" [Project x "1"]]]
-        rex = F.FunDecl t "rex" [(complex, "x")] $
+        rex = F.FunDecl False t "rex" [(complex, "x")] $
           Project x "0"
-        imx = F.FunDecl t "imx" [(complex, "x")] $
+        imx = F.FunDecl False t "imx" [(complex, "x")] $
           Project x "1"
-        magnx = F.FunDecl t "magnx" [(complex, "x")] $
+        magnx = F.FunDecl False t "magnx" [(complex, "x")] $
           let a = Project x "0"
               b = Project x "1"
           in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
 boolToInt :: FunDecl
-boolToInt = F.FunDecl F.IntT "boolToInt" [(F.BoolT, "x")] $
+boolToInt = F.FunDecl False F.IntT "boolToInt" [(F.BoolT, "x")] $
   F.IfThenElse (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
 
 negi, absi, mini,
   maxi, nandb, norb, eqb, xorb, neqi, neqd, resi, inf32, inf64 :: FunDecl
 
-negi = F.FunDecl F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
+negi = F.FunDecl False F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
 
-absi = F.FunDecl F.IntT "absi" [(F.IntT,"x")] $ absExp (F.Var "x")
+absi = F.FunDecl False F.IntT "absi" [(F.IntT,"x")] $ absExp (F.Var "x")
 
-mini = F.FunDecl F.IntT "mini" [(F.IntT, "x"), (F.IntT, "y")] $ minExp (F.Var "x") (F.Var "y")
+mini = F.FunDecl False F.IntT "mini" [(F.IntT, "x"), (F.IntT, "y")] $ minExp (F.Var "x") (F.Var "y")
 
-maxi = F.FunDecl F.IntT "maxi" [(F.IntT, "x"), (F.IntT, "y")] $ maxExp (F.Var "x") (F.Var "y")
+maxi = F.FunDecl False F.IntT "maxi" [(F.IntT, "x"), (F.IntT, "y")] $ maxExp (F.Var "x") (F.Var "y")
 
-nandb = F.FunDecl F.BoolT "nandb" [(F.BoolT, "x"), (F.BoolT, "y")] $ nandExp (F.Var "x") (F.Var "y")
+nandb = F.FunDecl False F.BoolT "nandb" [(F.BoolT, "x"), (F.BoolT, "y")] $ nandExp (F.Var "x") (F.Var "y")
 
-norb = F.FunDecl F.BoolT "norb" [(F.BoolT, "x"), (F.BoolT, "y")] $ norExp (F.Var "x") (F.Var "y")
+norb = F.FunDecl False F.BoolT "norb" [(F.BoolT, "x"), (F.BoolT, "y")] $ norExp (F.Var "x") (F.Var "y")
 
-eqb = F.FunDecl F.BoolT "eqb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolEquals (F.Var "x") (F.Var "y")
+eqb = F.FunDecl False F.BoolT "eqb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolEquals (F.Var "x") (F.Var "y")
   where boolEquals e1 e2 = BinApp F.LogicOr (norExp e1 e2) (BinApp F.LogicAnd e1 e2)
 
-xorb = F.FunDecl F.BoolT "xorb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolXor (F.Var "x") (F.Var "y")
+xorb = F.FunDecl False F.BoolT "xorb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolXor (F.Var "x") (F.Var "y")
   where boolXor e1 e2 = BinApp F.LogicAnd (nandExp e1 e2) (BinApp F.LogicOr e1 e2)
 
-neqi = F.FunDecl F.BoolT "neqi" [(F.IntT, "x"), (F.IntT, "y")] $ notEq (F.Var "x") (F.Var "y")
+neqi = F.FunDecl False F.BoolT "neqi" [(F.IntT, "x"), (F.IntT, "y")] $ notEq (F.Var "x") (F.Var "y")
 
-neqd = F.FunDecl F.BoolT "neqd" [(F.F32T, "x"), (F.F32T, "y")] $ notEq (F.Var "x") (F.Var "y")
+neqd = F.FunDecl False F.BoolT "neqd" [(F.F32T, "x"), (F.F32T, "y")] $ notEq (F.Var "x") (F.Var "y")
 
 notEq :: F.Exp -> F.Exp -> F.Exp
 notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
 
-resi = F.FunDecl F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
+resi = F.FunDecl False F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
 
-inf32 = F.FunDecl F.F32T "inf32" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
-inf64 = F.FunDecl F.F64T "inf64" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
+inf32 = F.FunDecl False F.F32T "inf32" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
+inf64 = F.FunDecl False F.F64T "inf64" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
 
--- AUX: make FunDecl by combining signature and body (aux function that create function body)
+-- AUX: make FunDecl False by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
-makeFun args name body tp = F.FunDecl (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) args body
+makeFun args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) args body
   where annot (TupleT ts)  = intercalate "_" $ map annot ts
         annot (ArrayT t _) = "arr" ++ annot t
         annot t            = pretty t
@@ -450,7 +450,7 @@ generateGenFun (ReshapeFun t) = makeFun (stdArgs t) "reshape" (reshape1Body t) t
 
 genFun :: GenFun -> CompilerM F.Ident
 genFun gf = do
-  let ff@(FunDecl _ name _ _) = generateGenFun gf
+  let ff@(FunDecl False _ name _ _) = generateGenFun gf
   tell $ M.singleton gf ff
   return name
 
