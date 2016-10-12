@@ -497,6 +497,7 @@ compileExp (Vc exps) = Array <$> mapM compileExp exps
 compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
+  "scan" -> compileScan instDecl args
   "eachV"  -> compileEachV instDecl args
   "each"   -> compileEach instDecl args
   "power"  -> compilePower instDecl args
@@ -846,6 +847,24 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               body <- makeReduce tp (r-1) kernel idExp (F.Var "x")
               return $ Map (F.Fn rt [(t,"x")] body) arrayExp
 compileReduce _ _ = throwError "reduce needs 3 arguments"
+
+-- scan --
+compileScan :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileScan Nothing _ = throwError "Need instance declaration for scan"
+compileScan (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
+  kernel <- compileKernel orig_kernel =<< makeBTp orig_tp
+  v' <- compileExp v
+  array' <- compileExp array
+  makeScan orig_tp orig_rank kernel v' array'
+  where makeScan tp r kernel idExp arrayExp
+          | r == 0 = return $ arrayExp
+          | r == 1 = return $ Scan kernel idExp arrayExp
+          | otherwise = do
+              rt <- mkType (tp,r-1)
+              t <- mkType (tp,r)
+              body <- makeScan tp (r-1) kernel idExp (F.Var "x")
+              return $ Map (F.Fn rt [(t,"x")] body) arrayExp
+compileScan _ _ = throwError "scan needs 3 arguments"
 
 -- Prj ---
 compilePrj :: Integer -> T.Exp -> CompilerM F.Exp
