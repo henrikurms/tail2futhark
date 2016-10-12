@@ -861,9 +861,9 @@ compileScan (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
           | r == 1 = return $ Scan kernel idExp arrayExp
           | otherwise = do
               rt <- mkType (tp,r-1)
-              t <- mkType (tp,r)
+              -- t <- mkType (tp,r)
               body <- makeScan tp (r-1) kernel idExp (F.Var "x")
-              return $ Map (F.Fn rt [(t,"x")] body) arrayExp
+              return $ Map (F.Fn rt [(rt,"x")] body) arrayExp
 compileScan _ _ = throwError "scan needs 3 arguments"
 
 -- Prj ---
