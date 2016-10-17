@@ -2,6 +2,7 @@
 
 T2F       ?= tail2futhark
 FUTHARKC  ?= futhark-c
+FUTHARKOPENCL ?= futhark-opencl
 APLT_ROOT ?= ~/gits/apltail
 APLT      ?= $(APLT_ROOT)/aplt
 PRELUDE   ?= $(APLT_ROOT)/lib/prelude.apl
@@ -21,3 +22,6 @@ tail_%: tail_%.c
 
 fut_%: %.fut
 	$(FUTHARKC) -o $@ $<
+
+futopencl_%: %.fut
+	$(FUTHARKOPENCL) -o $@ $<
