@@ -168,7 +168,11 @@ dropBody tp = IfThenElse (size `less` absExp len) emptArr elseBranch
           len = F.Var "l"
           size = F.Index (F.FunCall "shape" [F.Var "x"]) [izero]
           plus = BinApp Plus len size
-          emptArr = F.Empty tp
+          emptArr = F.Let (Ident "dims") (F.FunCall "shape" [F.Var "x"])
+                    (F.FunCall "reshape" [F.Tuple emptShape, F.Empty tp])
+          emptShape = F.Constant (Int 0) :
+                      [F.Index (F.Var "dims") [F.Constant $ Int i]
+                      | i <- [1..F.rank tp] ]
           elseBranch = IfThenElse (len `less` izero) negDrop posDrop
           negDrop = mkSplit "v1" "_" plus (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
