@@ -505,7 +505,6 @@ compileOpExp ident instDecl args = case ident of
   "take" -> compileTake instDecl args
   "takeV" -> compileTakeV instDecl args
   "zipWith" -> compileZipWith instDecl args
-  "rav" -> compileRav instDecl args
   "cat" -> compileCat instDecl args
   "reverse" -> compileReverse instDecl args
   "reverseV" -> compileVReverseV instDecl args
@@ -662,14 +661,6 @@ compileCat (Just([_],[r])) [a1,a2] = do
   return $ FunCall concatf [a1', a2']
   where concatf = "concat@" ++ show (r-1)
 compileCat _ _ = throwError "compileCat: invalid arguments"
-
--- rav --
-compileRav :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileRav _ [a1] = do
-  a1' <- compileExp a1
-  return $ FunCall rav [a1']
-  where concatf = "concat@" ++ show (r-1)
-compileRav _ _ = throwError "compileRav: expects one argument"
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp

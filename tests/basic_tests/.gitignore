@@ -1,4 +1,5 @@
 *.res
+*.resopencl
 *~
 *.fut
 fut_*
