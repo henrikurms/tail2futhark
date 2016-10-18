@@ -829,9 +829,9 @@ compileZipWith _ _ = throwError "zipWith takes 3 arguments"
 
 -- zilde --
 compileZilde' :: BType -> Integer -> CompilerM F.Exp
-compileZilde' _ _ = return $ F.FunCall "reshape" [F.Constant (F.Int 0),
-                                                  Array [F.Constant (F.Int 0),
-                                                         F.Constant (F.Int 0)]]
+compileZilde' t _ = do
+  bt <- makeBTp t
+  return $ F.Empty bt
 
 compileZilde :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileZilde (Just([t],[r])) [] = compileZilde' t r
