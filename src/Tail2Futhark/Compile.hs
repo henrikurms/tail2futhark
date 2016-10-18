@@ -490,6 +490,7 @@ compileExp (Vc exps) = Array <$> mapM compileExp exps
 -- operators --
 compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
+  "zilde" -> compileZilde instDecl args
   "reduce" -> compileReduce instDecl args
   "compress" -> compileCompress instDecl args
   "scan" -> compileScan instDecl args
@@ -826,6 +827,15 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
 compileZipWith _ _ = throwError "zipWith takes 3 arguments"
 
+-- zilde --
+compileZilde' :: BType -> Integer -> CompilerM F.Exp
+compileZilde' _ _ = return $ F.FunCall "reshape" [F.Constant (F.Int 0),
+                                                  Array [F.Constant (F.Int 0),
+                                                         F.Constant (F.Int 0)]]
+
+compileZilde :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileZilde (Just([t],[r])) [] = compileZilde' t r
+compileZilde _ _ = throwError "zilde takes two singleton instance lists and no arguments"
 
 -- compress --
 compileCompress' :: BType -> T.Exp -> T.Exp -> CompilerM F.Exp

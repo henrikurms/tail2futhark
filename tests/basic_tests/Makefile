@@ -17,6 +17,7 @@ test: $(RESFILES)
 	@echo "Tests succeeded:   `grep "OK" $(RESFILES) | wc -l` /`grep "Test" $(RESFILES) | wc -l`"
 	@echo "Test errors:       `grep "ERR" $(RESFILES) | wc -l` /`grep "Test" $(RESFILES) | wc -l`"
 	@echo "-------------------------------------"
+	@exit `grep "ERR" $(RESFILES) | wc -l`
 
 .PHONY: testopencl
 testopencl: $(RESOPENCLFILES)
@@ -25,6 +26,7 @@ testopencl: $(RESOPENCLFILES)
 	@echo "Tests succeeded:   `grep "OK" $(RESOPENCLFILES) | wc -l` /`grep "Test" $(RESOPENCLFILES) | wc -l`"
 	@echo "Test errors:       `grep "ERR" $(RESOPENCLFILES) | wc -l` /`grep "Test" $(RESOPENCLFILES) | wc -l`"
 	@echo "-----------------------------------------------------"
+	@exit `grep "ERR" $(RESOPENCLFILES) | wc -l`
 
 %.out: fut_%
 	./$< > $@
