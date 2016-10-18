@@ -132,16 +132,10 @@ norExp :: F.Exp -> F.Exp -> F.Exp
 norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
 
 resiExp :: F.Exp -> F.Exp -> F.Exp
-resiExp y x = F.IfThenElse (y `eq` izero) x $ F.IfThenElse cond (x % y) (x % y `plus` y)
-  where cond = ((x % y) `eq` izero) `lor` ((x `gr` izero) `land` (y `gr` izero)) `lor` ((x `less` izero) `land` (y `less` izero))
-        infix 1 %; (%) = F.BinApp F.Mod
+resiExp y x = F.IfThenElse (y `eq` izero) x (x % y)
+  where infix 1 %; (%) = F.BinApp F.Mod
         izero = Constant (Int 0)
-        plus = F.BinApp F.Plus
-        gr = F.BinApp F.Greater
-        less = F.BinApp F.Less
         eq = F.BinApp F.Eq
-        lor = F.BinApp F.LogicOr
-        land = F.BinApp F.LogicAnd
 
 -- reshape1 --
 -- create split part of reshape1 function --
@@ -267,7 +261,7 @@ makeBTp T.BoolT = return F.BoolT
 makeBTp T.CharT = return F.IntT
 makeBTp T.ComplexT = do t <- makeBTp T.DoubleT
                         return $ F.TupleT [t,t]
-makeBTp (T.Btyv v) = throwError $ "makeBTp: cannot transform type variable " ++ v
+makeBTp (T.Btyv _) = return F.IntT   -- just pick an arbitrary type
 
 -- make Futhark array type from Futhark basic type --
 mkType :: (BType, Integer) -> CompilerM F.Type
@@ -497,6 +491,7 @@ compileExp (Vc exps) = Array <$> mapM compileExp exps
 compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
   "reduce" -> compileReduce instDecl args
+  "compress" -> compileCompress instDecl args
   "scan" -> compileScan instDecl args
   "eachV"  -> compileEachV instDecl args
   "each"   -> compileEach instDecl args
@@ -510,6 +505,7 @@ compileOpExp ident instDecl args = case ident of
   "take" -> compileTake instDecl args
   "takeV" -> compileTakeV instDecl args
   "zipWith" -> compileZipWith instDecl args
+  "rav" -> compileRav instDecl args
   "cat" -> compileCat instDecl args
   "reverse" -> compileReverse instDecl args
   "reverseV" -> compileVReverseV instDecl args
@@ -666,6 +662,14 @@ compileCat (Just([_],[r])) [a1,a2] = do
   return $ FunCall concatf [a1', a2']
   where concatf = "concat@" ++ show (r-1)
 compileCat _ _ = throwError "compileCat: invalid arguments"
+
+-- rav --
+compileRav :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileRav _ [a1] = do
+  a1' <- compileExp a1
+  return $ FunCall rav [a1']
+  where concatf = "concat@" ++ show (r-1)
+compileRav _ _ = throwError "compileRav: expects one argument"
 
 -- takeV --
 compileTakeV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -830,6 +834,26 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
 compileZipWith _ _ = throwError "zipWith takes 3 arguments"
+
+
+-- compress --
+compileCompress' :: BType -> T.Exp -> T.Exp -> CompilerM F.Exp
+compileCompress' bt bs xs = do
+  bs' <- compileExp bs
+  xs' <- compileExp xs
+  t <- mkType (bt,0)
+  return $ F.Let (Ident "zs") (ZipWith (zipWithFn t) [bs',xs']) $
+           F.Let (Ident "rs") (Filter (filterFn t) (F.Var "zs")) $
+           Map (mapFn t) (F.Var "rs")
+  where zipWithFn t = F.Fn (pt t) [(F.BoolT,"b"),(t,"x")] (F.Tuple[F.Var "b",F.Var "x"])
+        filterFn t = F.Fn F.BoolT [(pt t,"p")] (F.Let (TouplePat [Ident "b",Ident "_"]) (F.Var "p") (F.Var "b"))
+        mapFn t = F.Fn t [(pt t,"p")] (F.Let (TouplePat [Ident "_",Ident "x"]) (F.Var "p") (F.Var "x"))
+        pt t = F.TupleT[F.BoolT,t]
+
+compileCompress :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileCompress (Just([t],[_])) [bs,xs] = compileCompress' t bs xs
+compileCompress Nothing _ = throwError "compress needs instance declaration"
+compileCompress _ _ = throwError "compress takes two arguments"
 
 -- reduce --
 compileReduce :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp

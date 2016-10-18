@@ -58,7 +58,7 @@ testopencl: $(RESOPENCLFILES)
 
 .PHONY: clean
 clean:
-	rm -f *.fut tail_* fut_* *.res *.out *.comp futopencl_* *.outopencl *.resopencl
+	rm -f *.fut tail_* fut_* *.res *.out *.comp futopencl_* *.outopencl *.resopencl *~
 
 .PHONY: realclean
 realclean:

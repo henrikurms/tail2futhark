@@ -15,7 +15,7 @@ tail_%: tail_%.c
 	gcc -lm -std=c99 -O3 -o $@ -I $(INCLUDE) $<
 
 %.tail: %.apl
-	$(APLT) -p_types -p_tail -silent -c -o $@ $(PRELUDE) $< 
+	$(APLT) -p_types -p_tail -s_tail -silent -c -o $@ $(PRELUDE) $< 
 
 %.fut: %.tail
 	$(T2F) -o $@ $< 

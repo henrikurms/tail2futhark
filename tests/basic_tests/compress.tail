@@ -1,0 +1,4 @@
+let v3:[int]1 = compress{[int],[1]}(zipWith{[bool,bool,bool],[1]}(eqb,[ff,tt,ff,tt],[tt,tt,tt,tt]),iotaV(4)) in
+let v4:[int]0 = first{[int],[1]}(shape{[int],[1]}(v3)) in
+let v7:[int]0 = reduce{[int],[0]}(addi,0,v3) in
+i2d(addi(v4,v7))
