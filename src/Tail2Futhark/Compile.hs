@@ -500,7 +500,7 @@ compileOpExp ident instDecl args = case ident of
   "powerScl" -> compilePower instDecl args
   "firstV" -> compileFirstV instDecl args
   "first" -> compileFirst instDecl args
-  "shapeV" -> F.Array <$> makeShape 1 args
+  "shapeV" -> compileShape instDecl args
   "shape"  -> compileShape instDecl args
   "reshape" -> compileReshape instDecl args
   "take" -> compileTake instDecl args
@@ -749,9 +749,7 @@ compileTransp2 _ e = case e of [_,_] -> throwError "transp2 needs litaral as fir
 
 -- shape --
 compileShape :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
-compileShape (Just(_,[len])) args = F.Array <$> makeShape len args
-compileShape Nothing _args = throwError "Need instance declaration for shape"
-compileShape _ _ = throwError "compileShape: invalid arguments"
+compileShape _ args = F.FunCall "shape" <$> mapM compileExp args
 
 -- firstV --
 compileFirstV :: t -> [T.Exp] -> CompilerM F.Exp
