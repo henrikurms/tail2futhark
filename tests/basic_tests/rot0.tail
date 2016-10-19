@@ -1,0 +1,18 @@
+let v1:<int>5 = iotaV(5) in
+let v2:[int]2 = reshape{[int],[1,2]}([3,4],iotaV(12)) in
+let v3:[int]2 = transp{[int],[2]}(v2) in
+let v4:<int>5 = rotateV{[int],[5]}(1,v1) in
+let v9:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v4,[2,3,4,5,1])) in
+let v10:<int>5 = rotateV{[int],[5]}(-1,v1) in
+let v15:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v10,[5,1,2,3,4])) in
+let v16:[int]2 = rotate{[int],[2]}(1,v2) in
+let v23:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v16,reshape{[int],[1,2]}([3,4],[2,3,4,1,6,7,8,5,10,11,12,9])))) in
+let v30:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,reduce{[int],[1]}(addi,0,v16),[10,26,42])) in
+let v33:[int]2 = cat{[int],[2]}(transp{[int],[2]}(drop{[int],[2]}(1,transp{[int],[2]}(v2))),transp{[int],[2]}(take{[int],[2]}(1,transp{[int],[2]}(v2)))) in
+let v36:[int]1 = reduce{[int],[1]}(addi,0,v33) in
+let v41:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v36,[10,26,42])) in
+let v42:[int]2 = take{[int],[2]}(2,v3) in
+let v49:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v42,reshape{[int],[1,2]}([2,3],[1,5,9,2,6,10])))) in
+let v50:[int]2 = transp{[int],[2]}(v42) in
+let v57:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v50,reshape{[int],[1,2]}([3,2],[1,2,5,6,9,10])))) in
+i2d(reduce{[int],[0]}(addi,0,[b2i(v9),b2i(v15),b2i(v23),b2i(v30),b2i(v41),b2i(v49),b2i(v57)]))
