@@ -12,7 +12,6 @@ addons:
     - wget
     - libgmp-dev
     - libffi6
-    - libffi4
     - libc6:i386
 
 cache:
