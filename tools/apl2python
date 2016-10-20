@@ -1,0 +1,31 @@
+#!/bin/sh
+
+APLT=${APLT:-aplt}
+FUTHARK=${FUTHARK:-futhark-py}
+T2F=${T2F:-tail2futhark}
+
+FUTHARKFLAGS='--unsafe --real-as-single'
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <tail program>"
+    exit 1
+fi
+
+if ! [ "$TAIL_ROOT" ]; then
+    echo '$TAIL_ROOT must point to a checkout of the apltail repository.'
+    exit 1
+fi
+
+set -e # Die on error.
+
+TAIL_PRELUDE=${TAIL_ROOT}/lib/prelude.apl
+TAIL_INCLUDE=${TAIL_ROOT}/include
+
+apl_source=$1
+tail_source=${apl_source%.*}.tail
+fut_source=${apl_source%.*}.fut
+py_source=${apl_source%.*}.py
+
+$APLT -p_types -p_tail -silent -c -o "$tail_source" "$TAIL_PRELUDE" "$apl_source"
+$T2F -o "$fut_source" "$tail_source"
+$FUTHARK $FUTHARKFLAGS "$fut_source" -o "$py_source"

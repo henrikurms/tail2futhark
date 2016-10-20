@@ -1,0 +1,12 @@
+#!/bin/sh
+
+apl_source=$1
+tail_source=${apl_source%.*}.tail
+futhark_source=${apl_source%.*}.fut
+
+shift
+
+apl2tail "$apl_source"
+if tail2futhark "$tail_source" "$@" > "$futhark_source"; then
+    echo "Wrote file $futhark_source"
+fi

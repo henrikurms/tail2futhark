@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <tail program>"
+    exit 1
+fi
+
+if ! [ "$TAIL_ROOT" ]; then
+    echo '$TAIL_ROOT must point to a checkout of the apltail repository.'
+    exit 1
+fi
+
+apl_source=$1
+tail_source=${apl_source%.*}.tail
+
+TAIL_PRELUDE=${TAIL_ROOT}/lib/prelude.apl
+
+aplt -p_types -s_tail -c -o "$tail_source" $TAIL_PRELUDE "$apl_source"
