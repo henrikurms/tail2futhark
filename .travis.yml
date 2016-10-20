@@ -48,7 +48,7 @@ before_install:
  - export MLCOMP="mlton -mlb-path-map $HOME/.mlton/mlb-path-map"
  - smackage make apltail aplt-mlton
  - smackage make apltail install
- - export APLT_ROOT=$(pwd)/.smackage/lib/apltail/v1
+ - export APLT_ROOT=$(pwd)/.smackage/lib/apltail/v1.4
  - export APLT=aplt
  # install Futhark
  - wget http://futhark-lang.org/releases/futhark-nightly-linux-x86_64.tar.xz
