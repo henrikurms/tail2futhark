@@ -322,7 +322,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof32 = Constant . F32 . fromRational . toRational
     tof64 = Constant . F64
 
-    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil,
+    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floor,
                             sinf, cosf, atan2f,
                             d2x, addx, mulx, injx, subx, negx, conjx, expx,
                             rex, imx, magnx]
@@ -353,6 +353,10 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
+        floor = F.FunDecl False F.IntT "floor" [(t, "x")] $
+          IfThenElse (F.BinApp F.Less (F.Var "x") (constant 0))
+          (F.FunCall "int" [F.BinApp Minus x (constant 1)])
+          (F.FunCall "int" [x])
         d2x = F.FunDecl False complex "d2x" [(t, "x")] $
           F.Tuple [x, constant 0]
         injx = F.FunDecl False complex "injx" [(t, "x")] $
@@ -957,7 +961,7 @@ convertFun fun = case fun of
   "cos"    -> Just "cos"
   "atan2"  -> Just "atan2"
   "notb"   -> Just "!"
-  "floor"  -> Just "int"
+  "floor"  -> Just "floor"
   "mem"    -> Just "copy"
   "signi"  -> Just "signum"
   _         | fun `elem` idFuns -> Just fun
