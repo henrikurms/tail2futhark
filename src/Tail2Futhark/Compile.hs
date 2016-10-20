@@ -322,7 +322,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof32 = Constant . F32 . fromRational . toRational
     tof64 = Constant . F64
 
-    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floor,
+    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floorf,
                             sinf, cosf, atan2f,
                             d2x, addx, mulx, injx, subx, negx, conjx, expx,
                             rex, imx, magnx]
@@ -353,7 +353,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
-        floor = F.FunDecl False F.IntT "floor" [(t, "x")] $
+        floorf = F.FunDecl False F.IntT "floor" [(t, "x")] $
           IfThenElse (F.BinApp F.Less (F.Var "x") (constant 0))
           (F.FunCall "int" [F.BinApp Minus x (constant 1)])
           (F.FunCall "int" [x])
@@ -464,9 +464,7 @@ genFun gf = do
 
 -- general expressions --
 compileExp :: T.Exp -> CompilerM F.Exp
-compileExp (T.Var ident)
-  | ident == "pi" = compileExp $ D 3.14159265359
-  | otherwise = return $ F.Var $ "t_" ++ ident
+compileExp (T.Var ident) = return $ F.Var $ "t_" ++ ident
 compileExp (I x) = return $ Constant (Int x)
 compileExp (D d) = do
   float <- asks floatType
@@ -500,6 +498,7 @@ compileExp (Vc exps) = Array <$> mapM compileExp exps
 -- operators --
 compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
+  "pi" -> compilePi instDecl args
   "zilde" -> compileZilde instDecl args
   "reduce" -> compileReduce instDecl args
   "compress" -> compileCompress instDecl args
@@ -844,6 +843,11 @@ compileZilde' t _ = do
 compileZilde :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileZilde (Just([t],[r])) [] = compileZilde' t r
 compileZilde _ _ = throwError "zilde takes two singleton instance lists and no arguments"
+
+-- pi --
+compilePi :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compilePi Nothing [] = compileExp $ D 3.14159265359
+compilePi _ _ = throwError "pi takes no instance lists and no arguments"
 
 -- compress --
 compileCompress' :: BType -> T.Exp -> T.Exp -> CompilerM F.Exp
