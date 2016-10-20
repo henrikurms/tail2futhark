@@ -40,6 +40,8 @@ before_install:
  - rm -rf $HOME/smackage
  - mkdir -p $HOME/.mlton
  - echo "SMACKAGE $HOME/.smackage/lib" > $HOME/.mlton/mlb-path-map
+ - echo "aplparse git git://github.com/melsman/aplparse.git" >> $HOME/.smackage/sources.local
+ - echo "kitlib git git://github.com/melsman/kitlib.git" >> $HOME/.smackage/sources.local
  - echo "apltail git git://github.com/melsman/apltail.git" >> $HOME/.smackage/sources.local
  - smackage refresh
  - smackage get apltail
