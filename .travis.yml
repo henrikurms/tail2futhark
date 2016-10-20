@@ -1,6 +1,6 @@
 language: c
 
-sudo: false
+sudo: true
 
 matrix:
   include:
@@ -22,14 +22,33 @@ cache:
     - $HOME/.stack
 
 before_install:
+ # update machine and install mlton
+ - sudo apt-get -qq update
+ - sudo apt-get install -y mlton
+ # install Haskell stack 
  - export PATH=$HOME/.local/bin:$PATH
  - ./.travis-setup.sh
- - git clone https://github.com/melsman/apltail.git
- # Something nasty happens now.
+ # install smackage
+ - git clone git://github.com/standardml/smackage
+ - cd smackage
+ - make mlton
+ - bin/smackage refresh
+ - export PATH=$HOME/.smackage/bin:$PATH
+ - bin/smackage get smackage
+ - bin/smackage make smackage mlton
+ - bin/smackage make smackage install
+ - cd ..
+ - rm -rf $HOME/smackage
+ - mkdir -p $HOME/.mlton
+ - echo "SMACKAGE $HOME/.smackage/lib" > $HOME/.mlton/mlb-path-map
+ - echo "apltail git git://github.com/melsman/apltail.git" >> $HOME/.smackage/sources.local
+ - smackage refresh
+ - smackage get apltail
+ - export MLCOMP="mlton -mlb-path-map $HOME/.mlton/mlb-path-map"
+ - smackage make apltail aplt-mlton
+ - smackage make apltail install
  - export APLT_ROOT=$(pwd)/apltail
- - wget http://napoleon.hiperfit.dk/~athas/aplt -O $APLT_ROOT/aplt
- - chmod +x $APLT_ROOT/aplt
- # Nastyness over; now it's all good.
+ # install Futhark
  - wget http://futhark-lang.org/releases/futhark-nightly-linux-x86_64.tar.xz
  - tar xf futhark-nightly-linux-x86_64.tar.xz
  - (cd futhark-nightly-linux-x86_64/ && PREFIX=$HOME/.local make install)

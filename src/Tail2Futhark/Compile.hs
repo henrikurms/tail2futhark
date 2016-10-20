@@ -349,6 +349,8 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           (Constant (Int 0)) (Constant (Int (-1)))
         ceil = F.FunDecl False F.IntT "ceil" [(t, "x")] $
           IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
+          (F.FunCall "int" [x]) $
+          IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
           (F.FunCall "int" [x])
           (F.FunCall "int" [F.BinApp Plus x (constant 1)])
         d2x = F.FunDecl False complex "d2x" [(t, "x")] $
