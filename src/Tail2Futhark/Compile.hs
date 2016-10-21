@@ -323,7 +323,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
     tof64 = Constant . F64
 
     funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floorf,
-                            sinf, cosf, atan2f,
+                            sinf, cosf, tanf, atan2f,
                             d2x, addx, mulx, injx, subx, negx, conjx, expx,
                             rex, imx, magnx]
       where
@@ -335,6 +335,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         ln = F.FunDecl False t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
         sinf = F.FunDecl False t "sin" [(t, "x")] $ F.FunCall (suff "sin") [x]
         cosf = F.FunDecl False t "cos" [(t, "x")] $ F.FunCall (suff "cos") [x]
+        tanf = F.FunDecl False t "tan" [(t, "x")] $ F.BinApp F.Div (F.FunCall (suff "sin") [x]) (F.FunCall (suff "cos") [x])
         atan2f = F.FunDecl False t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (suff "atan2_") [x,y]
         absd = F.FunDecl False t "absd" [(t,"x")] $
           IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
@@ -963,6 +964,7 @@ convertFun fun = case fun of
   "expd"   -> Just "expd"
   "sin"    -> Just "sin"
   "cos"    -> Just "cos"
+  "tan"    -> Just "tan"
   "atan2"  -> Just "atan2"
   "notb"   -> Just "!"
   "floor"  -> Just "floor"
