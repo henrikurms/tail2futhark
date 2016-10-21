@@ -1,0 +1,5 @@
+let v2:[int]1 = iota(9) in
+let v14:[bool]0 = eqi(23,reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(muli,v2,each{[bool,int],[1]}(b2i,zipWith{[bool,bool,bool],[1]}(orb,each{[int,bool],[1]}(fn v6:[int]0 => eqi(0,v6),each{[int,int],[1]}(fn v5:[int]0 => resi(3,v5),v2)),each{[int,bool],[1]}(fn v4:[int]0 => eqi(0,v4),each{[int,int],[1]}(fn v3:[int]0 => resi(5,v3),v2))))))) in
+let v16:[int]1 = iota(999) in
+let v28:[bool]0 = eqi(233168,reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(muli,v16,each{[bool,int],[1]}(b2i,zipWith{[bool,bool,bool],[1]}(orb,each{[int,bool],[1]}(fn v20:[int]0 => eqi(0,v20),each{[int,int],[1]}(fn v19:[int]0 => resi(3,v19),v16)),each{[int,bool],[1]}(fn v18:[int]0 => eqi(0,v18),each{[int,int],[1]}(fn v17:[int]0 => resi(5,v17),v16))))))) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,[v14,v28])))

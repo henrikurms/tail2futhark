@@ -1,0 +1,14 @@
+let v6:[double]0 = divd(addd(ln(divd(60.0,65.0)),muld(addd(0.1,divd(powd(0.2,2.0),2.0)),1.0)),muld(0.2,powd(1.0,0.5))) in
+let v7:[double]0 = subd(v6,muld(0.2,powd(1.0,0.5))) in
+let v11:[double]0 = absd(v7) in
+let v12:[double]0 = divd(1.0,addd(1.0,muld(0.2316419,v11))) in
+let v16:<double>5 = eachV{[double,double],[5]}(fn v14:[double]0 => powd(v12,v14),eachV{[int,double],[5]}(i2d,iotaV(5))) in
+let v27:[double]1 = reshape{[double],[1,1]}([5],v16) in
+let v32:[double]0 = subd(1.0,muld(divd(1.0,powd(muld(2.0,muld(1.0,pi())),0.5)),muld(expd(negd(muld(v11,divd(v11,2.0)))),reduce{[double],[0]}(addd,0.0,zipWith{[double,double,double],[1]}(muld,[0.31938153,-0.356563782,1.781477937,-1.821255978,1.330274429],v27))))) in
+let v36:[double]0 = absd(v6) in
+let v37:[double]0 = divd(1.0,addd(1.0,muld(0.2316419,v36))) in
+let v41:<double>5 = eachV{[double,double],[5]}(fn v39:[double]0 => powd(v37,v39),eachV{[int,double],[5]}(i2d,iotaV(5))) in
+let v52:[double]1 = reshape{[double],[1,1]}([5],v41) in
+let v57:[double]0 = subd(1.0,muld(divd(1.0,powd(muld(2.0,muld(1.0,pi())),0.5)),muld(expd(negd(muld(v36,divd(v36,2.0)))),reduce{[double],[0]}(addd,0.0,zipWith{[double,double,double],[1]}(muld,[0.31938153,-0.356563782,1.781477937,-1.821255978,1.330274429],v52))))) in
+let v58:[double]0 = subd(muld(60.0,addd(muld(i2d(absi(mini(0,signd(v6)))),subd(1.0,v57)),muld(i2d(subi(1,absi(mini(0,signd(v6))))),v57))),muld(muld(65.0,expd(negd(muld(0.1,1.0)))),addd(muld(i2d(absi(mini(0,signd(v7)))),subd(1.0,v32)),muld(i2d(subi(1,absi(mini(0,signd(v7))))),v32)))) in
+v58
