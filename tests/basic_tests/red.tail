@@ -1,0 +1,10 @@
+let v1:<int>5 = iotaV(5) in
+let v2:<int>0 = takeV{[int],[0]}(0,v1) in
+let v5:[bool]0 = eqi(0,reduce{[int],[0]}(addi,0,v2)) in
+let v6:[int]3 = reshape{[int],[1,3]}([4,5,3],iotaV(60)) in
+let v9:[int]2 = reduce{[int],[2]}(addi,0,take{[int],[3]}(0,v6)) in
+let v14:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,[0,5],shape{[int],[2]}(v9))) in
+let v15:[int]3 = take{[int],[3]}(0,v6) in
+let v18:[int]2 = transp{[int],[2]}(reduce{[int],[2]}(addi,0,transp{[int],[3]}(v15))) in
+let v28:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[double,double,bool],[2]}(eqd,each{[int,double],[2]}(i2d,v18),each{[int,double],[2]}(i2d,each{[bool,int],[2]}(b2i,reshape{[bool],[1,2]}([5,3],[ff])))))) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,[v5,v14,v28])))
