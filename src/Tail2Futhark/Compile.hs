@@ -554,6 +554,7 @@ compileOpExp ident instDecl args = case ident of
            F.Index <$>
            compileExp arr <*>
            sequence [F.BinApp F.Minus <$> compileExp i <*> compileExp (I 1) ]
+         | [T.I d, i, arr] <- args -> compileIdxS instDecl d i arr
   "bench" -> compileBench instDecl args
 
   _
@@ -857,6 +858,22 @@ compileZilde' t _ = do
 compileZilde :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileZilde (Just([t],[r])) [] = compileZilde' t r
 compileZilde _ _ = throwError "zilde takes two singleton instance lists and no arguments"
+
+-- idxS --
+extractDim :: Integer -> Integer -> [Integer]
+extractDim r j = (j-1):elim (j-1) [0..r-1]
+  where elim _ [] = []
+        elim i (x:xs) = if x==i then xs else x:elim i xs
+
+compileIdxS' :: Integer -> Integer -> T.Exp -> T.Exp -> CompilerM F.Exp
+compileIdxS' r d i arr = do
+  arr1 <- compileExp arr
+  idx <- compileExp i
+  return $ F.Index (Rearrange (extractDim r d) arr1) [F.BinApp F.Minus idx (F.Constant (F.Int 1))]
+
+compileIdxS :: Maybe InstDecl -> Integer -> T.Exp -> T.Exp -> CompilerM F.Exp
+compileIdxS (Just([_],[r])) d i a = compileIdxS' (r+1) d i a
+compileIdxS _ _ _ _ = throwError "idxS takes two singleton instance lists and three arguments"
 
 -- pi --
 compilePi :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp

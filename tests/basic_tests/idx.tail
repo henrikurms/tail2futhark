@@ -1,0 +1,22 @@
+let v1:<int>28 = iotaV(28) in
+let v2:[int]2 = reshape{[int],[1,2]}([5,7],iotaV(35)) in
+let v3:[int]3 = reshape{[int],[1,3]}([5,4,3],iotaV(60)) in
+let v6:[int]0 = idxS{[int],[0]}(1,5,v1) in
+let v7:[bool]0 = eqi(v6,5) in
+let v9:<int>2 = eachV{[int,int],[2]}(fn v8:[int]0 => idxS{[int],[0]}(1,v8,v1),[5,2]) in
+let v14:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v9,[5,2])) in
+let v15:[int]1 = idxS{[int],[1]}(1,1,v2) in
+let v20:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v15,iotaV(7))) in
+let v21:[int]1 = idxS{[int],[1]}(1,2,v2) in
+let v27:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v21,eachV{[int,int],[7]}(fn v22:[int]0 => addi(7,v22),iotaV(7)))) in
+let v28:[int]1 = idxS{[int],[1]}(2,2,v2) in
+let v33:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v28,[2,9,16,23,30])) in
+let v36:<int>3 = eachV{[int,int],[3]}(fn v35:[int]0 => idxS{[int],[0]}(1,v35,idxS{[int],[1]}(1,2,v2)),[3,2,3]) in
+let v41:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v36,[10,9,10])) in
+let v42:[int]2 = idxS{[int],[2]}(1,2,v3) in
+let v50:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v42,reshape{[int],[1,2]}([4,3],eachV{[int,int],[12]}(fn v43:[int]0 => addi(12,v43),iotaV(12)))))) in
+let v51:[int]2 = drop{[int],[2]}(1,idxS{[int],[2]}(2,2,v3)) in
+let v58:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v51,reshape{[int],[1,2]}([4,3],[16,17,18,28,29,30,40,41,42,52,53,54])))) in
+let v59:[int]2 = drop{[int],[2]}(1,idxS{[int],[2]}(3,2,v3)) in
+let v68:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,v59,reshape{[int],[1,2]}([4,4],eachV{[int,int],[16]}(fn v61:[int]0 => addi(11,v61),eachV{[int,int],[16]}(fn v60:[int]0 => muli(3,v60),iotaV(16))))))) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,[v7,v14,v20,v27,v33,tt,v41,v50,v58,v68])))
