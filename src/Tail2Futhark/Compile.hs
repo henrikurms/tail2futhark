@@ -513,6 +513,7 @@ compileExp (Vc exps) = Array <$> mapM compileExp exps
 compileOpExp :: String -> Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileOpExp ident instDecl args = case ident of
   "pi" -> compilePi instDecl args
+  "rav" -> compileRav instDecl args
   "zilde" -> compileZilde instDecl args
   "reduce" -> compileReduce instDecl args
   "compress" -> compileCompress instDecl args
@@ -874,6 +875,17 @@ compileIdxS' r d i arr = do
 compileIdxS :: Maybe InstDecl -> Integer -> T.Exp -> T.Exp -> CompilerM F.Exp
 compileIdxS (Just([_],[r])) d i a = compileIdxS' (r+1) d i a
 compileIdxS _ _ _ _ = throwError "idxS takes two singleton instance lists and three arguments"
+
+-- rav --
+compileRav' :: Integer -> T.Exp -> CompilerM F.Exp
+compileRav' r xs = do
+  xs' <- compileExp xs
+  shapeProd <- multExp <$> makeShape r [xs]
+  return $ F.FunCall "reshape" [shapeProd, xs']
+
+compileRav :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileRav (Just([_],[r])) [xs] = compileRav' r xs
+compileRav _ _ = throwError "rav takes two singleton instance lists and one argument"
 
 -- pi --
 compilePi :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
