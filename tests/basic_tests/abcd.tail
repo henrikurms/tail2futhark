@@ -1,0 +1,9 @@
+let v2:[char]2 = reshape{[char],[1,2]}([8,6],['C','C','C','A','A','C','B','A','A','D','A','B','C','A','A','C','D','C','A','C','D','D','B','C','D','D','C','C','C','B','A','D','C','B','C','C','C','A','C','C','C','B','C','C','B','A','C','C']) in
+let v8:[char]3 = transp2{[char],[3]}([2,3,1],reshape{[char],[1,3]}([8,6,4],['A','B','C','D'])) in
+let v9:[char]3 = reshape{[char],[2,3]}([4,8,6],v2) in
+let v12:[bool]3 = zipWith{[char,char,bool],[3]}(eqc,v8,v9) in
+let v15:[bool]2 = reduce{[bool],[2]}(orb,ff,v12) in
+let v18:[bool]2 = reduce{[bool],[2]}(orb,ff,v12) in
+let v21:[bool]1 = transp{[bool],[1]}(reduce{[bool],[1]}(andb,tt,transp{[bool],[2]}(v18))) in
+let v26:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[bool,bool,bool],[1]}(eqb,v21,[ff,ff,ff,tt,ff,tt,ff,ff])) in
+i2d(b2i(v26))

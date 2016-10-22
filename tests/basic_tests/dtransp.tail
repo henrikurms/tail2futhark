@@ -1,0 +1,8 @@
+let v1:[int]3 = reshape{[int],[1,3]}([2,3,4],iotaV(24)) in
+let v2:[int]3 = transp2{[int],[3]}([2,1,3],v1) in
+let v7:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,shape{[int],[3]}(v2),[3,2,4])) in
+let v16:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,reduce{[int],[2]}(addi,0,v2),reshape{[int],[1,2]}([3,2],[10,58,26,74,42,90])))) in
+let v17:[int]3 = transp2{[int],[3]}([3,1,2],v1) in
+let v22:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,shape{[int],[3]}(v17),[3,4,2])) in
+let v31:[bool]0 = reduce{[bool],[0]}(andb,tt,reduce{[bool],[1]}(andb,tt,zipWith{[int,int,bool],[2]}(eqi,reduce{[int],[2]}(addi,0,v17),reshape{[int],[1,2]}([3,4],[14,16,18,20,22,24,26,28,30,32,34,36])))) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,[v7,v16,v22,v31])))

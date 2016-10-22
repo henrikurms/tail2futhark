@@ -210,9 +210,22 @@ makeShape r args
 makeTransp :: Integer -> F.Exp -> F.Exp
 makeTransp r = makeTransp2 $ reverse [0..r-1]
 
+-- APL uses inverse indexing for dyadic transpose; invIndexing has a
+-- number of properties:
+--   (1) invIndexing(iota n) = iota n;
+--   (2) invIndexing(rev(iota n)) = rev(iota n);
+--   (3) invIndexing o invIndexing = id;
+--   (4) invIndexing [2,0,1] = [1,2,0]
+--   ...
+invIndexing :: [Integer] -> [Integer] 
+invIndexing idxs = inv idxs 0
+  where inv xs n = if n == toInteger(length xs) then [] else findIdx xs n : inv xs (n+1)
+        findIdx [] _ = -1
+        findIdx (x:xs) n = if n == x then 0 else 1 + findIdx xs n
+
 -- AUX transp2 --
 makeTransp2 :: [Integer] -> F.Exp -> F.Exp
-makeTransp2 xs y = Rearrange xs y
+makeTransp2 xs y = Rearrange (invIndexing xs) y
 
 ---------------------------
 -- GENERAL AUX FUNCTIONS --
@@ -987,6 +1000,7 @@ convertBinOp op = case op of
   "lted" -> Just F.LessEq
   "eqi"  -> Just F.Eq
   "eqd"  -> Just F.Eq
+  "eqc"  -> Just F.Eq
   "gti"  -> Just F.Greater
   "gtd"  -> Just F.Greater
   "gtei" -> Just F.GreaterEq
