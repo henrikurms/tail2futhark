@@ -1,0 +1,10 @@
+let v18:([int]1 * [char]1 * [int]0) = power{[int,char,int],[1,1,0]}(fn v9:([int]1 * [char]1 * S(int,3)) => let v10:[int]1 = Prj(0,v9) in
+          let v11:[char]1 = Prj(1,v9) in
+          let v12:S(int,3) = Prj(2,v9) in
+          let v16:[int]1 = zipWith{[int,int,int],[1]}(addi,[1,1],v10) in
+          let v17:[char]1 = cat{[char],[1]}(v11,['h','e','j']) in
+          (v16,v17,3),3,([2,3],['a','s','b','c'],8)) in
+let v23:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,Prj(0,v18),[5,6])) in
+let v28:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[char,char,bool],[1]}(eqc,Prj(1,v18),['a','s','b','c','h','e','j','h','e','j','h','e','j'])) in
+let v29:[bool]0 = eqi(Prj(2,v18),3) in
+i2d(b2i(reduce{[bool],[0]}(andb,tt,[v23,v28,v29])))
