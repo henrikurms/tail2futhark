@@ -1,7 +1,0 @@
-let v1:[int]2 = reshape{[int],[1,2]}([2,3],iotaV(6)) in
-let v2:<int>5 = transp{[int],[1]}(vreverseV{[int],[5]}(transp{[int],[1]}(iotaV(5)))) in
-let v3:[int]1 = rav{[int],[2]}(transp{[int],[2]}(v1)) in
-let v8:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v3,[1,4,2,5,3,6])) in
-let v9:[int]1 = rav{[int],[1]}(v2) in
-let v14:[bool]0 = reduce{[bool],[0]}(andb,tt,zipWith{[int,int,bool],[1]}(eqi,v9,[5,4,3,2,1])) in
-i2d(b2i(reduce{[bool],[0]}(andb,tt,[v8,v14])))

@@ -1,1 +1,0 @@
-i2d(reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(addi,[1,2,3],[4,5,6])))

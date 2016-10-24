@@ -1,4 +1,0 @@
-let v2:[int]2 = reshape{[int],[1,2]}([3,2],[9,8,7,6,5,4]) in
-let v3:[int]2 = cons{[int],[1]}([1,2,3],v2) in
-let v4:[int]2 = take{[int],[2]}(1,v2) in
-i2d(first{[int],[1]}(reduce{[int],[1]}(addi,0,v4)))

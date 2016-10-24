@@ -1,4 +1,0 @@
-let v2:<int>4 = vreverseV{[int],[4]}([1,2,3,13]) in
-let v3:[int]2 = vreverse{[int],[2]}(reshape{[int],[1,2]}([3,4],iotaV(10))) in
-let v5:[int]2 = prArrI(transp{[int],[2]}(cons{[int],[1]}(transp{[int],[1]}(v2),transp{[int],[2]}(each{[int,int],[2]}(fn v4:[int]0 => subi(v4,1),v3))))) in
-0.0

@@ -1,3 +1,0 @@
-let v3:[int]1 = zipWith{[int,int,int],[1]}(resi,[3,-5,6,-3,0],[29,43,-14,-14,5]) in
-let v4:[int]1 = prArrI(v3) in
-0.0

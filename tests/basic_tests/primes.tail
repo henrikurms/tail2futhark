@@ -1,6 +1,0 @@
-let v1:<int>99 = dropV{[int],[99]}(1,iotaV(100)) in
-let v7:[int]2 = transp{[int],[2]}(reshape{[int],[1,2]}([99,99],v1)) in
-let v8:[int]2 = reshape{[int],[1,2]}([99,99],v1) in
-let v12:[bool]2 = each{[int,bool],[2]}(fn v11:[int]0 => eqi(0,v11),zipWith{[int,int,int],[2]}(resi,v7,v8)) in
-let v17:[int]1 = compress{[int],[1]}(each{[int,bool],[1]}(fn v16:[int]0 => eqi(1,v16),transp{[int],[1]}(reduce{[int],[1]}(addi,0,each{[bool,int],[2]}(b2i,transp{[bool],[2]}(v12))))),v1) in
-i2d(reduce{[int],[0]}(addi,0,v17))

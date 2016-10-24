@@ -1,5 +1,0 @@
-let v1:[int]2 = reshape{[int],[1,2]}([2,2],[1,2,3,4]) in
-let v3:[int]2 = each{[int,int],[2]}(fn v2:[int]0 => addi(v2,5),v1) in
-let v4:[int]1 = reshape{[int],[2,1]}([4],v3) in
-let v7:[int]0 = reduce{[int],[0]}(addi,0,v4) in
-i2d(v7)

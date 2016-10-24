@@ -1,5 +1,0 @@
-let v1:[double]0 = powd(2.0,3.0) in
-let v2:[bool]0 = eqd(8.0,v1) in
-let v3:[double]0 = expd(3.0) in
-let v6:[bool]0 = gtd(1e-06,absd(subd(20.085536,v3))) in
-i2d(b2i(reduce{[bool],[0]}(andb,tt,[v2,v6])))

@@ -1,1 +1,0 @@
-i2d(reduce{[int],[0]}(addi,0,consV{[int],[7]}(3,iotaV(7))))

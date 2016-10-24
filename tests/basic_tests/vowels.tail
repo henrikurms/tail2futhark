@@ -1,3 +1,0 @@
-let v7:[char]2 = transp{[char],[2]}(reshape{[char],[1,2]}([10,11],['A','P','L',' ','i','s',' ','C','o','o','l'])) in
-let v8:[char]2 = reshape{[char],[1,2]}([11,10],['A','E','I','O','U','a','e','i','o','u']) in
-i2d(reduce{[int],[0]}(addi,0,reduce{[int],[1]}(addi,0,each{[bool,int],[2]}(b2i,zipWith{[char,char,bool],[2]}(eqc,v7,v8)))))

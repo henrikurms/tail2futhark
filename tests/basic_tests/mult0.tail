@@ -1,6 +1,0 @@
-let v1:<int>10 = iotaV(10) in
-let v2:<int>10 = iotaV(10) in
-let v6:[int]2 = transp{[int],[2]}(reshape{[int],[1,2]}([10,10],v1)) in
-let v7:[int]2 = reshape{[int],[1,2]}([10,10],v2) in
-let v10:[int]2 = zipWith{[int,int,int],[2]}(muli,v6,v7) in
-i2d(reduce{[int],[0]}(addi,0,reduce{[int],[1]}(addi,0,v10)))

@@ -28,6 +28,17 @@ by running:
 Make sure this directory is in your `$PATH`.  Alternatively, just copy
 the binary to where you need it.
 
+## Prerequisites
+
+To use `tail2futhark` and to test it, you need a working version of
+the [APLtail](https://github.com/melsman/apltail) compiler, which
+allows for compiling APL programs into TAIL programs, suitable for
+input to `tail2futhark`.
+
+__Notice: For installation instructions, you may consult the
+`.travis.yml` file, which documents the APLtail installation procedure
+for Linux boxes.__
+
 ## Usage
 
 There are two ways to invoke `tail2futhark`, corresponding to whether
@@ -46,7 +57,6 @@ This command results in a Futhark program with one entry point for every
 `.tail` file.  The name of each entry point will match the name of the
 file, with `.tail` stripped off.
 
-
 ## APL to TAIL
 
 While stricly not the domain of `tail2futhark`, this is a handy
@@ -60,19 +70,13 @@ repository.
 
 ## Testing
 
-To test the compiler, run the following command:
+To test the compiler, run the command:
 
-    stack test
-
-This command will execute a number of tests and print a test report on
-stdout. An alternative is to run
-
-    (cd tests/basic_tests; make test)
+    make test
     
 Yet an alternative is to run
 
     (cd tests/basic_tests; make testopencl)
 
-The test source files are really APL-files and to (re)generate TAIL
-programs from the APL-files, you need the `apltail` compiler,
-available from https://github.com/melsman/apltail. See the `Makefile` in the `tests/basic_tests` directory for details.
+See the Prerequisites section for information about the required
+`apltail` compiler.

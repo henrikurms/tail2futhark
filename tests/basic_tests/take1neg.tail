@@ -1,2 +1,0 @@
-let v0:<int>5 = take{[int],[1]}(-5,[1,2,3,4,5,6,7]) in
-i2d(reduce{[int],[0]}(addi,0,v0))

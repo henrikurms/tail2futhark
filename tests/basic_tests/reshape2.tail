@@ -1,3 +1,0 @@
-let v1:[int]2 = reshape{[int],[1,2]}([3,3],[4,5]) in
-let v2:[int]2 = reshape{[int],[2,2]}([4,4],v1) in
-i2d(reduce{[int],[0]}(addi,0,shape{[int],[2]}(v2)))

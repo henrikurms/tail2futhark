@@ -1,3 +1,0 @@
-let v1:<int>3 = [2,3,4] in
-let v2:<int>3 = transp{[int],[1]}(vreverseV{[int],[3]}(transp{[int],[1]}(v1))) in
-i2d(first{[int],[1]}(v2))

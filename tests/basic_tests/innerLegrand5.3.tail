@@ -1,7 +1,0 @@
-let v6:[int]0 = reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(muli,[3600,60,1],[3,44,29])) in
-let v24:[int]0 = reduce{[int],[0]}(addi,0,zipWith{[int,int,int],[1]}(muli,[3600,60,1],[3,44,29])) in
-let v25:[int]0 = addi(v6,v24) in
-let v32:[double]0 = reduce{[double],[0]}(addd,0.0,zipWith{[double,double,double],[1]}(muld,[6.0,4.2,1.5,8.9,31.0,18.0],[2.0,6.0,3.0,5.0,1.0,0.5])) in
-let v50:[double]0 = reduce{[double],[0]}(addd,0.0,zipWith{[double,double,double],[1]}(muld,[6.0,4.2,1.5,8.9,31.0,18.0],[2.0,6.0,3.0,5.0,1.0,0.5])) in
-let v51:[double]0 = addd(v32,v50) in
-addd(i2d(v25),v51)
