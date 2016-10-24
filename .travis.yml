@@ -42,10 +42,10 @@ before_install:
  - echo "SMACKAGE $HOME/.smackage/lib" > $HOME/.mlton/mlb-path-map
  - echo "aplparse git git://github.com/melsman/aplparse.git" >> $HOME/.smackage/sources.local
  - echo "kitlib git git://github.com/melsman/kitlib.git" >> $HOME/.smackage/sources.local
- - echo "apltail git git://github.com/melsman/apltail.git" >> $HOME/.smackage/sources.local
  - smackage refresh
  - smackage get kitlib
  - smackage get aplparse
+ # install apltail
  - git clone git://github.com/melsman/apltail
  - cd apltail
  - export MLCOMP="mlton -mlb-path-map $HOME/.mlton/mlb-path-map"
@@ -58,8 +58,9 @@ before_install:
  - (cd futhark-nightly-linux-x86_64/ && PREFIX=$HOME/.local make install)
 
 install:
- - stack --no-terminal test --only-dependencies -j 3
+ # install tail2futhark
+ - make install
 
 script:
- - stack --no-terminal test --haddock --no-haddock-deps -j 3
- - stack install
+ # execute tests
+ - make test
