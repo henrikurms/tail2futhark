@@ -323,7 +323,7 @@ compileTp (S bt _)        = makeBTp bt
 -- LIBRARY FUNCTIONS --
 -----------------------
 
--- list containing ompl of all library functions --
+-- list containing impl of all library functions --
 builtins :: [F.FunDecl]
 builtins = [boolToInt,negi,absi,mini,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
 
@@ -531,6 +531,8 @@ compileOpExp ident instDecl args = case ident of
   "takeV" -> compileTakeV instDecl args
   "zipWith" -> compileZipWith instDecl args
   "cat" -> compileCat instDecl args
+  "gradeUp" -> compileGradeUp instDecl args
+  "gradeDown" -> compileGradeDown instDecl args
   "reverse" -> compileReverse instDecl args
   "reverseV" -> compileVReverseV instDecl args
   "vreverse" -> compileVReverse instDecl args
@@ -621,6 +623,23 @@ compileIota _ [a] = compileIota' <$> compileExp a
           Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1))))
           (FunCall "iota" [a'])
 compileIota _ _ = throwError "Iota take one argument"
+
+compileGradeUp :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileGradeUp (Just([tp],[])) [a] =
+  if tp == T.IntT || tp == T.CharT then
+    do a' <- compileExp a
+       return $ FunCall "grade_up" [a']
+  else throwError "compileGradeUp: expecting sortable type instance"
+compileGradeUp _ _ = throwError "compileGradeUp: expecting singleton type instance list and one argument"
+
+compileGradeDown :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileGradeDown (Just([tp],[])) [a] =
+  if tp == T.IntT || tp == T.CharT then
+    do a' <- compileExp a
+       return $ FunCall "grade_down" [a']
+  else throwError "compileGradeUp: expecting sortable type instance"
+compileGradeDown _ _ = throwError "compileGradeDown: expecting singleton type instance list and one argument"
+
 
 -- vreverse --
 compileVReverse :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
