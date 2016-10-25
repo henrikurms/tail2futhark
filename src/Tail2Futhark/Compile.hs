@@ -533,6 +533,7 @@ compileOpExp ident instDecl args = case ident of
   "cat" -> compileCat instDecl args
   "gradeUp" -> compileGradeUp instDecl args
   "gradeDown" -> compileGradeDown instDecl args
+  "replicate" -> compileReplicate instDecl args  
   "reverse" -> compileReverse instDecl args
   "reverseV" -> compileVReverseV instDecl args
   "vreverse" -> compileVReverse instDecl args
@@ -640,6 +641,26 @@ compileGradeDown (Just([tp],[])) [a] =
   else throwError "compileGradeUp: expecting sortable type instance"
 compileGradeDown _ _ = throwError "compileGradeDown: expecting singleton type instance list and one argument"
 
+-- replicate --
+compileReplicate' :: BType -> Integer -> F.Exp -> F.Exp -> F.Exp -> CompilerM F.Exp
+compileReplicate' _ 0 _ reps a = return $ F.FunCall "replicate" [reps,a]
+compileReplicate' tp 1 def reps a =
+   do t' <- mkType(tp,0)
+      return $ F.Let (Ident "vals2") (ZipWith (F.Fn t' [(F.IntT,"r"),(t',"v")] (F.IfThenElse (F.BinApp F.Less (F.Var "r") zer) def (F.Var "v"))) [reps,a])
+             $ F.Let (Ident "reps2") (F.Map (absfn t') reps)
+             $ F.Let (Ident "idxs") (F.FunCall "replIdx" [F.Var "reps2"])
+             $ Map (F.Fn t' [(F.IntT,"i")] (F.Unsafe(F.Index(F.Var"vals2")[F.Var"i"]))) (F.Var "idxs")
+      where zer = F.Constant (Int 0)
+            absfn t' = F.Fn t' [(t',"i")] (F.IfThenElse (F.BinApp F.Less (F.Var "i") zer) (F.Neg (F.Var "i")) (F.Var "i"))
+compileReplicate' _ _ _ _ _ = throwError "compileReplicate': multi-dimensional replicate not supported"
+
+compileReplicate :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileReplicate (Just([tp],[r])) [def,reps,a] =
+           do def' <- compileExp def
+              reps' <- compileExp reps
+              a' <- compileExp a
+              compileReplicate' tp r def' reps' a'
+compileReplicate _ _ = throwError "compileReplicate: expects two singleton instance lists and three arguments"
 
 -- vreverse --
 compileVReverse :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp

@@ -20,8 +20,11 @@ tail_%: tail_%.c
 %.fut: %.tail
 	$(T2F) -o $@ $< 
 
+%.futu: %.tail
+	$(T2F) --unsafe -o $@ $< 
+
 fut_%: %.fut
 	$(FUTHARKC) -o $@ $<
 
-futopencl_%: %.fut
+futopencl_%: %.futu
 	$(FUTHARKOPENCL) -o $@ $<
