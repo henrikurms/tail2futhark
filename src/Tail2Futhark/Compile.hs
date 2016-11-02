@@ -387,7 +387,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
               c = Project y "0"
               d = Project y "1"
           in F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
-                      BinApp Minus (BinApp Mult a d) (BinApp Mult b c)]
+                      BinApp Plus (BinApp Mult a d) (BinApp Mult b c)]
         negx = F.FunDecl False complex "negx" [(complex, "x")] $
           F.Tuple [F.Neg (Project x "0"),
                    F.Neg (Project x "1")]
