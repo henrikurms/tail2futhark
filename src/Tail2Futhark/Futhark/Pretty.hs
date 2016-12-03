@@ -110,7 +110,7 @@ instance Pretty Constant where
   ppr (F32 f)             = text (show f) <> text "f32"
   ppr (F64 f)             = text (show f) <> text "f64"
   ppr (Char c)            = text $ show c
-  ppr (Bool b)            = text (if b then "True" else "False")
+  ppr (Bool b)            = text (if b then "true" else "false")
   ppr (ArrayConstant arr) = brackets . commasep . map ppr $ arr
 
 -- Arguments --
