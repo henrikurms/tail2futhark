@@ -107,7 +107,7 @@ prelude = unlines [
    "  let pairs = scan ( fn ((v1,f1):(i32,bool)) ((v2,f2):(i32,bool)) : (i32,bool) =>",
    "                       let f = f1 || f2",
    "                       let v = if f2 then v2 else v1+v2",
-   "                       in (v,f) ) (0,False) (zip vals flags)",
+   "                       in (v,f) ) (0,false) (zip vals flags)",
    "  let (res,_) = unzip pairs",
    "  in res",
    "",
