@@ -55,6 +55,7 @@ instance Pretty Exp where
     indent 2 (ppr loopbody) <+> text "in" <+> ppr letbody
   ppr (Constant c) = ppr c
   ppr (Neg e)    = text "-" <> ppr e
+  ppr (Index (Var v) exps) = ppr v <> brackExps exps
   ppr (Index e exps) = parens (ppr e) <> brackExps exps
   ppr (Array exps) = brackExps exps
   ppr (Tuple exps) = parens $ commasep $ map ppr exps
