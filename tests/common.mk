@@ -1,12 +1,15 @@
 # Standard paths and definitions used by all the Makefiles in here.
 
+ifndef TAIL_ROOT
+$(error TAIL_ROOT is not set)
+endif
+
 T2F       ?= tail2futhark
 FUTHARKC  ?= futhark-c
 FUTHARKOPENCL ?= futhark-opencl
-APLT_ROOT ?= ~/gits/apltail
-APLT      ?= $(APLT_ROOT)/aplt
-PRELUDE   ?= $(APLT_ROOT)/lib/prelude.apl
-INCLUDE   ?= $(APLT_ROOT)/include
+APLT      ?= $(TAIL_ROOT)/aplt
+PRELUDE   ?= $(TAIL_ROOT)/lib/prelude.apl
+INCLUDE   ?= $(TAIL_ROOT)/include
 
 tail_%.c: %.apl
 	$(APLT) -silent -c -O2 -opt_hoist -oc $@ $(PRELUDE) $<
