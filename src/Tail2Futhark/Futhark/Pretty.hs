@@ -78,7 +78,7 @@ ppSOAC2 v k e1 e2 = text v <+> ppKernel k <+> parens (ppr e1) <+> parens (ppr e2
 
 ppKernel (Fn tp args body) =
   parens $
-  text "fn" <+> (spread $ map (parens . ppArg) args) <> text ":" <+> ppr tp <+> text "=>" </>
+  text "\\" <+> (spread $ map (parens . ppArg) args) <> text ":" <+> ppr tp <+> text "->" </>
   ppr body
 ppKernel (Fun ident []) = text ident
 ppKernel (Fun ident exps) = parens $ text ident <+> (commaList . map ppr $ exps)
