@@ -31,7 +31,7 @@ brackExps :: [Exp] -> Doc
 brackExps = brackList . map ppr
 
 instance Pretty Type where
-  ppr IntT          = text "int"
+  ppr IntT          = text "i32"
   ppr Int8T         = text "i8"
   ppr F32T          = text "f32"
   ppr F64T          = text "f64"
