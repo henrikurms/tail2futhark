@@ -189,7 +189,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate"
-                    [BinApp Minus (F.FunCall "abs" [len]) size, padElement]
+                    [BinApp Minus (F.FunCall "I32.abs" [len]) size, padElement]
           posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft
 
@@ -328,49 +328,50 @@ builtins :: [F.FunDecl]
 builtins = [boolToInt,negi,absi,mini,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
 
 f32Builtins, f64Builtins :: [F.FunDecl]
-(f32Builtins, f64Builtins) = (funs F.F32T (++"32") tof32,
-                              funs F.F64T (++"64") tof64)
+(f32Builtins, f64Builtins) = (funs F.F32T ("F32."++) (++"32") tof32,
+                              funs F.F64T ("F64."++) (++"64") tof64)
   where
     tof32, tof64 :: Double -> F.Exp
     tof32 = Constant . F32 . fromRational . toRational
     tof64 = Constant . F64
 
-    funs t suff constant = [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floorf,
-                            sinf, cosf, tanf, atan2f,
-                            d2x, addx, mulx, injx, subx, negx, conjx, expx,
-                            rex, imx, magnx]
+    funs t pref suff constant =
+      [i2dt, sqrtf, ln, absd, negd, maxd, mind, expd, signd, ceil, floorf,
+       sinf, cosf, tanf, atan2f,
+       d2x, addx, mulx, injx, subx, negx, conjx, expx,
+       rex, imx, magnx]
       where
         complex = TupleT [t, t]
         x = F.Var "x"
         y = F.Var "y"
         i2dt = F.FunDecl False t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
-        sqrtf = F.FunDecl False t "sqrt" [(t, "x")] $ F.FunCall (suff "sqrt") [x]
-        ln = F.FunDecl False t "ln" [(t, "x")] $ F.FunCall (suff "log") [x]
-        sinf = F.FunDecl False t "sin" [(t, "x")] $ F.FunCall (suff "sin") [x]
-        cosf = F.FunDecl False t "cos" [(t, "x")] $ F.FunCall (suff "cos") [x]
-        tanf = F.FunDecl False t "tan" [(t, "x")] $ F.BinApp F.Div (F.FunCall (suff "sin") [x]) (F.FunCall (suff "cos") [x])
-        atan2f = F.FunDecl False t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (suff "atan2_") [x,y]
+        sqrtf = F.FunDecl False t "sqrt" [(t, "x")] $ F.FunCall (pref "sqrt") [x]
+        ln = F.FunDecl False t "ln" [(t, "x")] $ F.FunCall (pref "log") [x]
+        sinf = F.FunDecl False t "sin" [(t, "x")] $ F.FunCall (pref "sin") [x]
+        cosf = F.FunDecl False t "cos" [(t, "x")] $ F.FunCall (pref "cos") [x]
+        tanf = F.FunDecl False t "tan" [(t, "x")] $ F.BinApp F.Div (F.FunCall (pref "sin") [x]) (F.FunCall (pref "cos") [x])
+        atan2f = F.FunDecl False t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (pref "atan2") [x,y]
         absd = F.FunDecl False t "absd" [(t,"x")] $
           IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
         negd = F.FunDecl False t "negd" [(t,"x")] $ F.Neg x
         maxd = F.FunDecl False t "maxd" [(t, "x"), (t, "y")] $ maxExp x y
         mind = F.FunDecl False t "mind" [(t, "x"), (t, "y")] $ minExp x y
-        expd = F.FunDecl False t "expd" [(t, "x")] $ F.FunCall (suff "exp") [x]
+        expd = F.FunDecl False t "expd" [(t, "x")] $ F.FunCall (pref "exp") [x]
         signd = F.FunDecl False F.IntT "signd" [(t, "x")] $
           IfThenElse (BinApp Less (constant 0) x)
           (Constant (Int 1)) $
           IfThenElse (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
         ceil = F.FunDecl False F.IntT "ceil" [(t, "x")] $
-          IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "int" [x]]) x)
-          (F.FunCall "int" [x]) $
+          IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "i32" [x]]) x)
+          (F.FunCall "i32" [x]) $
           IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
-          (F.FunCall "int" [x])
-          (F.FunCall "int" [F.BinApp Plus x (constant 1)])
+          (F.FunCall "i32" [x])
+          (F.FunCall "i32" [F.BinApp Plus x (constant 1)])
         floorf = F.FunDecl False F.IntT "floor" [(t, "x")] $
           IfThenElse (F.BinApp F.Less (F.Var "x") (constant 0))
-          (F.FunCall "int" [F.BinApp Minus x (constant 1)])
-          (F.FunCall "int" [x])
+          (F.FunCall "i32" [F.BinApp Minus x (constant 1)])
+          (F.FunCall "i32" [x])
         d2x = F.FunDecl False complex "d2x" [(t, "x")] $
           F.Tuple [x, constant 0]
         injx = F.FunDecl False complex "injx" [(t, "x")] $
@@ -1051,7 +1052,7 @@ convertFun fun = case fun of
   "notb"   -> Just "!"
   "floor"  -> Just "floor"
   "mem"    -> Just "copy"
-  "signi"  -> Just "signum"
+  "signi"  -> Just "I32.sgn"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
