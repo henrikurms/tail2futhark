@@ -189,7 +189,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate"
-                    [BinApp Minus (F.FunCall "I32.abs" [len]) size, padElement]
+                    [BinApp Minus (F.FunCall "i32.abs" [len]) size, padElement]
           posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft
 
@@ -328,8 +328,8 @@ builtins :: [F.FunDecl]
 builtins = [boolToInt,negi,absi,mini,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
 
 f32Builtins, f64Builtins :: [F.FunDecl]
-(f32Builtins, f64Builtins) = (funs F.F32T ("F32."++) (++"32") tof32,
-                              funs F.F64T ("F64."++) (++"64") tof64)
+(f32Builtins, f64Builtins) = (funs F.F32T ("f32."++) (++"32") tof32,
+                              funs F.F64T ("f64."++) (++"64") tof64)
   where
     tof32, tof64 :: Double -> F.Exp
     tof32 = Constant . F32 . fromRational . toRational
@@ -1052,7 +1052,7 @@ convertFun fun = case fun of
   "notb"   -> Just "!"
   "floor"  -> Just "floor"
   "mem"    -> Just "copy"
-  "signi"  -> Just "I32.sgn"
+  "signi"  -> Just "i32.sgn"
   _         | fun `elem` idFuns -> Just fun
             | otherwise -> Nothing
 
