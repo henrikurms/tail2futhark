@@ -66,8 +66,7 @@ data Exp = Var Ident
          | Rearrange [Integer] Exp
          | Unsafe Exp
          | Empty Type
-         | Map Kernel Exp
-         | ZipWith Kernel [Exp]
+         | Map Kernel [Exp]
          | Filter Kernel Exp
          | Scan Kernel Exp Exp
          | Reduce Kernel Exp Exp

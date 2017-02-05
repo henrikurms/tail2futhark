@@ -623,7 +623,7 @@ compileIota :: t -> [T.Exp] -> CompilerM F.Exp
 compileIota _ [a] = compileIota' <$> compileExp a
   where compileIota' a' =
           Map (F.Fn F.IntT [(F.IntT, "x")] (F.BinApp Plus (F.Var "x") (Constant (F.Int 1))))
-          (FunCall "iota" [a'])
+          [FunCall "iota" [a']]
 compileIota _ _ = throwError "Iota take one argument"
 
 compileGradeUp :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -647,10 +647,10 @@ compileReplicate' :: BType -> Integer -> F.Exp -> F.Exp -> F.Exp -> CompilerM F.
 compileReplicate' _ 0 _ reps a = return $ F.FunCall "replicate" [reps,a]
 compileReplicate' tp 1 def reps a =
    do t' <- mkType(tp,0)
-      return $ F.Let (Ident "vals2") (ZipWith (F.Fn t' [(F.IntT,"r"),(t',"v")] (F.IfThenElse (F.BinApp F.Less (F.Var "r") zer) def (F.Var "v"))) [reps,a])
-             $ F.Let (Ident "reps2") (F.Map (absfn t') reps)
+      return $ F.Let (Ident "vals2") (Map (F.Fn t' [(F.IntT,"r"),(t',"v")] (F.IfThenElse (F.BinApp F.Less (F.Var "r") zer) def (F.Var "v"))) [reps,a])
+             $ F.Let (Ident "reps2") (F.Map (absfn t') [reps])
              $ F.Let (Ident "idxs") (F.FunCall "replIdx" [F.Var "reps2"])
-             $ Map (F.Fn t' [(F.IntT,"i")] (F.Unsafe(F.Index(F.Var"vals2")[F.Var"i"]))) (F.Var "idxs")
+             $ Map (F.Fn t' [(F.IntT,"i")] (F.Unsafe(F.Index(F.Var"vals2")[F.Var"i"]))) [F.Var "idxs"]
       where zer = F.Constant (Int 0)
             absfn t' = F.Fn t' [(t',"i")] (F.IfThenElse (F.BinApp F.Less (F.Var "i") zer) (F.Neg (F.Var "i")) (F.Var "i"))
 compileReplicate' _ _ _ _ _ = throwError "compileReplicate': multi-dimensional replicate not supported"
@@ -679,7 +679,7 @@ compileVReverseV _ _ = throwError "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> CompilerM F.Exp
 makeVReverse tp r a = F.Let (Ident "a") a <$>
-  (Map <$> kernelExp <*> pure (FunCall "iota" [F.Index (FunCall "shape" [a]) [F.Constant (F.Int 0)]]))
+  (Map <$> kernelExp <*> pure [FunCall "iota" [F.Index (FunCall "shape" [a]) [F.Constant (F.Int 0)]]])
   where
     kernelExp = F.Fn <$>
       mkType (tp,r-1) <*>
@@ -829,7 +829,7 @@ compileFirstV _ args
 compileEachV :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileEachV Nothing _ = throwError "Need instance declaration for eachV"
 compileEachV (Just ([_intp,outtp],[_len])) [kernel,array] =
-  Map <$> (compileKernel kernel =<< makeBTp outtp) <*> compileExp array
+  Map <$> (compileKernel kernel =<< makeBTp outtp) <*> mapM compileExp [array]
 compileEachV _ _ = throwError "compileEachV: invalid arguments"
 
 -- each --
@@ -840,13 +840,13 @@ compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = do
     makeEach intp outtp orig_r okernel (F.Var "array")
   where ione = F.Constant (F.Int 1)
         makeEach _ tp2 1 kernel array =
-          Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure array
+          Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure [array]
         makeEach tp1 tp2 r kernel array = do
           rtp  <- setOuterSize (F.NamedDim "n") <$> mkType (tp2,r-1)
           tp1' <- mkType (tp1,r-1)
           body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
           return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [array]) [ione]) $
-            Map (F.Fn rtp [(tp1',"x")] body) array
+            Map (F.Fn rtp [(tp1',"x")] body) [array]
 compileEach Nothing _ = throwError "Need instance declaration for each"
 compileEach _ _ = throwError "each takes two arguments"
 
@@ -879,14 +879,14 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
   where ione = F.Constant (F.Int 1)
         makeZipWith r kernel a1 a2
           | r == 1 =
-            ZipWith <$> (compileKernel kernel =<< makeBTp rtp) <*> pure [a1,a2]
+            Map <$> (compileKernel kernel =<< makeBTp rtp) <*> pure [a1,a2]
           | otherwise = do
               rtp' <- setOuterSize (F.NamedDim "n") <$> mkType (rtp,r-1)
               tp1' <- mkType (tp1,r-1)
               tp2' <- mkType (tp2,r-1)
               body <- makeZipWith (r-1) kernel (F.Var "x") (F.Var "y")
               return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [a1]) [ione]) $
-                ZipWith (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) [a1, a2]
+                Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) [a1, a2]
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
 compileZipWith _ _ = throwError "zipWith takes 3 arguments"
@@ -939,9 +939,9 @@ compileCompress' bt bs xs = do
   bs' <- compileExp bs
   xs' <- compileExp xs
   t <- mkType (bt,0)
-  return $ F.Let (Ident "zs") (ZipWith (zipWithFn t) [bs',xs']) $
+  return $ F.Let (Ident "zs") (Map (zipWithFn t) [bs',xs']) $
            F.Let (Ident "rs") (Filter (filterFn t) (F.Var "zs")) $
-           Map (mapFn t) (F.Var "rs")
+           Map (mapFn t) [F.Var "rs"]
   where zipWithFn t = F.Fn (pt t) [(F.BoolT,"b"),(t,"x")] (F.Tuple[F.Var "b",F.Var "x"])
         filterFn t = F.Fn F.BoolT [(pt t,"p")] (F.Let (TouplePat [Ident "b",Ident "_"]) (F.Var "p") (F.Var "b"))
         mapFn t = F.Fn t [(pt t,"p")] (F.Let (TouplePat [Ident "_",Ident "x"]) (F.Var "p") (F.Var "x"))
@@ -966,7 +966,7 @@ compileReduce (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               rt <- mkType (tp,r-1)
               t <- mkType (tp,r)
               body <- makeReduce tp (r-1) kernel idExp (F.Var "x")
-              return $ Map (F.Fn rt [(t,"x")] body) arrayExp
+              return $ Map (F.Fn rt [(t,"x")] body) [arrayExp]
 compileReduce _ _ = throwError "reduce needs 3 arguments"
 
 -- scan --
@@ -984,7 +984,7 @@ compileScan (Just ([orig_tp],[orig_rank]))[orig_kernel,v,array] = do
               rt <- mkType (tp,r-1)
               -- t <- mkType (tp,r)
               body <- makeScan tp (r-1) kernel idExp (F.Var "x")
-              return $ Map (F.Fn rt [(rt,"x")] body) arrayExp
+              return $ Map (F.Fn rt [(rt,"x")] body) [arrayExp]
 compileScan _ _ = throwError "scan needs 3 arguments"
 
 -- Prj ---

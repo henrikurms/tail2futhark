@@ -64,8 +64,7 @@ instance Pretty Exp where
   ppr (FunCall ident exps) = text ident <+> spread (map (parens . ppr) exps)
   ppr (Rearrange perm e) = text "rearrange" <+> parens (commasep $ map ppr perm) <+> parens (ppr e)
   ppr (Empty tp) = text "empty" <> parens (ppr tp)
-  ppr (Map k e) = ppSOAC1 "map" k [e]
-  ppr (ZipWith k es) = ppSOAC1 "zipWith" k es
+  ppr (Map k es) = ppSOAC1 "map" k es
   ppr (Filter k e) = ppSOAC1 "filter" k [e]
   ppr (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
   ppr (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
