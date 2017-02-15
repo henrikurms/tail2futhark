@@ -16,11 +16,14 @@ instance Pretty Program where
 instance Pretty FunDecl where
   ppr (FunDecl entry tp ident args body) =
     fun'
-    <+> text ident <+> spread (map (parens . ppArg) args)
+    <+> text ident <+> args'
     <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
     where fun' = text $ if entry then "entry" else "fun"
+          args' = case args of
+                    [] -> parens mempty
+                    _  -> spread (map (parens . ppArg) args)
 
 commaList :: [Doc] -> Doc
 commaList = parens . commasep

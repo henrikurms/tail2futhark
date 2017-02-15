@@ -41,7 +41,7 @@ compile opts progs =
       includes ++
       map snd (M.toList genfuns) ++
       entry_funs
-  where includes = if includeLibs opts then builtins ++ fbuiltins else []
+  where includes = if includeLibs opts then fbuiltins else []
         fbuiltins = if floatAsSingle opts then f32Builtins else f64Builtins
         float = if floatAsSingle opts then F.F32T else F.F64T
         env = newEnv { floatType = float }
@@ -51,7 +51,7 @@ compileProg opts entry_name prog = do
   mainbody <- compileExp rootExp
   return $ F.FunDecl True ret entry_name signature' $ maybeUnsafe mainbody
   where (signature, ret, rootExp) = inputsAndOutputs float prog
-        signature' = case signature of [] -> [(F.TupleT [], "_")]
+        signature' = case signature of [] -> []
                                        _  -> signature
         float = if floatAsSingle opts then F.F32T else F.F64T
         maybeUnsafe
@@ -124,18 +124,6 @@ maxExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e2 e1
 
 minExp :: F.Exp -> F.Exp -> F.Exp
 minExp e1 e2 = IfThenElse (BinApp LessEq e1 e2) e1 e2
-
-nandExp :: F.Exp -> F.Exp -> F.Exp
-nandExp e1 e2 = F.FunCall "!" [BinApp F.LogicAnd e1 e2]
-
-norExp :: F.Exp -> F.Exp -> F.Exp
-norExp e1 e2 = F.FunCall "!" [BinApp F.LogicOr e1 e2]
-
-resiExp :: F.Exp -> F.Exp -> F.Exp
-resiExp y x = F.IfThenElse (y `eq` izero) x (x % y)
-  where infix 1 %; (%) = F.BinApp F.Mod
-        izero = Constant (Int 0)
-        eq = F.BinApp F.Eq
 
 -- reshape1 --
 -- create split part of reshape1 function --
@@ -323,10 +311,6 @@ compileTp (S bt _)        = makeBTp bt
 -- LIBRARY FUNCTIONS --
 -----------------------
 
--- list containing impl of all library functions --
-builtins :: [F.FunDecl]
-builtins = [boolToInt,negi,absi,mini,maxi,eqb,xorb,nandb,norb,neqi,neqd,resi,inf32,inf64]
-
 f32Builtins, f64Builtins :: [F.FunDecl]
 (f32Builtins, f64Builtins) = (funs F.F32T ("f32."++) (++"32") tof32,
                               funs F.F64T ("f64."++) (++"64") tof64)
@@ -409,43 +393,6 @@ f32Builtins, f64Builtins :: [F.FunDecl]
               b = Project x "1"
           in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
-boolToInt :: FunDecl
-boolToInt = F.FunDecl False F.IntT "boolToInt" [(F.BoolT, "x")] $
-  F.IfThenElse (F.Var "x") (Constant (Int 1)) (Constant (Int 0))
-
-negi, absi, mini,
-  maxi, nandb, norb, eqb, xorb, neqi, neqd, resi, inf32, inf64 :: FunDecl
-
-negi = F.FunDecl False F.IntT "negi" [(F.IntT,"x")] $ F.Neg (F.Var "x")
-
-absi = F.FunDecl False F.IntT "absi" [(F.IntT,"x")] $ absExp (F.Var "x")
-
-mini = F.FunDecl False F.IntT "mini" [(F.IntT, "x"), (F.IntT, "y")] $ minExp (F.Var "x") (F.Var "y")
-
-maxi = F.FunDecl False F.IntT "maxi" [(F.IntT, "x"), (F.IntT, "y")] $ maxExp (F.Var "x") (F.Var "y")
-
-nandb = F.FunDecl False F.BoolT "nandb" [(F.BoolT, "x"), (F.BoolT, "y")] $ nandExp (F.Var "x") (F.Var "y")
-
-norb = F.FunDecl False F.BoolT "norb" [(F.BoolT, "x"), (F.BoolT, "y")] $ norExp (F.Var "x") (F.Var "y")
-
-eqb = F.FunDecl False F.BoolT "eqb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolEquals (F.Var "x") (F.Var "y")
-  where boolEquals e1 e2 = BinApp F.LogicOr (norExp e1 e2) (BinApp F.LogicAnd e1 e2)
-
-xorb = F.FunDecl False F.BoolT "xorb" [(F.BoolT, "x"), (F.BoolT, "y")] $ boolXor (F.Var "x") (F.Var "y")
-  where boolXor e1 e2 = BinApp F.LogicAnd (nandExp e1 e2) (BinApp F.LogicOr e1 e2)
-
-neqi = F.FunDecl False F.BoolT "neqi" [(F.IntT, "x"), (F.IntT, "y")] $ notEq (F.Var "x") (F.Var "y")
-
-neqd = F.FunDecl False F.BoolT "neqd" [(F.F32T, "x"), (F.F32T, "y")] $ notEq (F.Var "x") (F.Var "y")
-
-notEq :: F.Exp -> F.Exp -> F.Exp
-notEq e1 e2 = FunCall "!" [BinApp F.Eq e1 e2]
-
-resi = F.FunDecl False F.IntT "resi" [(F.IntT, "x"),(F.IntT, "y")] $ resiExp (F.Var "x") (F.Var "y")
-
-inf32 = F.FunDecl False F.F32T "inf32" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F32 1)) (F.Constant (F32 0))
-inf64 = F.FunDecl False F.F64T "inf64" [(F.TupleT [], "_")] $ F.BinApp F.Div (F.Constant (F64 1)) (F.Constant (F64 0))
-
 -- AUX: make FunDecl False by combining signature and body (aux function that create function body)
 makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
 makeFun args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) args body
@@ -497,8 +444,8 @@ compileExp (B bool)   = return $ Constant (Bool bool)
 compileExp Inf = do
   float <- asks floatType
   case float of
-    F.F32T -> return $ F.FunCall "inf32" [Tuple []]
-    _      -> return $ F.FunCall "inf64" [Tuple []]
+    F.F32T -> return $ F.Var "f32.inf"
+    _      -> return $ F.Var "f64.inf"
 compileExp (T.Neg e) = F.Neg <$> compileExp e
 compileExp (T.Let v _ e1 e2) =
   F.Let (Ident ("t_" ++ v)) <$>
@@ -1040,8 +987,8 @@ convertFun :: String -> Maybe String
 convertFun fun = case fun of
   "i2d"    -> Just "i2d"
   "catV"   -> Just "concat"
-  "b2i"    -> Just "boolToInt"
-  "b2iV"   -> Just "boolToInt"
+  "b2i"    -> Just "i32"
+  "b2iV"   -> Just "i32"
   "ln"     -> Just "ln"
   "ceil"   -> Just "ceil"
   "expd"   -> Just "expd"

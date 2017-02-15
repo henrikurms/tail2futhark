@@ -73,3 +73,43 @@ fun replIdx (reps:[n]i32) : []i32 =
   let res = sgmScanSum tmp2 flags
   in res
 
+fun negi (x: i32): i32 =
+  -x
+
+fun absi (x: i32): i32 =
+  if x <= 0
+  then -x
+  else x
+
+fun mini (x: i32) (y: i32): i32 =
+  if x <= y
+  then x
+  else y
+
+fun maxi (x: i32) (y: i32): i32 =
+  if x <= y
+  then y
+  else x
+
+fun eqb (x: bool) (y: bool): bool =
+  ! (x || y) || (x && y)
+
+fun xorb (x: bool) (y: bool): bool =
+  ! (x && y) && (x || y)
+
+fun nandb (x: bool) (y: bool): bool =
+  ! (x && y)
+
+fun norb (x: bool) (y: bool): bool =
+  ! (x || y)
+
+fun neqi (x: i32) (y: i32): bool =
+  x != y
+
+fun neqd (x: f32) (y: f32): bool =
+  x != y
+
+fun resi (x: i32) (y: i32): i32 =
+  if x == 0
+  then y
+  else (y % x)
