@@ -2,7 +2,7 @@
 -- This Futhark program is generated automatically by tail2futhark.
 -------------------------------------------------------------------
 
-import "futlib/numeric"
+import "futlib/math"
 
 fun radix_sort_up(xs: [n]u32) : ([n]u32,[n]i32) =
   let is = iota(n) in
