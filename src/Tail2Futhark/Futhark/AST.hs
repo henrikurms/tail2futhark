@@ -60,7 +60,7 @@ data Exp = Var Ident
          | Neg Exp
          | Array [Exp]
          | Tuple [Exp]
-         | Project Exp String
+         | Project String Exp
          | BinApp Operator Exp Exp
          | FunCall Ident [Exp]
          | Rearrange [Integer] Exp

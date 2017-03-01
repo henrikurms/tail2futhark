@@ -62,7 +62,7 @@ instance Pretty Exp where
   ppr (Index e exps) = parens (ppr e) <> brackExps exps
   ppr (Array exps) = brackExps exps
   ppr (Tuple exps) = parens $ commasep $ map ppr exps
-  ppr (Project e f) = text (concat ["#", f, " "]) <> ppr e
+  ppr (Project f e) = text "#" <> text f <+> ppr e
   ppr (BinApp op e1 e2) = parens $ ppr e1 <+> ppOp op <+> ppr e2
   ppr (FunCall ident exps) = text ident <+> spread (map (parens . ppr) exps)
   ppr (Rearrange perm e) = text "rearrange" <+> parens (commasep $ map ppr perm) <+> parens (ppr e)

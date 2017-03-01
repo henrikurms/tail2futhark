@@ -361,36 +361,36 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         injx = F.FunDecl False complex "injx" [(t, "x")] $
           F.Tuple [constant 0, x]
         addx = F.FunDecl False complex "addx" [(complex, "x"), (complex, "y")] $
-          F.Tuple [BinApp Plus (Project x "0") (Project y "0"),
-                   BinApp Plus (Project x "1") (Project y "1")]
+          F.Tuple [BinApp Plus (Project "1" x) (Project "1" y),
+                   BinApp Plus (Project "2" x) (Project "2" y)]
         subx = F.FunDecl False complex "subx" [(complex, "x"), (complex, "y")] $
-          F.Tuple [BinApp Minus (Project x "0") (Project y "0"),
-                   BinApp Minus (Project x "1") (Project y "1")]
+          F.Tuple [BinApp Minus (Project "1" x) (Project "1" y),
+                   BinApp Minus (Project "2" x) (Project "2" y)]
         mulx = F.FunDecl False complex "mulx" [(complex, "x"), (complex, "y")] $
-          let a = Project x "0"
-              b = Project x "1"
-              c = Project y "0"
-              d = Project y "1"
+          let a = Project "1" x
+              b = Project "2" x
+              c = Project "1" y
+              d = Project "2" y
           in F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
                       BinApp Plus (BinApp Mult a d) (BinApp Mult b c)]
         negx = F.FunDecl False complex "negx" [(complex, "x")] $
-          F.Tuple [F.Neg (Project x "0"),
-                   F.Neg (Project x "1")]
+          F.Tuple [F.Neg (Project "1" x),
+                   F.Neg (Project "2" x)]
         conjx = F.FunDecl False complex "conjx" [(complex, "x")] $
-          F.Tuple [Project x "0",
-                   F.Neg (Project x "1")]
+          F.Tuple [Project "1" x,
+                   F.Neg (Project "2" x)]
         expx = F.FunDecl False complex "expx" [(complex, "x")] $
           FunCall "mulx" [F.Tuple [constant 0,
-                                   FunCall "expd" [Project x "0"]],
-                          F.Tuple [FunCall "cos" [Project x "1"],
-                                   FunCall "sin" [Project x "1"]]]
+                                   FunCall "expd" [Project "1" x]],
+                          F.Tuple [FunCall "cos" [Project "2" x],
+                                   FunCall "sin" [Project "2" x]]]
         rex = F.FunDecl False t "rex" [(complex, "x")] $
-          Project x "0"
+          Project "1" x
         imx = F.FunDecl False t "imx" [(complex, "x")] $
-          Project x "1"
+          Project "2" x
         magnx = F.FunDecl False t "magnx" [(complex, "x")] $
-          let a = Project x "0"
-              b = Project x "1"
+          let a = Project "1" x
+              b = Project "2" x
           in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
 -- AUX: make FunDecl False by combining signature and body (aux function that create function body)
@@ -937,7 +937,8 @@ compileScan _ _ = throwError "scan needs 3 arguments"
 -- Prj ---
 compilePrj :: Integer -> T.Exp -> CompilerM F.Exp
 compilePrj i tup =
-  F.Project <$> compileExp tup <*> pure (show i)
+  -- TAIL tuples are 0-indexed and Futhark tuples are 1-indexed.
+  F.Project (show (i+1)) <$> compileExp tup
 
 -- bench --
 --
