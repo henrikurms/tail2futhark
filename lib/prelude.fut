@@ -4,20 +4,6 @@
 
 import "futlib/math"
 
-fun radix_sort_up(xs: [n]u32) : ([n]u32,[n]i32) =
-  let is = iota(n) in
-  let is = map (+1) is in
-  loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
-    radix_sort_step_up(p,i)
-  in p
-
-fun radix_sort_down(xs: [n]u32) : ([n]u32,[n]i32) =
-  let is = iota(n) in
-  let is = map (+1) is in
-  loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
-    radix_sort_step_down(p,i)
-  in p
-
 fun radix_sort_step_up(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
   let bits       = map (\(x:u32):i32 -> i32((x >> u32(digit_n)) & 1u32)) xs
@@ -47,6 +33,20 @@ fun radix_sort_step_down(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let ps_actual  = map (\(p:i32) : i32 -> p - 1) ps
   in (write ps_actual xs (copy(xs)),
       write ps_actual is (copy(is)))
+
+fun radix_sort_up(xs: [n]u32) : ([n]u32,[n]i32) =
+  let is = iota(n) in
+  let is = map (+1) is in
+  loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
+    radix_sort_step_up(p,i)
+  in p
+
+fun radix_sort_down(xs: [n]u32) : ([n]u32,[n]i32) =
+  let is = iota(n) in
+  let is = map (+1) is in
+  loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
+    radix_sort_step_down(p,i)
+  in p
 
 fun grade_up (xs: [n]i32) : [n]i32 =
   let xs = map u32 xs in
