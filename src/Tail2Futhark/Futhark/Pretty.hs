@@ -20,7 +20,7 @@ instance Pretty FunDecl where
     <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
-    where fun' = text $ if entry then "entry" else "fun"
+    where fun' = text $ if entry then "entry" else "let"
           args' = case args of
                     [] -> parens mempty
                     _  -> spread (map (parens . ppArg) args)
