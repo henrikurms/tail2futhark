@@ -44,6 +44,7 @@ instance Pretty Type where
 
 instance Pretty DimDecl where
   ppr AnyDim       = mempty
+  ppr (BoundDim d) = text "#" <> ppr d
   ppr (NamedDim d) = ppr d
   ppr (ConstDim d) = ppr d
 

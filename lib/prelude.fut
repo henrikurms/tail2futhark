@@ -4,7 +4,7 @@
 
 import "futlib/math"
 
-let radix_sort_step_up(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
+let radix_sort_step_up(p:([#n]u32,[#n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
   let bits       = map (\(x:u32):i32 -> i32((x >> u32(digit_n)) & 1u32)) xs
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
@@ -19,7 +19,7 @@ let radix_sort_step_up(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   in (scatter (copy(xs)) ps_actual xs,
       scatter (copy(is)) ps_actual is)
 
-let radix_sort_step_down(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
+let radix_sort_step_down(p:([#n]u32,[#n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
   let bits       = map (\(x:u32):i32 -> i32((x >> u32(digit_n)) & 1u32)) xs
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
@@ -34,29 +34,29 @@ let radix_sort_step_down(p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   in (scatter (copy(xs)) ps_actual xs,
       scatter (copy(is)) ps_actual is)
 
-let radix_sort_up(xs: [n]u32) : ([n]u32,[n]i32) =
+let radix_sort_up(xs: [#n]u32) : ([n]u32,[n]i32) =
   let is = iota(n) in
   let is = map (+1) is in
   loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
     radix_sort_step_up(p,i)
   in p
 
-let radix_sort_down(xs: [n]u32) : ([n]u32,[n]i32) =
+let radix_sort_down(xs: [#n]u32) : ([n]u32,[n]i32) =
   let is = iota(n) in
   let is = map (+1) is in
   loop (p:([n]u32,[n]i32) = (xs,is)) = for i < 32 do
     radix_sort_step_down(p,i)
   in p
 
-let grade_up (xs: [n]i32) : [n]i32 =
+let grade_up (xs: [#n]i32) : [n]i32 =
   let xs = map u32 xs in
   let (_,is) = radix_sort_up xs in is
 
-let grade_down (xs: [n]i32) : [n]i32 =
+let grade_down (xs: [#n]i32) : [n]i32 =
   let xs = map u32 xs in
   let (_,is) = radix_sort_down xs in is
 
-let sgmScanSum (vals:[n]i32) (flags:[n]bool) : [n]i32 =
+let sgmScanSum (vals:[#n]i32) (flags:[#n]bool) : [n]i32 =
   let pairs = scan ( \((v1,f1):(i32,bool)) ((v2,f2):(i32,bool)) : (i32,bool) ->
                        let f = f1 || f2
                        let v = if f2 then v2 else v1+v2
@@ -64,7 +64,7 @@ let sgmScanSum (vals:[n]i32) (flags:[n]bool) : [n]i32 =
   let (res,_) = unzip pairs
   in res
 
-let replIdx (reps:[n]i32) : []i32 =
+let replIdx (reps:[#n]i32) : []i32 =
   let tmp = scan (+) 0 reps
   let sers = map (\(i:i32):i32 -> if i == 0 then 0 else unsafe tmp[i-1]) (iota(n))
   let m = unsafe tmp[n-1]
