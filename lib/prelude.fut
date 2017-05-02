@@ -2,7 +2,8 @@
 -- This Futhark program is generated automatically by tail2futhark.
 -------------------------------------------------------------------
 
-import "futlib/math"
+import "/futlib/math"
+import "/futlib/array"
 
 let radix_sort_step_up(p:([#n]u32,[#n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
