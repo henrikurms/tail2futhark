@@ -54,7 +54,7 @@ data Operator = Plus | Mult | LessEq | GreaterEq | Less | Greater | Minus | Div 
 data Exp = Var Ident
          | Let Pattern Exp Exp
          | IfThenElse Exp Exp Exp
-         | ForLoop Ident Exp Ident Exp Exp Exp
+         | ForLoop Ident Exp Ident Exp Exp
          | Constant Constant
          | Index Exp [Exp]
          | Neg Exp

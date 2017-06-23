@@ -806,7 +806,7 @@ compilePower (Just (ts,rs)) [kernel,num,arr] = do
   arr' <- compileExp arr
   case fn of
     F.Fn _ [(_,var)] body ->
-      return $ F.ForLoop var arr' "i" num' body $ F.Var var
+      return $ F.ForLoop var arr' "i" num' body
     F.Fn{} ->
       fail "expecting exactly one argument in function to power-function"
     _  ->
