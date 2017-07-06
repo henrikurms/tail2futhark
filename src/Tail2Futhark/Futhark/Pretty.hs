@@ -54,7 +54,7 @@ instance Pretty Exp where
   ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
   ppr (Unsafe e) = text "unsafe" <+> ppr e
   ppr (ForLoop merge merge_init i bound loopbody) =
-    text "loop" <+> parens (text merge <+> text "=" <+> ppr merge_init) <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
+    text "loop" <+> text merge <+> text "=" <+> ppr merge_init <+> text "for" <+> text i <+> text "<" <+> ppr bound <+> text "do" </>
     indent 2 (ppr loopbody)
   ppr (Constant c) = ppr c
   ppr (Neg e)    = text "-" <> ppr e
