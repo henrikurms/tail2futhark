@@ -2,6 +2,7 @@
 module Tail2Futhark.Futhark.Pretty (pretty)  where
 
 import           Tail2Futhark.Futhark.AST
+import           Text.PrettyPrint.Mainland.Class
 import           Text.PrettyPrint.Mainland hiding (pretty)
 import qualified Text.PrettyPrint.Mainland as PP
 
