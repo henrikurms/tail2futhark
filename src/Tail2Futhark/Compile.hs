@@ -136,16 +136,25 @@ makeLets ((v,e) : rest) body = F.Let (Ident v) e (makeLets rest body)
 makeLets [] body             = body
 
 reshape1Body :: F.Type -> F.Exp
-reshape1Body _ = makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split
+reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
+                 (F.FunCall "replicate" [F.Var "l", blank t])
+                 (makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split)
   where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
         desired = F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size
         reshapeCall = F.FunCall "reshape" [F.Tuple [BinApp Mult size len],
                                            F.FunCall "replicate" [len,F.Var "x"]]
-        size = F.Index (F.FunCall "shape" [F.Var "x"]) [Constant (Int 0)]
+        size = F.FunCall "length" [F.Var "x"]
         len = F.Var "roundUp"
         fdiv = BinApp Div
         fplus = BinApp Plus
         fminus = BinApp Minus
+
+        blank (F.ArrayT et _) = blank et
+        blank F.F32T = Constant $ F32 0
+        blank F.F64T = Constant $ F64 0
+        blank F.BoolT = Constant $ Bool False
+        blank (F.TupleT ts) = Tuple $ map blank ts
+        blank _ = Constant $ Int 0
 
 -- drop --
 -- make body for drop1 function --
