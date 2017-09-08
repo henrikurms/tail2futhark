@@ -163,7 +163,7 @@ dropBody tp = IfThenElse (size `less` absExp len) emptArr elseBranch
     where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
-          size = F.Index (F.FunCall "shape" [F.Var "x"]) [izero]
+          size = F.FunCall "length" [F.Var "x"]
           plus = BinApp Plus len size
           emptArr = F.Let (Ident "dims") (F.FunCall "shape" [F.Var "x"])
                     (F.FunCall "reshape" [F.Tuple emptShape, F.Empty tp])
@@ -182,7 +182,7 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           izero = Constant (Int 0)
           plus  = BinApp Plus len size
           len  = F.Var "l"
-          size = F.Index (F.FunCall "shape" [F.Var "x"]) [izero]
+          size = F.FunCall "length" [F.Var "x"]
           padRight = F.FunCall "concat" [F.Var "x", padding]
           padLeft = F.FunCall "concat" [padding, F.Var "x"]
           padding = F.FunCall "replicate"
@@ -635,15 +635,14 @@ compileVReverseV _ _ = throwError "compileVReverseC: invalid arguments"
 
 makeVReverse :: BType -> Integer -> F.Exp -> CompilerM F.Exp
 makeVReverse tp r a = F.Let (Ident "a") a <$>
-  (Map <$> kernelExp <*> pure [FunCall "iota" [F.Index (FunCall "shape" [a]) [F.Constant (F.Int 0)]]])
+  (Map <$> kernelExp <*> pure [FunCall "iota" [FunCall "length" [a]]])
   where
     kernelExp = F.Fn <$>
       mkType (tp,r-1) <*>
       pure [(F.IntT,"x")] <*>
       pure (F.Index (F.Var "a") [F.BinApp F.Minus minusIndex ione])
-    sizeCall = F.Index (F.FunCall "shape" [a]) [izero]
+    sizeCall = F.FunCall "length" [a]
     minusIndex = F.BinApp F.Minus sizeCall (F.Var "x")
-    izero = F.Constant (F.Int 0)
     ione = F.Constant (F.Int 1)
 
 -- rotate --
