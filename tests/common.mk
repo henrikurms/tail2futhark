@@ -4,6 +4,8 @@ ifndef TAIL_ROOT
 $(error TAIL_ROOT is not set)
 endif
 
+.SECONDARY:
+
 T2F       ?= tail2futhark
 FUTHARKC  ?= futhark-c
 FUTHARKOPENCL ?= futhark-opencl
