@@ -5,7 +5,7 @@ newtype Program = Program [FunDecl]
 -- | Boolean is true if entry point.
 data FunDecl = FunDecl Bool Type Ident [TypeSizeParam] [Arg] Exp
 
-data DimDecl = AnyDim | BoundDim Ident | NamedDim Ident | ConstDim Int
+data DimDecl = AnyDim | NamedDim Ident | ConstDim Int
              deriving (Show, Eq, Ord)
 
 data Type = IntT
