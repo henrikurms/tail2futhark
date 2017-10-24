@@ -20,12 +20,12 @@ data Env = Env { floatType :: F.Type }
 newEnv :: Env
 newEnv = Env F.F64T
 
-newtype CompilerM a = CompilerM (ReaderT Env (WriterT (M.Map GenFun FunDecl) (Except String)) a)
+newtype CompilerM a = CompilerM (ReaderT Env (WriterT (M.Map String FunDecl) (Except String)) a)
                     deriving (Applicative, Functor, Monad,
                               MonadReader Env, MonadError String,
-                              MonadWriter (M.Map GenFun FunDecl))
+                              MonadWriter (M.Map String FunDecl))
 
-runCompilerM :: CompilerM a -> Env -> Either String (a, M.Map GenFun FunDecl)
+runCompilerM :: CompilerM a -> Env -> Either String (a, M.Map String FunDecl)
 runCompilerM (CompilerM m) = runExcept . runWriterT . runReaderT m
 
 --------------------------
@@ -49,7 +49,7 @@ compile opts progs =
 compileProg :: Options -> String -> T.Program -> CompilerM F.FunDecl
 compileProg opts entry_name prog = do
   mainbody <- compileExp rootExp
-  return $ F.FunDecl True ret entry_name signature' $ maybeUnsafe mainbody
+  return $ F.FunDecl True ret entry_name [] signature' $ maybeUnsafe mainbody
   where (signature, ret, rootExp) = inputsAndOutputs float prog
         signature' = case signature of [] -> []
                                        _  -> signature
@@ -158,18 +158,16 @@ reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
 
 -- drop --
 -- make body for drop1 function --
-dropBody :: F.Type -> F.Exp
-dropBody tp = IfThenElse (size `less` absExp len) emptArr elseBranch
+dropBody :: [F.Exp] -> F.Type -> F.Exp
+dropBody dims tp = IfThenElse (size `less` absExp len) emptArr elseBranch
     where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
           size = F.FunCall "length" [F.Var "x"]
           plus = BinApp Plus len size
-          emptArr = F.Let (Ident "dims") (F.FunCall "shape" [F.Var "x"])
-                    (F.FunCall "reshape" [F.Tuple emptShape, F.Empty tp])
+          emptArr = F.FunCall "reshape" [F.Tuple emptShape, F.Empty tp]
           emptShape = F.Constant (Int 0) :
-                      [F.Index (F.Var "dims") [F.Constant $ Int i]
-                      | i <- [1..F.rank tp] ]
+                      drop 1 dims
           elseBranch = IfThenElse (len `less` izero) negDrop posDrop
           negDrop = mkSplit "v1" "_" plus (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
@@ -190,18 +188,16 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
           posTake = IfThenElse (len `less` size) (mkSplit "v1" "_" (F.Var "l") (F.Var "x") (F.Var "v1")) padRight
           negTake = IfThenElse (izero `less` plus) (mkSplit "_" "v2" plus (F.Var "x") (F.Var "v2")) padLeft
 
-
 ------------------------------------------
 -- AUX FUNCTIONS FOR SPECIFIC FUNCTIONS --
 ------------------------------------------
 
 -- AUX shape --
-makeShape :: Integer -> [T.Exp] -> CompilerM [F.Exp]
-makeShape r args
-  | [e] <- args = do
-      e' <- compileExp e
-      return $ map (\x -> F.Index (FunCall "shape" [e']) [Constant (Int x)]) [0..r-1]
-  | otherwise = throwError "shape takes one argument"
+makeShape :: F.Type -> T.Exp -> CompilerM [F.Exp]
+makeShape t e = do
+  e' <- compileExp e
+  dim_fun <- genFun $ DimFun t
+  return [ F.FunCall dim_fun [Constant $ Int i, e'] | i <- [0..F.rank t-1] ]
 
 -- AUX transp --
 makeTransp :: Integer -> F.Exp -> F.Exp
@@ -249,16 +245,18 @@ getType s
           | otherwise = Just (read prefix :: Integer)
 
 -- return zero expression of basic type --
-zero :: (Integer, F.Ident) -> F.Type -> F.Exp
-zero _ F.IntT = Constant (Int 0)
-zero _ F.F32T = Constant (F32 0)
-zero _ F.F64T = Constant (F64 0)
-zero _ F.BoolT = Constant (Bool False)
-zero (i,x) (F.ArrayT t _) =
-  F.FunCall "replicate"
-  [F.Index (FunCall "shape" [F.Var x]) [F.Constant (F.Int i)],
-    zero (i+1,x) t]
-zero _ tp = error $ "take for type " ++ pretty tp ++ " not supported"
+zero :: (Integer, F.Ident) -> F.Type -> CompilerM F.Exp
+zero _ F.IntT = return $ Constant (Int 0)
+zero _ F.F32T = return $ Constant (F32 0)
+zero _ F.F64T = return $ Constant (F64 0)
+zero _ F.BoolT = return $ Constant (Bool False)
+zero (i,x) at@(F.ArrayT t _) = do
+  zero' <- zero (i+1,x) t
+  dim_fn <- genFun $ DimFun $ foldl ArrayT at $
+            genericReplicate i AnyDim
+  return $ F.FunCall "replicate"
+    [FunCall dim_fn [F.Constant (F.Int i), F.Var x], zero']
+zero _ tp = fail $ "take for type " ++ pretty tp ++ " not supported"
 
 -- make Futhark function expression from ident
 makeKernel :: String -> Kernel
@@ -280,11 +278,6 @@ makeBTp (T.Btyv _) = return F.IntT   -- just pick an arbitrary type
 -- make Futhark array type from Futhark basic type --
 mkType :: (BType, Integer) -> CompilerM F.Type
 mkType (tp, r) = makeArrTp <$> makeBTp tp <*> pure r
-
--- Set the outer dimension of a Futhark type.
-setOuterSize :: DimDecl -> F.Type -> F.Type
-setOuterSize d (F.ArrayT t _) = F.ArrayT t d
-setOuterSize _ t              = t
 
 -- aux for mkType --
 makeArrTp :: F.Type -> Integer -> F.Type
@@ -337,74 +330,74 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         complex = TupleT [t, t]
         x = F.Var "x"
         y = F.Var "y"
-        i2dt = F.FunDecl False t "i2d" [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
-        sqrtf = F.FunDecl False t "sqrt" [(t, "x")] $ F.FunCall (pref "sqrt") [x]
-        ln = F.FunDecl False t "ln" [(t, "x")] $ F.FunCall (pref "log") [x]
-        sinf = F.FunDecl False t "sin" [(t, "x")] $ F.FunCall (pref "sin") [x]
-        cosf = F.FunDecl False t "cos" [(t, "x")] $ F.FunCall (pref "cos") [x]
-        tanf = F.FunDecl False t "tan" [(t, "x")] $ F.BinApp F.Div (F.FunCall (pref "sin") [x]) (F.FunCall (pref "cos") [x])
-        atan2f = F.FunDecl False t "atan2" [(t, "x"), (t, "y")] $ F.FunCall (pref "atan2") [x,y]
-        absd = F.FunDecl False t "absd" [(t,"x")] $
+        i2dt = F.FunDecl False t "i2d" [] [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
+        sqrtf = F.FunDecl False t "sqrt" [] [(t, "x")] $ F.FunCall (pref "sqrt") [x]
+        ln = F.FunDecl False t "ln" [] [(t, "x")] $ F.FunCall (pref "log") [x]
+        sinf = F.FunDecl False t "sin" [] [(t, "x")] $ F.FunCall (pref "sin") [x]
+        cosf = F.FunDecl False t "cos" [] [(t, "x")] $ F.FunCall (pref "cos") [x]
+        tanf = F.FunDecl False t "tan" [] [(t, "x")] $ F.BinApp F.Div (F.FunCall (pref "sin") [x]) (F.FunCall (pref "cos") [x])
+        atan2f = F.FunDecl False t "atan2" [] [(t, "x"), (t, "y")] $ F.FunCall (pref "atan2") [x,y]
+        absd = F.FunDecl False t "absd" [] [(t,"x")] $
           IfThenElse (BinApp LessEq x (constant 0)) (F.Neg x) x
-        negd = F.FunDecl False t "negd" [(t,"x")] $ F.Neg x
-        maxd = F.FunDecl False t "maxd" [(t, "x"), (t, "y")] $ maxExp x y
-        mind = F.FunDecl False t "mind" [(t, "x"), (t, "y")] $ minExp x y
-        expd = F.FunDecl False t "expd" [(t, "x")] $ F.FunCall (pref "exp") [x]
-        signd = F.FunDecl False F.IntT "signd" [(t, "x")] $
+        negd = F.FunDecl False t "negd" [] [(t,"x")] $ F.Neg x
+        maxd = F.FunDecl False t "maxd" [] [(t, "x"), (t, "y")] $ maxExp x y
+        mind = F.FunDecl False t "mind" [] [(t, "x"), (t, "y")] $ minExp x y
+        expd = F.FunDecl False t "expd" [] [(t, "x")] $ F.FunCall (pref "exp") [x]
+        signd = F.FunDecl False F.IntT "signd" [] [(t, "x")] $
           IfThenElse (BinApp Less (constant 0) x)
           (Constant (Int 1)) $
           IfThenElse (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
-        ceil = F.FunDecl False F.IntT "ceil" [(t, "x")] $
+        ceil = F.FunDecl False F.IntT "ceil" [] [(t, "x")] $
           IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "i32" [x]]) x)
           (F.FunCall "i32" [x]) $
           IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
           (F.FunCall "i32" [x])
           (F.FunCall "i32" [F.BinApp Plus x (constant 1)])
-        floorf = F.FunDecl False F.IntT "floor" [(t, "x")] $
+        floorf = F.FunDecl False F.IntT "floor" [] [(t, "x")] $
           IfThenElse (F.BinApp F.Less (F.Var "x") (constant 0))
           (F.FunCall "i32" [F.BinApp Minus x (constant 1)])
           (F.FunCall "i32" [x])
-        d2x = F.FunDecl False complex "d2x" [(t, "x")] $
+        d2x = F.FunDecl False complex "d2x" [] [(t, "x")] $
           F.Tuple [x, constant 0]
-        injx = F.FunDecl False complex "injx" [(t, "x")] $
+        injx = F.FunDecl False complex "injx" [] [(t, "x")] $
           F.Tuple [constant 0, x]
-        addx = F.FunDecl False complex "addx" [(complex, "x"), (complex, "y")] $
+        addx = F.FunDecl False complex "addx" [] [(complex, "x"), (complex, "y")] $
           F.Tuple [BinApp Plus (Project "1" x) (Project "1" y),
                    BinApp Plus (Project "2" x) (Project "2" y)]
-        subx = F.FunDecl False complex "subx" [(complex, "x"), (complex, "y")] $
+        subx = F.FunDecl False complex "subx" [] [(complex, "x"), (complex, "y")] $
           F.Tuple [BinApp Minus (Project "1" x) (Project "1" y),
                    BinApp Minus (Project "2" x) (Project "2" y)]
-        mulx = F.FunDecl False complex "mulx" [(complex, "x"), (complex, "y")] $
+        mulx = F.FunDecl False complex "mulx" [] [(complex, "x"), (complex, "y")] $
           let a = Project "1" x
               b = Project "2" x
               c = Project "1" y
               d = Project "2" y
           in F.Tuple [BinApp Minus (BinApp Mult a c) (BinApp Mult b d),
                       BinApp Plus (BinApp Mult a d) (BinApp Mult b c)]
-        negx = F.FunDecl False complex "negx" [(complex, "x")] $
+        negx = F.FunDecl False complex "negx" [] [(complex, "x")] $
           F.Tuple [F.Neg (Project "1" x),
                    F.Neg (Project "2" x)]
-        conjx = F.FunDecl False complex "conjx" [(complex, "x")] $
+        conjx = F.FunDecl False complex "conjx" [] [(complex, "x")] $
           F.Tuple [Project "1" x,
                    F.Neg (Project "2" x)]
-        expx = F.FunDecl False complex "expx" [(complex, "x")] $
+        expx = F.FunDecl False complex "expx" [] [(complex, "x")] $
           FunCall "mulx" [F.Tuple [constant 0,
                                    FunCall "expd" [Project "1" x]],
                           F.Tuple [FunCall "cos" [Project "2" x],
                                    FunCall "sin" [Project "2" x]]]
-        rex = F.FunDecl False t "rex" [(complex, "x")] $
+        rex = F.FunDecl False t "rex" [] [(complex, "x")] $
           Project "1" x
-        imx = F.FunDecl False t "imx" [(complex, "x")] $
+        imx = F.FunDecl False t "imx" [] [(complex, "x")] $
           Project "2" x
-        magnx = F.FunDecl False t "magnx" [(complex, "x")] $
+        magnx = F.FunDecl False t "magnx" [] [(complex, "x")] $
           let a = Project "1" x
               b = Project "2" x
           in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
 -- AUX: make FunDecl False by combining signature and body (aux function that create function body)
-makeFun :: [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
-makeFun args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) args body
+makeFun :: [F.TypeSizeParam] -> [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
+makeFun tsparams args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) tsparams args body
   where annot (TupleT ts)  = intercalate "_" $ map annot ts
         annot (ArrayT t _) = "arr" ++ annot t
         annot t            = pretty t
@@ -416,17 +409,36 @@ stdArgs tp = [(F.IntT,"l"),(ArrayT tp AnyDim, "x")]
 data GenFun = TakeFun F.Type
             | DropFun F.Type
             | ReshapeFun F.Type
+            | DimFun F.Type
             deriving (Eq, Ord, Show)
 
-generateGenFun :: GenFun -> FunDecl
-generateGenFun (TakeFun t) = makeFun (stdArgs t) "take" (takeBody (zero (1, "x") t)) t
-generateGenFun (DropFun t) = makeFun (stdArgs t) "drop" (dropBody t) t
-generateGenFun (ReshapeFun t) = makeFun (stdArgs t) "reshape" (reshape1Body t) t
+generateGenFun :: GenFun -> CompilerM FunDecl
+generateGenFun (TakeFun t) = do
+  body <- takeBody <$> zero (1, "x") t
+  return $ makeFun [] (stdArgs t) "take" body t
+generateGenFun (DropFun t) = do
+  dim_fn <- genFun $ DimFun $ ArrayT t AnyDim
+  let dims = [ FunCall dim_fn [Constant $ Int i, F.Var "x"] | i <- [0..F.rank t] ]
+  return $ makeFun [] (stdArgs t) "drop" (dropBody dims t) t
+generateGenFun (ReshapeFun t) =
+  return $ makeFun [] (stdArgs t) "reshape" (reshape1Body t) t
+generateGenFun (DimFun t) =
+  return $
+  F.FunDecl False F.IntT ("dim_" ++ show (F.rank t::Int))
+  (TypeParam "t":size_params) value_params body
+  where dim_names = map (\i -> "d" ++ show (i::Int)) [0..F.rank t-1]
+        size_params = map SizeParam dim_names
+        arr_t = foldl ArrayT (VarT "t") $ reverse $ map NamedDim dim_names
+        value_params = [(F.IntT,"i"), (arr_t, "x")]
+        body = foldl branch (F.Var "d0") $
+               reverse $ drop 1 $ zip [0..] dim_names
+        branch else_branch (i,d) =
+          F.IfThenElse (F.BinApp Eq (F.Var "i") (Constant $ Int i)) (F.Var d) else_branch
 
 genFun :: GenFun -> CompilerM F.Ident
 genFun gf = do
-  let ff@(FunDecl False _ name _ _) = generateGenFun gf
-  tell $ M.singleton gf ff
+  ff@(FunDecl False _ name _ _ _) <- generateGenFun gf
+  tell $ M.singleton name ff
   return name
 
 -----------------
@@ -707,8 +719,8 @@ compileTake :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileTake (Just([tp],[r])) [len,e] = do
   tp' <- mkType (tp, r-1)
   fname <- genFun $ TakeFun tp'
-  takeDropHelper (compileTake' fname) r len e
-  where compileTake' fname _ len' e' =
+  takeDropHelper (compileTake' fname) len e
+  where compileTake' fname len' e' =
           pure $ F.FunCall fname [len',e']
 compileTake Nothing _args = throwError "Need instance declaration for take"
 compileTake _ _ = throwError "Take needs 2 arguments"
@@ -718,18 +730,17 @@ compileDrop :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileDrop (Just([tp],[r])) [len,e] = do
   tp' <- mkType (tp, r-1)
   fname <- genFun $ DropFun tp'
-  takeDropHelper (compileDrop' fname) r len e
-  where compileDrop' fname _ len' e' =
+  takeDropHelper (compileDrop' fname) len e
+  where compileDrop' fname len' e' =
           pure $ F.FunCall fname [len',e']
 compileDrop _ _ = throwError "compileDrop: invalid arguments"
 
-takeDropHelper :: ([F.Exp] -> F.Exp -> F.Exp -> CompilerM b)
-               -> Integer -> T.Exp -> T.Exp -> CompilerM b
-takeDropHelper f r len e = do
-  shape <- makeShape r [e]
+takeDropHelper :: (F.Exp -> F.Exp -> CompilerM b)
+               -> T.Exp -> T.Exp -> CompilerM b
+takeDropHelper f len e = do
   len' <- compileExp len
   e' <- compileExp e
-  f shape len' e'
+  f len' e'
 
 -- reshape --
 compileReshape :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
@@ -742,10 +753,11 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = do
     F.Var dimsVar ->
       return (map (\i -> F.Index (F.Var dimsVar) [Constant (Int i)]) [0..r2-1], id)
     _ -> do
-      let name = "shape_tmp"
+      let name = "dim_tmp"
       return ([F.Index (F.Var name) [Constant (Int i)] | i <- [0..r2-1]],
               F.Let (F.Ident name) dimsExp)
-  shapeProd <- multExp <$> makeShape r1 [array]
+  tp_r1 <- mkType (tp,r1)
+  shapeProd <- multExp <$> makeShape tp_r1 array
   array' <- compileExp array
   let resh = F.FunCall "reshape" [shapeProd, array']
   return $ wrap $ F.FunCall "reshape" [F.Tuple dimsList, F.FunCall fname [multExp dimsList, resh]]
@@ -769,8 +781,13 @@ compileTransp2 _ e = case e of [_,_] -> throwError "transp2 needs litaral as fir
                                _     -> throwError "transp2 takes 2 arguments"
 
 -- shape --
-compileShape :: Maybe (t, [Integer]) -> [T.Exp] -> CompilerM F.Exp
-compileShape _ args = F.FunCall "shape" <$> mapM compileExp args
+compileShape :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
+compileShape (Just([tp],[r])) [arg] = do
+  fname <- genFun =<< DimFun <$> mkType (tp, r)
+  arg' <- compileExp arg
+  return $ Array [ F.FunCall fname [Constant $ Int i, arg'] | i <- [0..r-1] ]
+compileShape Nothing _args = throwError "Need instance declaration for shape"
+compileShape _ _ = throwError "Shape takes 1 argument"
 
 -- firstV --
 compileFirstV :: t -> [T.Exp] -> CompilerM F.Exp
@@ -793,15 +810,13 @@ compileEach (Just ([intp,outtp],[orig_r])) [okernel,orig_array] = do
   array <- compileExp orig_array
   F.Let (Ident "array") array <$>
     makeEach intp outtp orig_r okernel (F.Var "array")
-  where ione = F.Constant (F.Int 1)
-        makeEach _ tp2 1 kernel array =
+  where makeEach _ tp2 1 kernel array =
           Map <$> (compileKernel kernel =<< makeBTp tp2) <*> pure [array]
         makeEach tp1 tp2 r kernel array = do
-          rtp  <- setOuterSize (F.NamedDim "n") <$> mkType (tp2,r-1)
+          rtp  <- mkType (tp2,r-1)
           tp1' <- mkType (tp1,r-1)
           body <- makeEach tp1 tp2 (r-1) kernel (F.Var "x")
-          return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [array]) [ione]) $
-            Map (F.Fn rtp [(tp1',"x")] body) [array]
+          return $ Map (F.Fn rtp [(tp1',"x")] body) [array]
 compileEach Nothing _ = throwError "Need instance declaration for each"
 compileEach _ _ = throwError "each takes two arguments"
 
@@ -831,17 +846,15 @@ compileZipWith (Just([tp1,tp2,rtp],[rk])) [orig_kernel,orig_a1,orig_a2] = do
   F.Let (Ident "x") a1 <$>
     F.Let (Ident "y") a2 <$>
     makeZipWith rk orig_kernel (F.Var "x") (F.Var "y")
-  where ione = F.Constant (F.Int 1)
-        makeZipWith r kernel a1 a2
+  where makeZipWith r kernel a1 a2
           | r == 1 =
             Map <$> (compileKernel kernel =<< makeBTp rtp) <*> pure [a1,a2]
           | otherwise = do
-              rtp' <- setOuterSize (F.NamedDim "n") <$> mkType (rtp,r-1)
+              rtp' <- mkType (rtp,r-1)
               tp1' <- mkType (tp1,r-1)
               tp2' <- mkType (tp2,r-1)
               body <- makeZipWith (r-1) kernel (F.Var "x") (F.Var "y")
-              return $ F.Let (Ident "n") (F.Index (F.FunCall "shape" [a1]) [ione]) $
-                Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) [a1, a2]
+              return $ Map (F.Fn rtp' [(tp1',"x"),(tp2',"y")] body) [a1, a2]
     --Map kernelExp $ F.FunCall "zip" [(compileExp a1),(compileExp a2)] -- F.Map kernelExp $ F.FunCall "zip" [a1,a2]
 compileZipWith Nothing _ = throwError "Need instance declaration for zipWith"
 compileZipWith _ _ = throwError "zipWith takes 3 arguments"
@@ -873,14 +886,16 @@ compileIdxS (Just([_],[r])) d i a = compileIdxS' (r+1) d i a
 compileIdxS _ _ _ _ = throwError "idxS takes two singleton instance lists and three arguments"
 
 -- rav --
-compileRav' :: Integer -> T.Exp -> CompilerM F.Exp
-compileRav' r xs = do
+compileRav' :: F.Type -> T.Exp -> CompilerM F.Exp
+compileRav' t xs = do
   xs' <- compileExp xs
-  shapeProd <- multExp <$> makeShape r [xs]
+  shapeProd <- multExp <$> makeShape t xs
   return $ F.FunCall "reshape" [shapeProd, xs']
 
 compileRav :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
-compileRav (Just([_],[r])) [xs] = compileRav' r xs
+compileRav (Just([tp],[r])) [xs] = do
+  tp' <- mkType (tp,r)
+  compileRav' tp' xs
 compileRav _ _ = throwError "rav takes two singleton instance lists and one argument"
 
 -- pi --

@@ -15,9 +15,10 @@ instance Pretty Program where
     stack . map ppr $ fundecs
 
 instance Pretty FunDecl where
-  ppr (FunDecl entry tp ident args body) =
+  ppr (FunDecl entry tp ident tsparams args body) =
     fun'
-    <+> text ident <+> args'
+    <+> text ident
+    <+> tsparams' <+> args'
     <> text ":" <+> ppr tp
     <+> equals </>
     indent 2 (ppr body)
@@ -25,6 +26,11 @@ instance Pretty FunDecl where
           args' = case args of
                     [] -> parens mempty
                     _  -> spread (map (parens . ppArg) args)
+          tsparams' = spread $ map ppr tsparams
+
+instance Pretty TypeSizeParam where
+  ppr (SizeParam x) = brackets $ text x
+  ppr (TypeParam x) = text "'" <> text x
 
 commaList :: [Doc] -> Doc
 commaList = parens . commasep
@@ -40,6 +46,7 @@ instance Pretty Type where
   ppr F32T          = text "f32"
   ppr F64T          = text "f64"
   ppr BoolT         = text "bool"
+  ppr (VarT s)      = text s
   ppr (ArrayT at d) = brackets (ppr d) <> ppr at
   ppr (TupleT ts)   = parens $ commasep $ map ppr ts
 

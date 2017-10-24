@@ -3,7 +3,7 @@ module Tail2Futhark.Futhark.AST where
 newtype Program = Program [FunDecl]
 
 -- | Boolean is true if entry point.
-data FunDecl = FunDecl Bool Type Ident [Arg] Exp
+data FunDecl = FunDecl Bool Type Ident [TypeSizeParam] [Arg] Exp
 
 data DimDecl = AnyDim | BoundDim Ident | NamedDim Ident | ConstDim Int
              deriving (Show, Eq, Ord)
@@ -15,7 +15,7 @@ data Type = IntT
           | BoolT
           | TupleT [Type]
           | ArrayT Type DimDecl
-         -- | UArrayT Type
+          | VarT Ident
   deriving (Show, Eq, Ord)
 
 rank :: Num a => Type -> a
@@ -27,6 +27,8 @@ baseType (ArrayT tp _) = baseType tp
 baseType tp            = tp
 
 type Ident = String
+
+data TypeSizeParam = TypeParam Ident | SizeParam Ident
 
 type Arg = (Type, Ident)
 
