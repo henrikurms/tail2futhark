@@ -330,7 +330,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
         complex = TupleT [t, t]
         x = F.Var "x"
         y = F.Var "y"
-        i2dt = F.FunDecl False t "i2d" [] [(F.IntT, "x")] $ F.FunCall (suff "f") [x]
+        i2dt = F.FunDecl False t "i2d" [] [(F.IntT, "x")] $ F.FunCall (suff "r") [x]
         sqrtf = F.FunDecl False t "sqrt" [] [(t, "x")] $ F.FunCall (pref "sqrt") [x]
         ln = F.FunDecl False t "ln" [] [(t, "x")] $ F.FunCall (pref "log") [x]
         sinf = F.FunDecl False t "sin" [] [(t, "x")] $ F.FunCall (pref "sin") [x]
@@ -349,15 +349,15 @@ f32Builtins, f64Builtins :: [F.FunDecl]
           IfThenElse (BinApp Eq (constant 0) x)
           (Constant (Int 0)) (Constant (Int (-1)))
         ceil = F.FunDecl False F.IntT "ceil" [] [(t, "x")] $
-          IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall "i32" [x]]) x)
-          (F.FunCall "i32" [x]) $
+          IfThenElse (F.BinApp F.Eq (F.FunCall "i2d" [F.FunCall (suff "t") [x]]) x)
+          (F.FunCall (suff "t") [x]) $
           IfThenElse (F.BinApp F.LessEq (F.Var "x") (constant 0))
-          (F.FunCall "i32" [x])
-          (F.FunCall "i32" [F.BinApp Plus x (constant 1)])
+          (F.FunCall (suff "t") [x])
+          (F.FunCall (suff "t") [F.BinApp Plus x (constant 1)])
         floorf = F.FunDecl False F.IntT "floor" [] [(t, "x")] $
           IfThenElse (F.BinApp F.Less (F.Var "x") (constant 0))
-          (F.FunCall "i32" [F.BinApp Minus x (constant 1)])
-          (F.FunCall "i32" [x])
+          (F.FunCall (suff "t") [F.BinApp Minus x (constant 1)])
+          (F.FunCall (suff "t") [x])
         d2x = F.FunDecl False complex "d2x" [] [(t, "x")] $
           F.Tuple [x, constant 0]
         injx = F.FunDecl False complex "injx" [] [(t, "x")] $
@@ -1011,8 +1011,8 @@ convertFun :: String -> Maybe String
 convertFun fun = case fun of
   "i2d"    -> Just "i2d"
   "catV"   -> Just "concat"
-  "b2i"    -> Just "i32"
-  "b2iV"   -> Just "i32"
+  "b2i"    -> Just "i32.bool"
+  "b2iV"   -> Just "i32.bool"
   "ln"     -> Just "ln"
   "ceil"   -> Just "ceil"
   "expd"   -> Just "expd"

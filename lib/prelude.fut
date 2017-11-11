@@ -7,7 +7,7 @@ import "/futlib/array"
 
 let radix_sort_step_up [n] (p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
-  let bits       = map (\(x:u32):i32 -> i32((x >> u32(digit_n)) & 1u32)) xs
+  let bits       = map (\(x:u32):i32 -> (i32.u32 x >>> digit_n) & 1) xs
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
   let ps0        = scan (+) 0 bits_inv
   let ps0_clean  = map (*) bits_inv ps0
@@ -22,7 +22,7 @@ let radix_sort_step_up [n] (p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
 
 let radix_sort_step_down [n] (p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let (xs,is)    = p
-  let bits       = map (\(x:u32):i32 -> i32((x >> u32(digit_n)) & 1u32)) xs
+  let bits       = map (\(x:u32):i32 -> (i32.u32 x >>> digit_n) & 1) xs
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
   let ps1        = scan (+) 0 bits
   let ps1_offset = reduce (+) 0 bits
@@ -48,11 +48,11 @@ let radix_sort_down [n] (xs: [n]u32) : ([n]u32,[n]i32) =
     radix_sort_step_down(p,i)
 
 let grade_up [n] (xs: [n]i32) : [n]i32 =
-  let xs = map u32 xs in
+  let xs = map u32.i32 xs in
   let (_,is) = radix_sort_up xs in is
 
 let grade_down [n] (xs: [n]i32) : [n]i32 =
-  let xs = map u32 xs in
+  let xs = map u32.i32 xs in
   let (_,is) = radix_sort_down xs in is
 
 let sgmScanSum [n] (vals:[n]i32) (flags:[n]bool) : [n]i32 =
