@@ -10,12 +10,12 @@ let radix_sort_step_up [n] (p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) =
   let bits       = map (\(x:u32):i32 -> (i32.u32 x >>> digit_n) & 1) xs
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
   let ps0        = scan (+) 0 bits_inv
-  let ps0_clean  = map (*) bits_inv ps0
+  let ps0_clean  = map2 (*) bits_inv ps0
   let ps1        = scan (+) 0 bits
   let ps0_offset = reduce (+) 0 bits_inv
   let ps1_clean  = map (\(i:i32) : i32 -> i+ps0_offset) ps1
-  let ps1_clean' = map (*) bits ps1_clean
-  let ps         = map (+) ps0_clean ps1_clean'
+  let ps1_clean' = map2 (*) bits ps1_clean
+  let ps         = map2 (+) ps0_clean ps1_clean'
   let ps_actual  = map (\(p:i32) : i32 -> p - 1) ps
   in (scatter (copy(xs)) ps_actual xs,
       scatter (copy(is)) ps_actual is)
@@ -26,11 +26,11 @@ let radix_sort_step_down [n] (p:([n]u32,[n]i32), digit_n:i32) : ([n]u32,[n]i32) 
   let bits_inv   = map (\(b:i32):i32 -> 1 - b) bits
   let ps1        = scan (+) 0 bits
   let ps1_offset = reduce (+) 0 bits
-  let ps1_clean  = map (*) bits ps1
+  let ps1_clean  = map2 (*) bits ps1
   let ps0        = scan (+) 0 bits_inv
   let ps0_clean  = map (\(i:i32) : i32 -> i+ps1_offset) ps0
-  let ps0_clean' = map (*) bits_inv ps0_clean
-  let ps         = map (+) ps1_clean ps0_clean'
+  let ps0_clean' = map2 (*) bits_inv ps0_clean
+  let ps         = map2 (+) ps1_clean ps0_clean'
   let ps_actual  = map (\(p:i32) : i32 -> p - 1) ps
   in (scatter (copy(xs)) ps_actual xs,
       scatter (copy(is)) ps_actual is)
