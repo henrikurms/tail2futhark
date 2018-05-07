@@ -135,14 +135,17 @@ makeLets :: [(F.Ident, F.Exp)] -> F.Exp -> F.Exp
 makeLets ((v,e) : rest) body = F.Let (Ident v) e (makeLets rest body)
 makeLets [] body             = body
 
+-- Fully flatten an array of known rank.
+fullFlatten :: Int -> F.Exp -> F.Exp
+fullFlatten r e | r > 1 = fullFlatten (r-1) $ F.FunCall "flatten" [e]
+
 reshape1Body :: F.Type -> F.Exp
 reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
                  (F.FunCall "replicate" [F.Var "l", blank t])
                  (makeLets (zip ["roundUp","extend"] [desired,reshapeCall]) split)
   where split = mkSplit "v1" "_" (F.Var "l") (F.Var "extend") (F.Var "v1")
         desired = F.Var "l" `fplus` (size `fminus` Constant (Int 1)) `fdiv` size
-        reshapeCall = F.FunCall "reshape" [F.Tuple [BinApp Mult size len],
-                                           F.FunCall "replicate" [len,F.Var "x"]]
+        reshapeCall = F.FunCall "flatten" [F.FunCall "replicate" [len,F.Var "x"]]
         size = F.FunCall "length" [F.Var "x"]
         len = F.Var "roundUp"
         fdiv = BinApp Div
@@ -395,7 +398,7 @@ f32Builtins, f64Builtins :: [F.FunDecl]
               b = Project "2" x
           in FunCall "sqrt" [BinApp F.Plus (BinApp F.Mult a a) (BinApp F.Mult b b)]
 
--- AUX: make FunDecl False by combining signature and body (aux function that create function body)
+-- AUX: make FunDecl by combining signature and body (aux function that create function body)
 makeFun :: [F.TypeSizeParam] -> [F.Arg] -> F.Ident -> F.Exp -> F.Type -> FunDecl
 makeFun tsparams args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++ "_" ++ annot tp) tsparams args body
   where annot (TupleT ts)  = intercalate "_" $ map annot ts
