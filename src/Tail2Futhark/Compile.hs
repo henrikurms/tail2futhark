@@ -138,6 +138,7 @@ makeLets [] body             = body
 -- Fully flatten an array of known rank.
 fullFlatten :: Int -> F.Exp -> F.Exp
 fullFlatten r e | r > 1 = fullFlatten (r-1) $ F.FunCall "flatten" [e]
+                | otherwise = e
 
 reshape1Body :: F.Type -> F.Exp
 reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
@@ -162,15 +163,16 @@ reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
 -- drop --
 -- make body for drop1 function --
 dropBody :: [F.Exp] -> F.Type -> F.Exp
-dropBody dims tp = IfThenElse (size `less` absExp len) emptArr elseBranch
+dropBody _dims tp = IfThenElse (size `less` absExp len) emptArr elseBranch
     where izero = Constant (Int 0)
           less = BinApp LessEq
           len = F.Var "l"
           size = F.FunCall "length" [F.Var "x"]
           plus = BinApp Plus len size
-          emptArr = F.FunCall "reshape" [F.Tuple emptShape, F.Empty tp]
-          emptShape = F.Constant (Int 0) :
-                      drop 1 dims
+          emptArr = F.Ascript (F.Array []) $
+                    foldr (flip ArrayT) (baseType tp) $
+                    ConstDim 0 :
+                    map (NamedDim . ("d"++) . show) [(0::Int)..rank tp-1]
           elseBranch = IfThenElse (len `less` izero) negDrop posDrop
           negDrop = mkSplit "v1" "_" plus (F.Var "x") (F.Var "v1")
           posDrop = mkSplit "_" "v2" len (F.Var "x") (F.Var "v2")
@@ -405,8 +407,11 @@ makeFun tsparams args name body tp = F.FunDecl False (ArrayT tp AnyDim) (name ++
         annot (ArrayT t _) = "arr" ++ annot t
         annot t            = pretty t
 
-stdArgs :: F.Type -> [(F.Type, String)]
-stdArgs tp = [(F.IntT,"l"),(ArrayT tp AnyDim, "x")]
+stdArgs :: F.Type -> ([TypeSizeParam], [(F.Type, String)])
+stdArgs tp = (map SizeParam sizes, [(F.IntT,"l"),(ArrayT arr AnyDim, "x")])
+  where sizes = map (("d"++) . show) [(0::Int)..rank tp-1]
+        arr = foldr (\d t -> ArrayT t d) (baseType tp) $
+              map NamedDim sizes
 
 -- Generic library functions
 data GenFun = TakeFun F.Type
@@ -418,13 +423,13 @@ data GenFun = TakeFun F.Type
 generateGenFun :: GenFun -> CompilerM FunDecl
 generateGenFun (TakeFun t) = do
   body <- takeBody <$> zero (1, "x") t
-  return $ makeFun [] (stdArgs t) "take" body t
+  return $ uncurry makeFun (stdArgs t) "take" body t
 generateGenFun (DropFun t) = do
   dim_fn <- genFun $ DimFun $ ArrayT t AnyDim
   let dims = [ FunCall dim_fn [Constant $ Int i, F.Var "x"] | i <- [0..F.rank t] ]
-  return $ makeFun [] (stdArgs t) "drop" (dropBody dims t) t
+  return $ uncurry makeFun (stdArgs t) "drop" (dropBody dims t) t
 generateGenFun (ReshapeFun t) =
-  return $ makeFun [] (stdArgs t) "reshape" (reshape1Body t) t
+  return $ uncurry makeFun (stdArgs t) "reshape" (reshape1Body t) t
 generateGenFun (DimFun t) =
   return $
   F.FunDecl False F.IntT ("dim_" ++ show (F.rank t::Int))

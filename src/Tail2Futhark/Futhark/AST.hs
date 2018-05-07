@@ -54,6 +54,7 @@ data Operator = Plus | Mult | LessEq | GreaterEq | Less | Greater | Minus | Div 
   deriving (Show, Eq)
 
 data Exp = Var Ident
+         | Ascript Exp Type
          | Let Pattern Exp Exp
          | IfThenElse Exp Exp Exp
          | ForLoop Ident Exp Ident Exp Exp

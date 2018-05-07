@@ -57,6 +57,7 @@ instance Pretty DimDecl where
 
 instance Pretty Exp where
   ppr (Var ident) = text ident
+  ppr (Ascript e t) = ppr e <+> colon <+> ppr t
   ppr (Let pat exp1 exp2) = text "let" <+> ppPat pat <+> equals <+> align (ppr exp1) <+> text "in" </> ppr exp2
   ppr (IfThenElse e1 e2 e3) = text "if" <+> ppr e1 </> text "then" <+> ppr e2 </> text "else" <+> ppr e3
   ppr (Unsafe e) = text "unsafe" <+> ppr e
