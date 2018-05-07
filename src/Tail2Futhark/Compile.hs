@@ -197,13 +197,6 @@ takeBody padElement = IfThenElse (izero `less` len) posTake negTake
 -- AUX FUNCTIONS FOR SPECIFIC FUNCTIONS --
 ------------------------------------------
 
--- AUX shape --
-makeShape :: F.Type -> T.Exp -> CompilerM [F.Exp]
-makeShape t e = do
-  e' <- compileExp e
-  dim_fun <- genFun $ DimFun t
-  return [ F.FunCall dim_fun [Constant $ Int i, e'] | i <- [0..F.rank t-1] ]
-
 -- AUX transp --
 makeTransp :: Integer -> F.Exp -> F.Exp
 makeTransp r = makeTransp2 $ reverse [0..r-1]
@@ -894,10 +887,7 @@ compileIdxS _ _ _ _ = throwError "idxS takes two singleton instance lists and th
 
 -- rav --
 compileRav' :: F.Type -> T.Exp -> CompilerM F.Exp
-compileRav' t xs = do
-  xs' <- compileExp xs
-  shapeProd <- multExp <$> makeShape t xs
-  return $ F.FunCall "reshape" [shapeProd, xs']
+compileRav' t xs = fullFlatten (rank t) <$> compileExp xs
 
 compileRav :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileRav (Just([tp],[r])) [xs] = do
