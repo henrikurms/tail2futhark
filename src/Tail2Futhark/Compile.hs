@@ -140,6 +140,13 @@ fullFlatten :: Int -> F.Exp -> F.Exp
 fullFlatten r e | r > 1 = fullFlatten (r-1) $ F.FunCall "flatten" [e]
                 | otherwise = e
 
+fullUnflatten :: [F.Exp] -> F.Exp -> F.Exp
+fullUnflatten dims arr = foldr unflatten arr $
+                         zip (drop 1 $ map fProduct $ inits dims) (drop 1 dims)
+  where unflatten (n,m) arr' = F.FunCall "unflatten" [n, m, arr']
+        fProduct [] = Constant $ Int 0
+        fProduct (x:xs) = foldl (BinApp Mult) x xs
+
 reshape1Body :: F.Type -> F.Exp
 reshape1Body t = F.IfThenElse (BinApp Eq size (Constant (Int 0)))
                  (F.FunCall "replicate" [F.Var "l", blank t])
@@ -760,7 +767,7 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = do
   tp_r1 <- mkType (tp,r1)
   array' <- compileExp array
   let resh = fullFlatten (rank tp_r1) array'
-  return $ wrap $ F.FunCall "reshape" [F.Tuple dimsList, F.FunCall fname [multExp dimsList, resh]]
+  return $ wrap $ fullUnflatten dimsList $ F.FunCall fname [multExp dimsList, resh]
 compileReshape Nothing _args = throwError "Need instance declaration for reshape"
 compileReshape _ _ = throwError "Reshape needs 2 arguments"
 
