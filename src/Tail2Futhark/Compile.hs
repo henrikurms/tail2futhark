@@ -765,9 +765,8 @@ compileReshape (Just([tp],[r1,r2])) [dims,array] = do
       return ([F.Index (F.Var name) [Constant (Int i)] | i <- [0..r2-1]],
               F.Let (F.Ident name) dimsExp)
   tp_r1 <- mkType (tp,r1)
-  shapeProd <- multExp <$> makeShape tp_r1 array
   array' <- compileExp array
-  let resh = F.FunCall "reshape" [shapeProd, array']
+  let resh = fullFlatten (rank tp_r1) array'
   return $ wrap $ F.FunCall "reshape" [F.Tuple dimsList, F.FunCall fname [multExp dimsList, resh]]
 compileReshape Nothing _args = throwError "Need instance declaration for reshape"
 compileReshape _ _ = throwError "Reshape needs 2 arguments"
