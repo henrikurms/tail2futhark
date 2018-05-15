@@ -685,9 +685,7 @@ compileVRotateV _ _ = throwError "vrotateV needs 2 arguments"
 
 -- vrotate --
 makeVRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
-makeVRotate _ _ i a = do
-  i' <- compileExp i
-  return $ F.FunCall "rotate@0" [i', a]
+makeVRotate t _ = makeRotate t 1
 
 makeRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
 makeRotate _ r i a = do
