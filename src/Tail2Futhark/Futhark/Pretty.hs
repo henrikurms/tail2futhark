@@ -34,7 +34,6 @@ instance Pretty TypeSizeParam where
 
 commaList :: [Doc] -> Doc
 commaList = parens . commasep
-ppKernel :: Kernel -> Doc
 brackList :: [Doc] -> Doc
 brackList = brackets . commasep
 brackExps :: [Exp] -> Doc
@@ -80,19 +79,20 @@ instance Pretty Exp where
   ppr (Scan k e1 e2) = ppSOAC2 "scan" k e1 e2
   ppr (Reduce k e1 e2) = ppSOAC2 "reduce" k e1 e2
 
-ppSOAC1 :: String -> Kernel -> [Exp] -> Doc
-ppSOAC1 v k es = text v <+> ppKernel k <+> spread (map (parens . ppr) es)
+  ppr (Fn tp args body) =
+    parens $
+    text "\\" <+> (spread $ map (parens . ppArg) args) <>
+    text ":" <+> ppr tp <+> text "->" </>
+    ppr body
+  ppr (Fun ident []) = text ident
+  ppr (Fun ident exps) = parens $ text ident <+> (commaList . map ppr $ exps)
+  ppr (Op op) = parens $ ppOp op
 
-ppSOAC2 :: String -> Kernel -> Exp -> Exp -> Doc
-ppSOAC2 v k e1 e2 = text v <+> ppKernel k <+> parens (ppr e1) <+> parens (ppr e2)
+ppSOAC1 :: String -> Exp -> [Exp] -> Doc
+ppSOAC1 v k es = text v <+> ppr k <+> spread (map (parens . ppr) es)
 
-ppKernel (Fn tp args body) =
-  parens $
-  text "\\" <+> (spread $ map (parens . ppArg) args) <> text ":" <+> ppr tp <+> text "->" </>
-  ppr body
-ppKernel (Fun ident []) = text ident
-ppKernel (Fun ident exps) = parens $ text ident <+> (commaList . map ppr $ exps)
-ppKernel (Op op) = parens $ ppOp op
+ppSOAC2 :: String -> Exp -> Exp -> Exp -> Doc
+ppSOAC2 v k e1 e2 = text v <+> ppr k <+> parens (ppr e1) <+> parens (ppr e2)
 
 ppOp :: Operator -> Doc
 ppOp op = text $ case op of

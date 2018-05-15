@@ -44,11 +44,6 @@ data Constant = Int Integer
               | ArrayConstant [Constant]
   deriving (Show, Eq)
 
-data Kernel = Fn Type [Arg] Exp
-              | Fun Ident [Exp]
-              | Op Operator
-  deriving (Show, Eq)
-
 data Operator = Plus | Mult | LessEq | GreaterEq | Less | Greater | Minus | Div | Eq | Mod |
                 LogicAnd | LogicOr | Pow | And | Or | Xor | Shl | Shr
   deriving (Show, Eq)
@@ -69,9 +64,13 @@ data Exp = Var Ident
          | Rearrange [Integer] Exp
          | Unsafe Exp
          | Empty Type
-         | Map Kernel [Exp]
-         | Filter Kernel Exp
-         | Scan Kernel Exp Exp
-         | Reduce Kernel Exp Exp
+         | Map Exp [Exp]
+         | Filter Exp Exp
+         | Scan Exp Exp Exp
+         | Reduce Exp Exp Exp
+
+         | Fn Type [Arg] Exp
+         | Fun Ident [Exp]
+         | Op Operator
   deriving (Show, Eq)
 

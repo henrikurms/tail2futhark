@@ -264,7 +264,7 @@ zero (i,x) at@(F.ArrayT t _) = do
 zero _ tp = fail $ "take for type " ++ pretty tp ++ " not supported"
 
 -- make Futhark function expression from ident
-makeKernel :: String -> Kernel
+makeKernel :: String -> F.Exp
 makeKernel ident
   | Just fun <- convertFun ident = F.Fun fun []
   | Just op  <- convertBinOp ident = F.Op op
@@ -294,7 +294,7 @@ multExp :: [F.Exp] -> F.Exp
 multExp = foldr (BinApp Mult) (Constant (Int 1))
 
 -- make Futhark kernel expression with type
-compileKernel :: T.Exp -> F.Type -> CompilerM Kernel
+compileKernel :: T.Exp -> F.Type -> CompilerM F.Exp
 compileKernel (T.Var ident) _ =
   return $ makeKernel ident
 compileKernel (T.Fn ident tp (T.Fn ident2 tp2 e)) rtp = do
