@@ -45,7 +45,7 @@ data Constant = Int Integer
   deriving (Show, Eq)
 
 data Operator = Plus | Mult | LessEq | GreaterEq | Less | Greater | Minus | Div | Eq | Mod |
-                LogicAnd | LogicOr | Pow | And | Or | Xor | Shl | Shr
+                LogicAnd | LogicOr | Pow | And | Or | Xor | Shl | Shr | Concat
   deriving (Show, Eq)
 
 data Exp = Var Ident

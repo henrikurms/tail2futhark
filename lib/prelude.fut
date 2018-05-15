@@ -112,3 +112,5 @@ let resi (x: i32) (y: i32): i32 =
   if x == 0
   then y
   else (y % x)
+
+let frotate 't (i: i32) (xs: []t) = rotate i xs

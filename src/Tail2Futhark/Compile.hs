@@ -314,6 +314,13 @@ compileTp (TupT ts)       = F.TupleT <$> mapM compileTp ts
 compileTp (SV bt (R _))   = makeArrTp <$> makeBTp bt <*> pure 1
 compileTp (S bt _)        = makeBTp bt
 
+-- Apply a function on an inner dimension of an array.  Produces a map
+-- nest.
+onInnerDim :: Integer -> Integer -> F.Exp -> F.Exp
+onInnerDim 0 _ e = e
+onInnerDim i n e = FunCall (F.Var mapf) [onInnerDim (i-1) n e]
+  where mapf = "map" ++ show n
+
 -----------------------
 -- LIBRARY FUNCTIONS --
 -----------------------
@@ -562,9 +569,8 @@ compileSnocV _ _ = throwError "snocV take two aguments"
 compileSnoc :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileSnoc (Just([_],[r])) [a,e] = compileSnoc' <$> compileExp a <*> compileExp e
   where compileSnoc' a' e' =
-          F.FunCall (F.Var concatf) [a',e'']
+          F.FunCall (onInnerDim r 2 (F.Op Concat)) [a',e'']
           where e'' = makeTransp (r+1) $ F.Array [e']
-        concatf = "concat@" ++ show r
 compileSnoc _ _ = throwError "compileSnoc: invalid arguments"
 
 -- consV --
@@ -580,9 +586,8 @@ compileConsV _ _ = throwError "consV take two aguments"
 compileCons :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileCons (Just([_],[r])) [e,a] = compileCons' <$> compileExp e <*> compileExp a
   where compileCons' e' a' =
-          F.FunCall (F.Var concatf) [e'',a']
+          F.FunCall (onInnerDim r 2 (F.Op Concat)) [e'',a']
             where e'' = makeTransp (r+1) $ F.Array [e']
-        concatf = "concat@" ++ show r
 compileCons _ _ = throwError "compileCons: invalid arguments"
 
 -- first --
@@ -691,16 +696,14 @@ makeVRotate t _ = makeRotate t 1
 makeRotate :: BType -> Integer -> T.Exp -> F.Exp -> CompilerM F.Exp
 makeRotate _ r i a = do
   i' <- compileExp i
-  return $ F.FunCall (F.Var rotatef) [i', a]
-  where rotatef = "rotate@" ++ show (r-1)
+  return $ F.FunCall (onInnerDim (r-1) 1 (F.FunCall (F.Var "frotate") [i'])) [a]
 
 -- cat --
 compileCat :: Maybe InstDecl -> [T.Exp] -> CompilerM F.Exp
 compileCat (Just([_],[r])) [a1,a2] = do
   a1' <- compileExp a1
   a2' <- compileExp a2
-  return $ FunCall (F.Var concatf) [a1', a2']
-  where concatf = "concat@" ++ show (r-1)
+  return $ F.FunCall (onInnerDim (r-1) 2 (F.Op F.Concat)) [a1', a2']
 compileCat _ _ = throwError "compileCat: invalid arguments"
 
 -- takeV --

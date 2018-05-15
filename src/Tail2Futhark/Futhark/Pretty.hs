@@ -114,6 +114,7 @@ ppOp op = text $ case op of
   And       -> "&"
   Shl       -> ">>"
   Shr       -> "<<"
+  Concat    -> "++"
   --XOr -> "^"
 
 instance Pretty Constant where
