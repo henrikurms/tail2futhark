@@ -71,7 +71,7 @@ instance Pretty Exp where
   ppr (Tuple exps) = parens $ commasep $ map ppr exps
   ppr (Project f e) = ppr e <> text "." <> text f
   ppr (BinApp op e1 e2) = parens $ ppr e1 <+> ppOp op <+> ppr e2
-  ppr (FunCall ident exps) = text ident <+> spread (map (parens . ppr) exps)
+  ppr (FunCall f exps) = ppr f <+> spread (map (parens . ppr) exps)
   ppr (Rearrange perm e) = text "rearrange" <+> parens (commasep $ map ppr perm) <+> parens (ppr e)
   ppr (Empty tp) = text "empty" <> parens (ppr tp)
   ppr (Map k es) = ppSOAC1 ("map" ++ show (length es)) k es
