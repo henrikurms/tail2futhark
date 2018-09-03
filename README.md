@@ -1,3 +1,5 @@
+** Warning: `tail2futhark` has not been kept fully up to date with recent changes in Futhark.  However, it would not be a large job to fix it.**
+
 With `tail2Futhark` it is possible to compile APL programs - through [apltail](https://github.com/melsman/apltail) - to [Futhark](https://github.com/HIPERFIT/futhark) and thereby target GPGPU architectures supported by the Futhark project.
 
 ## Status
